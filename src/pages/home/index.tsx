@@ -46,6 +46,7 @@ import LoadingIndicator from '@/components/LoadingIndicator'
 import UserService, { SearchUser } from '@/services/user'
 import TagService, { TagType } from '@/services/tag'
 import TagList from '@/components/TagList'
+import CategoryTree from '@/components/CategoryTree'
 
 const { Header, Content, Sider } = Layout
 const { Search } = Input
@@ -305,6 +306,12 @@ const Home = () => {
     }
   }
 
+  const renderArticleTitle = (article: Article) => (
+    <div className="text-lg font-bold hover:text-blue-600">
+      {article.title}
+    </div>
+  )
+
   return (
     <Layout className="min-h-screen bg-white">
       {/* Top Header */}
@@ -357,7 +364,6 @@ const Home = () => {
           className="bg-transparent px-6 hidden xl:block"
         >
           <div className="sticky top-[80px]">
-            {/* 分类管理卡片 */}
             <Card
               title={
                 <div className="flex items-center justify-between">
@@ -376,7 +382,7 @@ const Home = () => {
               }
               className="bg-white shadow-sm"
             >
-              <CategoryManager userName={userInfo?.userName} />
+              <CategoryTree userName={userInfo?.userName} />
             </Card>
           </div>
         </Sider>
@@ -412,14 +418,13 @@ const Home = () => {
               }}
               renderItem={(article: Article) => (
                 <motion.div
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.2 }}
                 >
                   <List.Item
                     key={article.id}
-                    className="cursor-pointer hover:bg-gray-50 transition-colors p-6 border-b last:border-b-0"
+                    className="cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => navigate(`/${article.user.name}/${article.slug}`)}
                     actions={[
                       <Space key="likes" className="text-gray-500">
@@ -435,11 +440,7 @@ const Home = () => {
                   >
                     <List.Item.Meta
                       avatar={<Avatar src={article.user.avatar} size={40} />}
-                      title={
-                        <h3 className="text-xl font-bold hover:text-blue-600 m-0">
-                          {article.title}
-                        </h3>
-                      }
+                      title={renderArticleTitle(article)}
                       description={
                         <div className="flex items-center text-gray-500 text-sm mt-2">
                           <span>{article.user.name}</span>
@@ -461,20 +462,6 @@ const Home = () => {
           className="bg-transparent px-6 hidden xl:block"
         >
           <div className="sticky top-[80px] space-y-6">
-            <div className="relative w-full">
-              
-              {!isCreatorOrAdmin && (
-                <div className="absolute top-0 left-0 right-0 bottom-0 backdrop-blur-sm bg-white/50 z-10 rounded-lg flex items-center justify-center">
-                  <div className="flex flex-col items-center px-2 py-1">
-                    <LockOutlined className="text-lg text-gray-400 mb-1" />
-                    <p className="text-gray-500 text-xs text-center">
-                      只有创作者和管理员可以发布文章
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* 标签列表 */}
             <TagList />
           </div>
