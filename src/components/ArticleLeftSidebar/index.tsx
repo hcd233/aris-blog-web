@@ -23,7 +23,7 @@ interface ArticleSidebarProps {
   onCollapsedChange?: (collapsed: boolean) => void
 }
 
-const ArticleSidebar: React.FC<ArticleSidebarProps> = ({ 
+const ArticleLeftSidebar: React.FC<ArticleSidebarProps> = ({ 
   content, 
   onCollapsedChange 
 }) => {
@@ -127,7 +127,7 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
     <div 
       className="fixed transition-all duration-300 flex"
       style={{ 
-        left: collapsed ? '-280px' : '0',
+        left: collapsed ? '-320px' : '0',
         top: '80px',
         bottom: '80px',
         zIndex: 100
@@ -135,12 +135,10 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
     >
       {/* 侧边栏内容 */}
       <div
-        className="h-full bg-white shadow-lg"
+        className="h-full bg-white shadow-lg flex flex-col"
         style={{
-          width: '280px',
+          width: '320px',
           borderRadius: '0 12px 12px 0',
-          display: 'flex',
-          flexDirection: 'column'
         }}
       >
         {/* 阅读信息卡片 */}
@@ -242,4 +240,4 @@ const ArticleSidebar: React.FC<ArticleSidebarProps> = ({
   )
 }
 
-export default ArticleSidebar 
+export default React.memo(ArticleLeftSidebar) 

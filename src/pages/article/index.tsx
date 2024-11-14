@@ -11,7 +11,7 @@ import MarkdownPreview from '@uiw/react-markdown-preview'
 import ArticleService, { Article as ArticleType, ArticleVersion } from '@/services/article'
 import Comments from '@/components/Comments'
 import ArticleActions from '@/components/ArticleActions'
-import ArticleSidebar from '@/components/ArticleSidebar'
+import ArticleLeftSidebar from '@/components/ArticleLeftSidebar'
 import ArticleRightSidebar from '@/components/ArticleRightSidebar'
 import './styles/article.css'
 import { getStoredTokens } from '@/utils/auth'
@@ -132,33 +132,39 @@ const ArticlePage: React.FC = () => {
   return (
     <Layout className="min-h-screen bg-gray-50">
       {article && version && (
-        <ArticleSidebar 
+        <ArticleLeftSidebar 
           content={version.content} 
           onCollapsedChange={setSidebarCollapsed}
         />
       )}
 
-      {article && (
-        <ArticleRightSidebar
-          userName={article.user.name}
-          articleSlug={article.slug}
-          likes={article.likes}
-          views={article.views}
-          onCollapsedChange={setRightSidebarCollapsed}
-        />
-      )}
-
       <Content 
-        className="mx-auto py-8 transition-all duration-300 ease-in-out"
+        className="transition-all ease-in-out"
         style={{ 
-          marginLeft: sidebarCollapsed ? '64px' : '320px',
-          marginRight: rightSidebarCollapsed ? '64px' : '360px',
-          maxWidth: `calc(100% - ${
-            (sidebarCollapsed ? 128 : 680)
-          }px)`,
+          marginLeft: sidebarCollapsed ? '64px' : '344px',
+          marginRight: rightSidebarCollapsed ? '64px' : '344px',
+          padding: '32px 0',
+          transitionDuration: '400ms',
+          transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
+        <div 
+          className="bg-white rounded-lg shadow-sm p-8 mb-8 mx-auto transition-all ease-in-out" 
+          style={{ 
+            maxWidth: (() => {
+              if (!sidebarCollapsed && !rightSidebarCollapsed) {
+                return '960px'
+              }
+              if (sidebarCollapsed && rightSidebarCollapsed) {
+                return '1280px'
+              }
+              return '1120px'
+            })(),
+            width: '100%',
+            transitionDuration: '400ms',
+            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
           <Title 
             level={1} 
             className="mb-6 article-title"
@@ -251,6 +257,16 @@ const ArticlePage: React.FC = () => {
           </div>
         </div>
       </Content>
+
+      {article && (
+        <ArticleRightSidebar
+          userName={article.user.name}
+          articleSlug={article.slug}
+          likes={article.likes}
+          views={article.views}
+          onCollapsedChange={setRightSidebarCollapsed}
+        />
+      )}
     </Layout>
   )
 }
