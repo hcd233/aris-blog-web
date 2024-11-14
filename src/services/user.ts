@@ -1,15 +1,31 @@
 import request from '@/utils/request'
-import { API_ROUTES } from '@/constants'
-import { UserInfo } from '@/types/auth'
-import { ApiResponse } from '@/types/common'
+
+export interface SearchUser {
+  id: number
+  userName: string
+  avatar: string
+}
+
+export interface SearchUsersResponse {
+  users: SearchUser[]
+  queryInfo: {
+    filter: string[]
+    page: number
+    pageSize: number
+    query: string
+    total: number
+  }
+}
 
 class UserService {
-  static async getUserProfile(userName: string) {
-    return request.get<any, ApiResponse<UserInfo>>(`${API_ROUTES.USER.PROFILE}/${userName}`)
-  }
-
-  static async updateUserProfile(userName: string, data: Partial<UserInfo>) {
-    return request.put<any, ApiResponse<UserInfo>>(`${API_ROUTES.USER.PROFILE}/${userName}`, data)
+  static async searchUsers(query: string, page: number = 1, pageSize: number = 10) {
+    return request.get<SearchUsersResponse>('/v1/user', {
+      params: {
+        query,
+        page,
+        pageSize
+      }
+    })
   }
 }
 
