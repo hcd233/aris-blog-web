@@ -1,22 +1,24 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{vue,js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
-      container: {
-        center: true,
-        padding: '2rem',
+      fontFamily: {
+        sans: ['Inter var', 'sans-serif'],
       },
-      backdropBlur: {
-        xs: '2px',
+      colors: {
+        'background-color': '#FFF0F5',
+        'primary-color': '#FF69B4',
+        'secondary-color': '#FFB6C1',
+        'text-color': '#333333',
       },
     },
   },
-  plugins: [],
-  corePlugins: {
-    preflight: false,
-  }
-} 
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
+}
+

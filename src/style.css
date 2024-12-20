@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #FF69B4;
+  --secondary-color: #FFB6C1;
+  --background-color: #FFF0F5;
+  --text-color: #333333;
+}
+
+body {
+  @apply bg-background-color text-text-color;
+  font-family: 'Inter var', sans-serif;
+}
+
+.anime-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+.page-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
