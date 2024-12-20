@@ -62,6 +62,32 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async refreshAccessToken() {
+      if (!this.refreshToken) {
+        throw new Error('No refresh token available')
+      }
+
+      try {
+        const response = await axios.post(`${API_BASE_URL}/token/refresh`, {
+          refreshToken: this.refreshToken
+        })
+        
+        const { accessToken, refreshToken } = response.data.data
+        
+        this.accessToken = accessToken
+        this.refreshToken = refreshToken
+        
+        localStorage.setItem('accessToken', accessToken)
+        localStorage.setItem('refreshToken', refreshToken)
+        
+        return accessToken
+      } catch (error: any) {
+        this.error = error.message
+        this.logout()
+        throw error
+      }
+    },
+
     async fetchUserInfo() {
       if (!this.accessToken) return
 
@@ -73,7 +99,23 @@ export const useAuthStore = defineStore('auth', {
         })
         this.user = response.data.data.user
       } catch (error: any) {
-        this.error = error.message
+        if (error.response?.status === 401) {
+          try {
+            await this.refreshAccessToken()
+            // 重试获取用户信息
+            const response = await axios.get(`${API_BASE_URL}/user/me`, {
+              headers: {
+                Authorization: `Bearer ${this.accessToken}`
+              }
+            })
+            this.user = response.data.data.user
+          } catch (refreshError) {
+            this.error = refreshError.message
+            this.logout()
+          }
+        } else {
+          this.error = error.message
+        }
       }
     },
 
