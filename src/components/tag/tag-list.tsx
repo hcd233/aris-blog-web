@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
 import { Hash } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { UserAvatar } from "@/components/user/user-avatar"
 
 interface Tag {
   tagID: number
@@ -15,6 +16,7 @@ interface Tag {
   slug: string
   description: string
   likes: number
+  userID: number
 }
 
 export function TagList() {
@@ -90,9 +92,10 @@ export function TagList() {
                       </Badge>
                     </div>
                     {tag.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {tag.description}
-                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <UserAvatar userID={tag.userID} showName={false} />
+                        <p className="line-clamp-1">{tag.description}</p>
+                      </div>
                     )}
                   </div>
                 </div>

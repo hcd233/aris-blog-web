@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
 import { usePopover } from "@/hooks/use-popover"
 import { LoginPopover } from "@/components/auth/login-popover"
+import { UserAvatar } from "@/components/user/user-avatar"
 
 interface Article {
   articleID: number
@@ -26,6 +27,7 @@ interface Article {
   likes: number
   comments: number
   userID: number
+  authorName: string
 }
 
 export function ArticleList() {
@@ -130,7 +132,7 @@ export function ArticleList() {
           <div className="divide-y divide-border/20">
             {articles.map((article, index) => (
               <div key={article.articleID} className={index > 0 ? "pt-6 mt-6" : ""}>
-                <Link href={`/article/${article.slug}`}>
+                <Link href={`/article/${article.authorName}/${article.slug}`}>
                   <article className="space-y-4 group">
                     <div className="space-y-2">
                       <h3 className="text-2xl font-bold tracking-tight group-hover:text-primary transition-colors">
@@ -140,6 +142,7 @@ export function ArticleList() {
 
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-3">
+                        <UserAvatar userID={article.userID} className="text-muted-foreground" />
                         <time className="text-sm text-muted-foreground">
                           {format(new Date(article.createdAt), 'yyyy年MM月dd日', { locale: zhCN })}
                         </time>

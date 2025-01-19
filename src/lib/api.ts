@@ -1,5 +1,27 @@
 const API_BASE_URL = 'http://9.134.115.68:8170'
 
+interface UserInfo {
+  userID: number
+  name: string
+  email: string
+  avatar: string
+  lastLogin: string
+}
+
+interface ArticleDetail {
+  articleID: number
+  title: string
+  content: string
+  version: number
+  createdAt: string
+  updatedAt: string
+  views: number
+  likes: number
+  comments: number
+  userID: number
+  tags: string[]
+}
+
 export class ApiService {
   static async login(provider: 'github' | 'google' | 'qq' = 'github') {
     const response = await fetch(`${API_BASE_URL}/v1/oauth2/${provider}/login`, {
@@ -113,5 +135,84 @@ export class ApiService {
     
     const data = await response.json()
     return data.data
+  }
+
+  static async getUserInfo(userID: number) {
+    const token = localStorage.getItem('accessToken')
+    const response = await fetch(
+      `${API_BASE_URL}/v1/user/${userID}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token || '',
+        },
+      }
+    )
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('获取用户信息失败:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      })
+      throw new Error(errorData.error || '获取用户信息失败')
+    }
+    
+    const data = await response.json()
+    return data.data.user as UserInfo
+  }
+
+  static async getArticleBySlug(authorName: string, articleSlug: string) {
+    const token = localStorage.getItem('accessToken')
+    const response = await fetch(
+      `${API_BASE_URL}/v1/article/slug/${authorName}/${articleSlug}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token || '',
+        },
+      }
+    )
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('获取文章详情失败:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      })
+      throw new Error(errorData.error || '获取文章详情失败')
+    }
+    
+    const data = await response.json()
+    return data.data.article as ArticleDetail
+  }
+
+  static async getArticleContent(articleID: number, version?: number) {
+    const token = localStorage.getItem('accessToken')
+    const url = version 
+      ? `${API_BASE_URL}/v1/article/${articleID}/version/${version}`
+      : `${API_BASE_URL}/v1/article/${articleID}/latest`
+
+    const response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token || '',
+      },
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('获取文章内容失败:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      })
+      throw new Error(errorData.error || '获取文章内容失败')
+    }
+    
+    const data = await response.json()
+    return data.data.content
   }
 } 
