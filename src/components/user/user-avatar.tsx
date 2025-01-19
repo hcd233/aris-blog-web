@@ -14,13 +14,16 @@ interface UserAvatarProps {
   userID: number
   showName?: boolean
   className?: string
+  initialData?: UserInfo
 }
 
-export function UserAvatar({ userID, showName = true, className = "" }: UserAvatarProps) {
-  const [user, setUser] = useState<UserInfo | null>(null)
-  const [loading, setLoading] = useState(true)
+export function UserAvatar({ userID, showName = true, className = "", initialData }: UserAvatarProps) {
+  const [user, setUser] = useState<UserInfo | null>(initialData || null)
+  const [loading, setLoading] = useState(!initialData)
 
   useEffect(() => {
+    if (initialData) return
+
     const fetchUser = async () => {
       try {
         const data = await ApiService.getUserInfo(userID)
@@ -36,7 +39,7 @@ export function UserAvatar({ userID, showName = true, className = "" }: UserAvat
     }
 
     fetchUser()
-  }, [userID])
+  }, [userID, initialData])
 
   if (loading) {
     return (

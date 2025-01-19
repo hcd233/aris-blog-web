@@ -15,7 +15,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LoginDialog } from "@/components/auth/login-dialog"
 import { format } from "date-fns"
 import { zhCN } from "date-fns/locale"
 import { ThemeDialog } from "@/components/theme-dialog"
@@ -58,7 +57,7 @@ export function Header() {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <nav className="flex items-center space-x-6">
           <Link href="/" className="text-xl font-bold">
-            博客平台
+            Aris Blog
           </Link>
           <div className="flex items-center space-x-4">
             <Link 

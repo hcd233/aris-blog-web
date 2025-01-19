@@ -8,18 +8,32 @@ interface UserInfo {
   lastLogin: string
 }
 
-interface ArticleDetail {
+interface Article {
   articleID: number
   title: string
-  content: string
-  version: number
+  slug: string
+  tags: string[]
   createdAt: string
-  updatedAt: string
   views: number
   likes: number
   comments: number
   userID: number
-  tags: string[]
+  user?: {
+    name: string
+    avatar: string
+  }
+}
+
+interface ArticleDetail extends Article {
+  content: string
+  version: number
+  updatedAt: string
+}
+
+interface ArticleVersion {
+  version: number
+  content: string
+  createdAt: string
 }
 
 export class ApiService {
@@ -108,7 +122,28 @@ export class ApiService {
     }
     
     const data = await response.json()
-    return data.data
+    const articles = await Promise.all(
+      data.data.articles.map(async (article: Article) => {
+        if (!article.user) {
+          try {
+            const userData = await ApiService.getUserInfo(article.userID)
+            article.user = {
+              name: userData.name,
+              avatar: userData.avatar
+            }
+          } catch (error) {
+            console.error(`获取用户 ${article.userID} 信息失败:`, error)
+            article.user = {
+              name: 'anonymous',
+              avatar: ''
+            }
+          }
+        }
+        return article
+      })
+    )
+    
+    return { ...data.data, articles }
   }
 
   static async getTags(page: number = 1, pageSize: number = 20) {
@@ -172,28 +207,24 @@ export class ApiService {
           'Content-Type': 'application/json',
           'Authorization': token || '',
         },
+        credentials: 'include'
       }
     )
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.error('获取文章详情失败:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData
-      })
-      throw new Error(errorData.error || '获取文章详情失败')
+    const data = await response.json()
+    
+    if (!data.data || !data.data.article) {
+      throw new Error(data.error || '文章不存在')
     }
     
-    const data = await response.json()
     return data.data.article as ArticleDetail
   }
 
   static async getArticleContent(articleID: number, version?: number) {
     const token = localStorage.getItem('accessToken')
     const url = version 
-      ? `${API_BASE_URL}/v1/article/${articleID}/version/${version}`
-      : `${API_BASE_URL}/v1/article/${articleID}/latest`
+      ? `${API_BASE_URL}/v1/article/${articleID}/version/v${version}`
+      : `${API_BASE_URL}/v1/article/${articleID}/version/latest`
 
     const response = await fetch(url, {
       headers: {
@@ -213,6 +244,6 @@ export class ApiService {
     }
     
     const data = await response.json()
-    return data.data.content
+    return data.data.version as ArticleVersion
   }
 } 

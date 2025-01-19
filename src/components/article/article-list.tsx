@@ -27,7 +27,10 @@ interface Article {
   likes: number
   comments: number
   userID: number
-  authorName: string
+  user?: {
+    name: string
+    avatar: string
+  }
 }
 
 export function ArticleList() {
@@ -130,54 +133,66 @@ export function ArticleList() {
           </div>
         ) : (
           <div className="divide-y divide-border/20">
-            {articles.map((article, index) => (
-              <div key={article.articleID} className={index > 0 ? "pt-6 mt-6" : ""}>
-                <Link href={`/article/${article.authorName}/${article.slug}`}>
-                  <article className="space-y-4 group">
-                    <div className="space-y-2">
-                      <h3 className="text-2xl font-bold tracking-tight group-hover:text-primary transition-colors">
-                        {article.title}
-                      </h3>
-                    </div>
+            {articles.map((article, index) => {
+              const userName = article.user?.name || 'anonymous'
+              const userAvatar = article.user?.avatar || ''
 
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-3">
-                        <UserAvatar userID={article.userID} className="text-muted-foreground" />
-                        <time className="text-sm text-muted-foreground">
-                          {format(new Date(article.createdAt), 'yyyy年MM月dd日', { locale: zhCN })}
-                        </time>
-                        <div className="flex gap-2">
-                          {article.tags?.slice(0, 2).map((tag) => (
-                            <Badge key={tag} variant="secondary" className="rounded-full px-3">
-                              {tag}
-                            </Badge>
-                          ))}
-                          {article.tags?.length > 2 && (
-                            <Badge variant="secondary" className="rounded-full px-3">
-                              +{article.tags.length - 2}
-                            </Badge>
-                          )}
+              return (
+                <div key={article.articleID} className={index > 0 ? "pt-6 mt-6" : ""}>
+                  <Link href={`/article/${userName}/${article.slug}`}>
+                    <article className="space-y-4 group">
+                      <div className="space-y-2">
+                        <h3 className="text-2xl font-bold tracking-tight group-hover:text-primary transition-colors">
+                          {article.title}
+                        </h3>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                          <UserAvatar 
+                            userID={article.userID} 
+                            className="text-muted-foreground"
+                            initialData={article.user ? {
+                              name: article.user.name,
+                              avatar: article.user.avatar
+                            } : undefined}
+                          />
+                          <time className="text-sm text-muted-foreground">
+                            {format(new Date(article.createdAt), 'yyyy年MM月dd日', { locale: zhCN })}
+                          </time>
+                          <div className="flex gap-2">
+                            {article.tags?.slice(0, 2).map((tag) => (
+                              <Badge key={tag} variant="secondary" className="rounded-full px-3">
+                                {tag}
+                              </Badge>
+                            ))}
+                            {article.tags?.length > 2 && (
+                              <Badge variant="secondary" className="rounded-full px-3">
+                                +{article.tags.length - 2}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Eye className="h-4 w-4" />
+                            <span>{article.views}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <ThumbsUp className="h-4 w-4" />
+                            <span>{article.likes}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="h-4 w-4" />
+                            <span>{article.comments}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-4 w-4" />
-                          <span>{article.views}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <ThumbsUp className="h-4 w-4" />
-                          <span>{article.likes}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MessageSquare className="h-4 w-4" />
-                          <span>{article.comments}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                </Link>
-              </div>
-            ))}
+                    </article>
+                  </Link>
+                </div>
+              )
+            })}
           </div>
         )}
       </Card>

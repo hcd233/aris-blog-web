@@ -1,3 +1,5 @@
+@import 'highlight.js/styles/github-dark.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -69,4 +71,159 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* 自定义标题锚点样式 */
+.prose h1[id],
+.prose h2[id],
+.prose h3[id],
+.prose h4[id],
+.prose h5[id],
+.prose h6[id] {
+  scroll-margin-top: 100px;
+}
+
+/* 代码块样式 */
+.prose pre {
+  background-color: #1e1e1e !important;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1.5rem 0;
+}
+
+.prose code {
+  background-color: rgba(0, 0, 0, 0.1);
+  padding: 0.2em 0.4em;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.dark .prose code {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.prose pre code {
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* 文章内容样式 */
+.prose {
+  max-width: none !important;
+  width: 100%;
+  font-size: 1.1em;
+  line-height: 1.75;
+}
+
+.prose p {
+  margin-bottom: 1.5em;
+}
+
+.prose pre {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  font-size: 0.9em;
+  padding: 1.5em;
+}
+
+.prose img {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 100%;
+  height: auto;
+  margin: 2em 0;
+}
+
+/* 调整暗色模式下的代码块样式 */
+.dark .prose pre {
+  background-color: hsl(var(--muted)) !important;
+}
+
+/* 调整链接样式 */
+.prose a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+}
+
+.prose a:hover {
+  text-decoration: underline;
+}
+
+/* 调整标题样式 */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+  color: hsl(var(--foreground));
+  font-weight: 600;
+  scroll-margin-top: 100px;
+  font-size: 2.5em;
+}
+
+.prose h2 {
+  font-size: 2em;
+}
+
+.prose h3 {
+  font-size: 1.75em;
+}
+
+.prose h4 {
+  font-size: 1.5em;
+}
+
+.prose h5 {
+  font-size: 1.25em;
+}
+
+.prose h6 {
+  font-size: 1.1em;
+}
+
+/* 调整引用块样式 */
+.prose blockquote {
+  border-left-color: hsl(var(--primary));
+  background-color: hsl(var(--muted));
+  margin: 1.5em 0;
+  padding: 1em 1.5em;
+  border-radius: 0.5rem;
+}
+
+.dark .prose blockquote {
+  background-color: hsl(var(--muted));
+}
+
+/* 调整表格样式 */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.prose table th,
+.prose table td {
+  border-color: hsl(var(--border));
+  padding: 0.75em 1em;
+}
+
+.prose table th {
+  background-color: hsl(var(--muted));
+}
+
+.dark .prose table th {
+  background-color: hsl(var(--muted));
+}
+
+/* 调整列表样式 */
+.prose ul,
+.prose ol {
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
 }
