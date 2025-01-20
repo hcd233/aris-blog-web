@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://9.134.115.68:8170'
+const API_BASE_URL = 'http://localhost:3000/api'
 
 interface UserInfo {
   userID: number
@@ -50,8 +50,8 @@ export class ApiService {
     
     const data = await response.json()
     const redirectURL = data.data.redirectURL.replace(
-      'http://9.134.115.68:3000/auth/callback',
-      `http://9.134.115.68:3000/auth/${provider}/callback`
+      'http://localhost:3000/auth/callback',
+      `http://localhost:3000/auth/${provider}/callback`
     )
     return { redirectURL }
   }

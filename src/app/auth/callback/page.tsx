@@ -32,6 +32,9 @@ export default function CallbackPage() {
         // 存储用户信息
         localStorage.setItem("user", JSON.stringify(user))
 
+        // 触发自定义事件来更新用户状态
+        window.dispatchEvent(new CustomEvent('userLogin', { detail: user }))
+
         toast({
           title: "登录成功",
           description: `欢迎回来，${user.name}！`,
@@ -57,7 +60,7 @@ export default function CallbackPage() {
     <div className="flex items-center justify-center min-h-[50vh]">
       <div className="text-center">
         <h2 className="text-2xl font-semibold mb-4">登录中...</h2>
-        <p className="text-muted-foreground">请稍候，正在处理您的登录请求</p>
+        <p className="text-muted-foreground">稍等一下，马上就好～</p>
       </div>
     </div>
   )
