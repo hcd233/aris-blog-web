@@ -12,6 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import TagList from '@/components/TagList';
+import AppIcon from '@/components/AppIcon';
+import { appConfig } from '@/config/app';
 
 export default function HomePage() {
   const router = useRouter();
@@ -95,11 +97,9 @@ export default function HomePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">A</span>
-                </div>
+                <AppIcon size="md" />
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  Aris Blog
+                  {appConfig.name}
                 </h1>
               </div>
               <Badge variant="secondary" className="hidden sm:inline-flex">

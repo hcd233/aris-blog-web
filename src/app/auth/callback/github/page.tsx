@@ -65,8 +65,8 @@ function GitHubCallback() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
       <Icons.spinner className="h-12 w-12 animate-spin" />
-      <p className="ml-4 mt-4 text-lg">Processing GitHub login...</p>
-      <p className="text-sm text-muted-foreground">Please wait while we verify your authentication.</p>
+      <p className="ml-4 mt-4 text-lg">处理Github登录中...</p>
+      <p className="text-sm text-muted-foreground">请稍等，我们正在验证您的身份。</p>
     </div>
   );
 }

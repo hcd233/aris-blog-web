@@ -65,7 +65,7 @@ export default function LoginPage() {
         </Button>
         
         <p className="px-8 text-center text-sm text-muted-foreground">
-          点击继续，即表示您同意我们的服务条款和隐私政策。
+          点击登录，即表示您同意我们的服务条款和隐私政策。
         </p>
       </div>
     </div>
