@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { appConfig } from '@/config/app';
+import { useState } from "react";
+import { appConfig } from "@/config/app";
 
 interface AppIconProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
 const sizeClasses = {
-  sm: 'w-6 h-6',
-  md: 'w-8 h-8', 
-  lg: 'w-12 h-12'
+  sm: "w-6 h-6",
+  md: "w-8 h-8",
+  lg: "w-12 h-12",
 };
 
 const textSizeClasses = {
-  sm: 'text-xs',
-  md: 'text-sm',
-  lg: 'text-lg'
+  sm: "text-xs",
+  md: "text-sm",
+  lg: "text-lg",
 };
 
-export default function AppIcon({ size = 'md', className = '' }: AppIconProps) {
+export default function AppIcon({ size = "md", className = "" }: AppIconProps) {
   const [imageError, setImageError] = useState(false);
   const sizeClass = sizeClasses[size];
   const textSizeClass = textSizeClasses[size];
@@ -39,7 +39,7 @@ export default function AppIcon({ size = 'md', className = '' }: AppIconProps) {
 
   // 否则显示默认的字母图标
   return (
-    <div 
+    <div
       className={`${sizeClass} bg-gradient-to-r ${appConfig.defaultIcon.gradient} rounded-lg flex items-center justify-center ${className}`}
     >
       <span className={`text-white font-bold ${textSizeClass}`}>
@@ -47,4 +47,4 @@ export default function AppIcon({ size = 'md', className = '' }: AppIconProps) {
       </span>
     </div>
   );
-} 
+}

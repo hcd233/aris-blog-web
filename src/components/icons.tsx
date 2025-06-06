@@ -1,7 +1,7 @@
 import {
   type LucideIcon,
   Github,
-  Loader2,      // Spinner icon from lucide
+  Loader2, // Spinner icon from lucide
   BookOpenText, // Example Logo icon from lucide
   AlertTriangle, // Example for error icon
   AlertCircle,
@@ -9,6 +9,8 @@ import {
   Mail,
   FileText,
   Folder,
+  FolderOpen,
+  FolderPlus,
   Tag,
   Plus,
   ExternalLink,
@@ -19,8 +21,13 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  ChevronDown
-} from 'lucide-react';
+  ChevronDown,
+  ChevronUp,
+  Edit,
+  Trash2,
+  MoreHorizontal,
+  File,
+} from "lucide-react";
 
 export type Icon = LucideIcon;
 
@@ -34,6 +41,9 @@ export const Icons = {
   mail: Mail,
   fileText: FileText,
   folder: Folder,
+  folderOpen: FolderOpen,
+  folderPlus: FolderPlus,
+  file: File,
   tag: Tag,
   plus: Plus,
   externalLink: ExternalLink,
@@ -44,5 +54,9 @@ export const Icons = {
   x: X,
   chevronLeft: ChevronLeft,
   chevronRight: ChevronRight,
-  chevronDown: ChevronDown
-}; 
+  chevronDown: ChevronDown,
+  chevronUp: ChevronUp,
+  edit: Edit,
+  trash: Trash2,
+  moreHorizontal: MoreHorizontal,
+};
