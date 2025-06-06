@@ -279,7 +279,7 @@ export default function HomePage() {
                 </div>
               </CardHeader>
               <Separator data-oid="gnza16s" />
-              <CardContent className="pt-6" data-oid="9fiwbl8">
+              <CardContent data-oid="9fiwbl8">
                 <div className="flex items-center space-x-6" data-oid="qrcfsl4">
                   <Avatar
                     className="w-20 h-20 border-4 border-blue-200 dark:border-blue-700"
@@ -417,33 +417,9 @@ export default function HomePage() {
               data-oid="i.5t7s6"
             >
               {/* Categories Section */}
-              <Card
-                className="lg:col-span-1 hover:shadow-lg transition-shadow duration-200"
-                data-oid="3kq8g0s"
-              >
-                <CardHeader className="pb-3" data-oid="h09mlh5">
-                  <div
-                    className="flex items-center space-x-2"
-                    data-oid="hhoeue3"
-                  >
-                    <Icons.folder
-                      className="w-5 h-5 text-purple-600"
-                      data-oid="wm_53mc"
-                    />
-
-                    <CardTitle className="text-lg" data-oid="zli16ua">
-                      Categories
-                    </CardTitle>
-                  </div>
-                  <CardDescription data-oid="ctwezeq">
-                    Organize your content
-                  </CardDescription>
-                </CardHeader>
-                <Separator data-oid="qqloy:t" />
-                <CardContent className="pt-6" data-oid="qi49fu5">
-                  <CategoryTree />
-                </CardContent>
-              </Card>
+              <div className="lg:col-span-1">
+                <CategoryTree />
+              </div>
 
               {/* Tags Section */}
               <Card
@@ -483,7 +459,7 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                 <Separator data-oid="spb6_iv" />
-                <CardContent className="pt-6" data-oid="j.j82x7">
+                <CardContent data-oid="j.j82x7">
                   <TagList
                     onTotalChange={handleTagsTotalChange}
                     data-oid="yii2_cd"
@@ -515,7 +491,7 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                 <Separator data-oid="6jw0vcd" />
-                <CardContent className="pt-6" data-oid="7jcb:d8">
+                <CardContent data-oid="7jcb:d8">
                   <div className="space-y-3" data-oid="gxg:z2c">
                     <Button
                       className="w-full justify-start"
@@ -587,7 +563,7 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                 <Separator data-oid="-ridj6s" />
-                <CardContent className="pt-6" data-oid="rs553l5">
+                <CardContent data-oid="rs553l5">
                   <div className="text-center py-12" data-oid="8qu9i3b">
                     <Icons.fileText
                       className="w-16 h-16 text-gray-400 mx-auto mb-4"

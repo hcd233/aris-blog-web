@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { tagService } from "@/services/tag.service";
 import type { Tag, CreateTagBody } from "@/types/api/tag.types";
 import { toast } from "sonner";
@@ -345,50 +346,15 @@ export default function TagList({ onTotalChange }: TagListProps) {
       </Dialog>
 
       {/* 删除确认对话框 */}
-      <Dialog
+      <DeleteConfirmDialog
         open={deleteConfirm !== null}
         onOpenChange={() => setDeleteConfirm(null)}
-      >
-        <DialogContent className="sm:max-w-[400px] border-0 shadow-xl">
-          <div className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 p-6 rounded-t-lg border-b border-red-100 dark:border-red-800">
-            <DialogHeader>
-              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Icons.alertCircle className="w-6 h-6 text-red-500" />
-              </div>
-              <DialogTitle className="text-center text-xl font-bold text-red-600 dark:text-red-400">
-                确认删除标签
-              </DialogTitle>
-              <DialogDescription className="text-center text-red-600 dark:text-red-400">
-                此操作不可撤销，删除后标签将永久消失
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-          <DialogFooter className="px-6 pb-6 space-x-3 bg-gray-50 dark:bg-gray-800 rounded-b-lg pt-6">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteConfirm(null)}
-              disabled={deleting}
-              className="border-2 border-gray-300 hover:bg-gray-100 transition-colors"
-            >
-              取消
-            </Button>
-            <Button
-              onClick={() => deleteConfirm && handleDeleteTag(deleteConfirm)}
-              disabled={deleting}
-              className="bg-red-500 hover:bg-red-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-            >
-              {deleting ? (
-                <>
-                  <Icons.spinner className="w-4 h-4 mr-2 animate-spin" />
-                  删除中...
-                </>
-              ) : (
-                "确认删除"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        title="确认删除标签"
+        itemName={deleteConfirm ? tags.find(tag => tag.tagID === deleteConfirm)?.name : undefined}
+        onConfirm={() => deleteConfirm && handleDeleteTag(deleteConfirm)}
+        loading={deleting}
+        variant="orange"
+      />
     </div>
   );
 }
