@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client';
+import oAuthService from './oauth.service';
 import type {
   GetCurrentUserResponse,
   LoginRedirectResponse,
@@ -9,29 +10,45 @@ import type {
   UpdateUserInfoResponse,
   ProviderCallbackBody, // For generic POST callback
   RefreshTokenBody,
+  OAuthProvider,
 } from '@/types/api/auth.types';
 
 const authService = {
   /**
-   * Initiates GitHub OAuth2 login. 
-   * Returns a URL to redirect the user to for GitHub authentication.
+   * 发起OAuth登录（通用方法）
+   * @param provider OAuth提供商
    */
-  redirectToGitHubOAuth: async (): Promise<LoginRedirectResponse> => {
-    // GET /v1/oauth2/github/login
-    // Response interceptor will extract { redirectURL: string } from response.data.data
-    return apiClient.get<LoginRedirectResponse>('/v1/oauth2/github/login');
+  initiateOAuth: async (provider: OAuthProvider): Promise<LoginRedirectResponse> => {
+    return oAuthService.initiateLogin(provider);
   },
 
   /**
-   * Handles the callback from GitHub OAuth2.
-   * Exchanges the authorization code and state for an access token and refresh token.
-   * @param code - The authorization code returned by GitHub.
-   * @param state - The state parameter returned by GitHub for CSRF protection.
+   * 处理OAuth回调（通用方法）
+   * @param provider OAuth提供商
+   * @param code 授权码
+   * @param state 状态参数
+   */
+  handleOAuthCallback: async (
+    provider: OAuthProvider,
+    code: string,
+    state: string
+  ): Promise<AuthTokensResponse> => {
+    return oAuthService.handleCallback(provider, code, state);
+  },
+
+  // 向后兼容的GitHub方法
+  /**
+   * @deprecated 使用 initiateOAuth('github') 替代
+   */
+  redirectToGitHubOAuth: async (): Promise<LoginRedirectResponse> => {
+    return authService.initiateOAuth('github');
+  },
+
+  /**
+   * @deprecated 使用 handleOAuthCallback('github', code, state) 替代
    */
   handleGitHubOAuthCallback: async (code: string, state: string): Promise<AuthTokensResponse> => {
-    // GET /v1/oauth2/github/callback?code={code}&state={state}
-    // Response interceptor will extract { accessToken, refreshToken } from response.data.data
-    return apiClient.get<AuthTokensResponse>(`/v1/oauth2/github/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`);
+    return authService.handleOAuthCallback('github', code, state);
   },
   
   /**
@@ -47,8 +64,25 @@ const authService = {
   },
 
   logout: async (): Promise<LogoutResponse> => {
-    await apiClient.post('/v1/auth/logout');
-    return { message: 'Logout successful' }; 
+    try {
+      // 1. 调用后端API，使其有机会清理服务端会话
+      await apiClient.post('/v1/auth/logout');
+    } catch (error) {
+      // 即便后端调用失败，也应继续清理客户端，因为用户的意图是登出
+      console.error('Logout API call failed, proceeding with client-side cleanup.', error);
+    } finally {
+      // 2. 清理客户端存储
+      // 确保只在浏览器环境中执行
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        
+        // 3. 重定向到登录页
+        // 使用 replace 防止用户通过后退按钮回到需要登录的页面
+        window.location.replace('/login');
+      }
+    }
+    return { message: 'Logout successful' };
   },
 
   getCurrentUser: async (): Promise<CurrentUser> => {

@@ -3,35 +3,43 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import authService from "@/services/auth.service";
+import oAuthService from "@/services/oauth.service";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
+import type { OAuthProvider } from "@/types/api/auth.types";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loadingProvider, setLoadingProvider] = useState<OAuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleGitHubLogin = async () => {
-    setIsLoading(true);
+  const handleOAuthLogin = async (provider: OAuthProvider) => {
+    setLoadingProvider(provider);
     setError(null);
+    
+    const providerConfig = oAuthService.getProviderConfig(provider);
+    
     try {
-      const response = await authService.redirectToGitHubOAuth();
+      const response = await authService.initiateOAuth(provider);
       if (response.redirectURL) {
         window.location.href = response.redirectURL;
       } else {
-        setError("无法获取GitHub登录链接，请稍后再试。");
-        setIsLoading(false);
+        setError(`无法获取${providerConfig.displayName}登录链接，请稍后再试。`);
+        setLoadingProvider(null);
       }
     } catch (err) {
-      console.error("GitHub login initiation failed:", err);
+      console.error(`${provider} login initiation failed:`, err);
       setError(
         err instanceof Error
           ? err.message
-          : "GitHub登录启动失败，请检查网络或联系管理员。",
+          : `${providerConfig.displayName}登录启动失败，请检查网络或联系管理员。`,
       );
-      setIsLoading(false);
+      setLoadingProvider(null);
     }
   };
+
+  // 向后兼容的GitHub登录方法
+  const handleGitHubLogin = () => handleOAuthLogin('github');
 
   return (
     <div className="container mx-auto flex h-screen w-screen flex-col items-center justify-center">
@@ -54,20 +62,32 @@ export default function LoginPage() {
           </div>
         )}
 
-        <Button
-          variant="outline"
-          type="button"
-          onClick={handleGitHubLogin}
-          disabled={isLoading}
-          className="w-full"
-        >
-          {isLoading ? (
-            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <Icons.gitHub className="mr-2 h-4 w-4" />
-          )}
-          使用 GitHub 登录
-        </Button>
+        {/* OAuth登录按钮 */}
+        <div className="space-y-3">
+          {oAuthService.getSupportedProviders().map((provider) => {
+            const config = oAuthService.getProviderConfig(provider);
+            const isLoading = loadingProvider === provider;
+            const IconComponent = Icons[config.icon as keyof typeof Icons];
+            
+            return (
+              <Button
+                key={provider}
+                variant="outline"
+                type="button"
+                onClick={() => handleOAuthLogin(provider)}
+                disabled={loadingProvider !== null}
+                className="w-full"
+              >
+                {isLoading ? (
+                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <IconComponent className="mr-2 h-4 w-4" />
+                )}
+                使用 {config.displayName} 登录
+              </Button>
+            );
+          })}
+        </div>
 
         <p className="px-8 text-center text-sm text-muted-foreground">
           点击登录，即表示您同意我们的服务条款和隐私政策。

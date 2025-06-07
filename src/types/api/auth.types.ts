@@ -1,4 +1,19 @@
 /**
+ * OAuth提供商类型
+ */
+export type OAuthProvider = 'github' | 'google';
+
+/**
+ * OAuth提供商配置
+ */
+export interface OAuthProviderConfig {
+  name: string;
+  displayName: string;
+  icon: string;
+  color: string;
+}
+
+/**
  * GET /v1/user/current - Based on swagger protocol.GetCurUserInfoResponse
  */
 export interface GetCurrentUserResponse {
@@ -6,18 +21,16 @@ export interface GetCurrentUserResponse {
 }
 
 /**
- * GET /v1/oauth2/github/login
- * POST /v1/auth/login/{type} (for username/password, if used)
- * Both return a redirect URL.
+ * GET /v1/oauth2/{provider}/login
+ * 获取OAuth登录重定向URL
  */
 export interface LoginRedirectResponse {
   redirectURL: string;
 }
 
 /**
- * GET /v1/oauth2/github/callback
- * POST /v1/auth/callback/{provider}
- * Both return access and refresh tokens.
+ * GET /v1/oauth2/{provider}/callback
+ * OAuth回调返回令牌
  */
 export interface AuthTokensResponse {
   accessToken: string;
