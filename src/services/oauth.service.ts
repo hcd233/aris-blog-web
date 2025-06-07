@@ -57,9 +57,11 @@ const oAuthService = {
     state: string
   ): Promise<AuthTokensResponse> => {
     // GET /v1/oauth2/{provider}/callback?code={code}&state={state}
+    // 注意：不要对code和state进行额外编码，因为它们从URL参数中获取时可能已经被解码
+    // 使用URLSearchParams会自动处理必要的编码
     const params = new URLSearchParams({
-      code: encodeURIComponent(code),
-      state: encodeURIComponent(state),
+      code: code,
+      state: state,
     });
     
     return apiClient.get<AuthTokensResponse>(

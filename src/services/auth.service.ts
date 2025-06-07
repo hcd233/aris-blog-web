@@ -64,23 +64,15 @@ const authService = {
   },
 
   logout: async (): Promise<LogoutResponse> => {
-    try {
-      // 1. 调用后端API，使其有机会清理服务端会话
-      await apiClient.post('/v1/auth/logout');
-    } catch (error) {
-      // 即便后端调用失败，也应继续清理客户端，因为用户的意图是登出
-      console.error('Logout API call failed, proceeding with client-side cleanup.', error);
-    } finally {
-      // 2. 清理客户端存储
-      // 确保只在浏览器环境中执行
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        
-        // 3. 重定向到登录页
-        // 使用 replace 防止用户通过后退按钮回到需要登录的页面
-        window.location.replace('/login');
-      }
+    // 2. 清理客户端存储
+    // 确保只在浏览器环境中执行
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      
+      // 3. 重定向到登录页
+      // 使用 replace 防止用户通过后退按钮回到需要登录的页面
+      window.location.replace('/login');
     }
     return { message: 'Logout successful' };
   },
