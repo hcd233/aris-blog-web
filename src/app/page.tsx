@@ -161,6 +161,18 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center space-x-4" data-oid="_kb7a95">
+              {/* Navigation Links */}
+              <nav className="hidden md:flex items-center space-x-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push('/articles')}
+                >
+                  <Icons.fileText className="w-4 h-4 mr-2" />
+                  文章管理
+                </Button>
+              </nav>
+
               {currentUser && (
                 <div className="flex items-center space-x-3" data-oid="1w0pbuq">
                   <div
