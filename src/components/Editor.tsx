@@ -30,6 +30,7 @@ export default function Editor({ value = '', onChange, placeholder = '开始写�
     ],
     content: value || '',
     editable: !disabled,
+    immediatelyRender: false,
     onUpdate: ({ editor }) => {
       onChange?.(editor.getHTML())
     },
