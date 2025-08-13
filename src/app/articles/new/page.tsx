@@ -1,10 +1,8 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+// zod not used in redesigned composer
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,43 +12,54 @@ import Editor from '@/components/Editor'
 import { articleService } from '@/services/article.service'
 import type { CreateArticleBody } from '@/types/api/article.types'
 import { toast } from 'sonner'
+import CategorySelect from '@/components/CategorySelect'
+import TagMultiSelect from '@/components/TagMultiSelect'
+import { generateSlugFromTitle } from '@/lib/slug'
 
-const schema = z.object({
-  title: z.string().min(1, '标题必填'),
-  slug: z.string().min(1, 'Slug 必填'),
-  categoryID: z.coerce.number().int().min(1, '分类必填'),
-  tags: z.string().optional(), // 逗号分隔
-})
-
-type FormValues = z.infer<typeof schema>
+const contentMinChars = 100
 
 export default function NewArticlePage() {
   const router = useRouter()
+  const [title, setTitle] = useState('')
+  const [slug, setSlug] = useState('')
+  const [categoryID, setCategoryID] = useState<number | null>(null)
+  const [tagSlugs, setTagSlugs] = useState<string[]>([])
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-  })
+  // Auto generate slug on title change
+  useEffect(() => {
+    if (!title) { setSlug(''); return }
+    setSlug(generateSlugFromTitle(title))
+  }, [title])
 
-  const onSubmit = async (values: FormValues) => {
-    if (!content || content.replace(/<[^>]*>/g, '').trim().length < 100) {
-      toast.error('内容至少100个字符')
+  const canSubmit = useMemo(() => {
+    const plain = content.replace(/<[^>]*>/g, '').trim()
+    return title.trim().length > 0 && !!categoryID && plain.length >= contentMinChars
+  }, [title, categoryID, content])
+
+  const onSubmit = async () => {
+    const plain = content.replace(/<[^>]*>/g, '').trim()
+    if (plain.length < contentMinChars) {
+      toast.error(`内容至少${contentMinChars}个字符`)
+      return
+    }
+    if (!categoryID) {
+      toast.error('请选择分类')
       return
     }
 
     try {
       setSubmitting(true)
       const body: CreateArticleBody = {
-        title: values.title.trim(),
-        slug: values.slug.trim(),
-        categoryID: values.categoryID,
-        tags: values.tags ? values.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+        title: title.trim(),
+        slug: slug || generateSlugFromTitle(title),
+        categoryID: categoryID,
+        tags: tagSlugs,
       }
 
       const createRes = await articleService.createArticle(body)
       const articleID = createRes.article.articleID
-
       await articleService.createArticleVersion(articleID, { content })
       toast.success('文章创建成功')
       router.push(`/articles/${articleID}`)
@@ -64,7 +73,7 @@ export default function NewArticlePage() {
 
   return (
     <div className="container mx-auto px-6 py-6">
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Icons.plus className="w-5 h-5 text-blue-600" />
@@ -73,41 +82,33 @@ export default function NewArticlePage() {
         </CardHeader>
         <Separator />
         <CardContent>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm font-semibold">标题</label>
-                <Input placeholder="文章标题" {...register('title')} />
-                {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>}
-              </div>
-              <div>
-                <label className="text-sm font-semibold">Slug</label>
-                <Input placeholder="文章slug" {...register('slug')} />
-                {errors.slug && <p className="text-xs text-red-500 mt-1">{errors.slug.message}</p>}
-              </div>
-              <div>
-                <label className="text-sm font-semibold">分类ID</label>
-                <Input type="number" placeholder="分类ID" {...register('categoryID')} />
-                {errors.categoryID && <p className="text-xs text-red-500 mt-1">{errors.categoryID.message}</p>}
-              </div>
-              <div className="md:col-span-3">
-                <label className="text-sm font-semibold">标签（用逗号分隔）</label>
-                <Input placeholder="如：react,frontend,typescript" {...register('tags')} />
+          <div className="space-y-4">
+            {/* Title row */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <Input
+                placeholder="输入标题..."
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                className="text-lg h-11"
+              />
+              <div className="flex items-center gap-2">
+                <CategorySelect value={categoryID ?? undefined} onChange={setCategoryID} />
+                <TagMultiSelect value={tagSlugs} onChange={setTagSlugs} />
               </div>
             </div>
+            {/* hint row */}
+            <div className="text-xs text-gray-500">Slug 将自动生成：{slug || '（待生成）'}</div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold">内容</label>
-              <Editor value={content} onChange={setContent} placeholder="开始写作..." />
-            </div>
+            {/* Editor */}
+            <Editor value={content} onChange={setContent} placeholder="开始写作..." />
 
             <div className="flex items-center gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => router.back()}>取消</Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? (<><Icons.spinner className="w-4 h-4 mr-2 animate-spin" /> 保存中...</>) : '创建'}
+              <Button type="button" onClick={onSubmit} disabled={!canSubmit || submitting}>
+                {submitting ? (<><Icons.spinner className="w-4 h-4 mr-2 animate-spin" /> 保存中...</>) : '发布'}
               </Button>
             </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>

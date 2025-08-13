@@ -29,6 +29,7 @@ import {
   File,
   Sun,
   Moon,
+  Check, 
   // Editor related
   Bold,
   Italic,
@@ -96,6 +97,7 @@ export const Icons = {
   moreHorizontal: MoreHorizontal,
   sun: Sun,
   moon: Moon,
+  check: Check, 
   // Editor related
   bold: Bold,
   italic: Italic,

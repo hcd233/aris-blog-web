@@ -1,10 +1,7 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,26 +11,22 @@ import Editor from '@/components/Editor'
 import { articleService } from '@/services/article.service'
 import type { Article } from '@/types/api/article.types'
 import { toast } from 'sonner'
-
-const schema = z.object({
-  title: z.string().min(1, '标题必填'),
-  slug: z.string().min(1, 'Slug 必填'),
-  categoryID: z.coerce.number().int().min(1, '分类必填'),
-  tags: z.string().optional(),
-})
-
-type FormValues = z.infer<typeof schema>
+import CategorySelect from '@/components/CategorySelect'
+import TagMultiSelect from '@/components/TagMultiSelect'
+import { generateSlugFromTitle } from '@/lib/slug'
 
 export default function EditArticlePage() {
   const params = useParams<{ articleID: string }>()
   const router = useRouter()
   const [article, setArticle] = useState<Article | null>(null)
+  const [title, setTitle] = useState('')
+  const [slug, setSlug] = useState('')
+  const [categoryID, setCategoryID] = useState<number | null>(null)
+  const [tagSlugs, setTagSlugs] = useState<string[]>([])
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [publishing, setPublishing] = useState(false)
-
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
   useEffect(() => {
     const load = async () => {
@@ -42,11 +35,10 @@ export default function EditArticlePage() {
         const id = Number(params.articleID)
         const a = await articleService.getArticle(id)
         setArticle(a.article)
-        setValue('title', a.article.title)
-        setValue('slug', a.article.slug)
-        // 后端若返回 categoryID 可在此设置；未在规范中定义，使用1占位
-        setValue('categoryID', (a.article as unknown as { categoryID?: number }).categoryID ?? 1)
-        setValue('tags', a.article.tags?.join(',') || '')
+        setTitle(a.article.title)
+        setSlug(a.article.slug)
+        setCategoryID((a.article as unknown as { categoryID?: number }).categoryID ?? null)
+        setTagSlugs(a.article.tags || [])
 
         const v = await articleService.getLatestVersion(id)
         setContent(v.version.content)
@@ -58,11 +50,23 @@ export default function EditArticlePage() {
       }
     }
     load()
-  }, [params, setValue])
+  }, [params])
 
-  const onSave = async (values: FormValues) => {
+  useEffect(() => {
+    if (!title || !article) return
+    const wasAuto = article.slug === slug
+    if (wasAuto) setSlug(generateSlugFromTitle(title))
+  }, [title, article, slug])
+
+  const canSave = useMemo(() => {
+    const plain = content.replace(/<[^>]*>/g, '').trim()
+    return !!article && title.trim().length > 0 && !!categoryID && plain.length >= 100
+  }, [article, title, categoryID, content])
+
+  const onSave = async () => {
     if (!article) return
-    if (!content || content.replace(/<[^>]*>/g, '').trim().length < 100) {
+    const plain = content.replace(/<[^>]*>/g, '').trim()
+    if (plain.length < 100) {
       toast.error('内容至少100个字符')
       return
     }
@@ -70,10 +74,10 @@ export default function EditArticlePage() {
     try {
       setSaving(true)
       await articleService.updateArticle(article.articleID, {
-        title: values.title.trim(),
-        slug: values.slug.trim(),
-        categoryID: values.categoryID,
-        tags: values.tags ? values.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
+        title: title.trim(),
+        slug: slug || generateSlugFromTitle(title),
+        categoryID: categoryID ?? undefined,
+        tags: tagSlugs,
       })
       await articleService.createArticleVersion(article.articleID, { content })
       toast.success('已保存新版本')
@@ -129,41 +133,32 @@ export default function EditArticlePage() {
         </CardHeader>
         <Separator />
         <CardContent>
-          <form onSubmit={handleSubmit(onSave)} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="text-sm font-semibold">标题</label>
-                <Input placeholder="文章标题" {...register('title')} />
-                {errors.title && <p className="text-xs text-red-500 mt-1">{errors.title.message}</p>}
-              </div>
-              <div>
-                <label className="text-sm font-semibold">Slug</label>
-                <Input placeholder="文章slug" {...register('slug')} />
-                {errors.slug && <p className="text-xs text-red-500 mt-1">{errors.slug.message}</p>}
-              </div>
-              <div>
-                <label className="text-sm font-semibold">分类ID</label>
-                <Input type="number" placeholder="分类ID" {...register('categoryID')} />
-                {errors.categoryID && <p className="text-xs text-red-500 mt-1">{errors.categoryID.message}</p>}
-              </div>
-              <div className="md:col-span-3">
-                <label className="text-sm font-semibold">标签（用逗号分隔）</label>
-                <Input placeholder="如：react,frontend,typescript" {...register('tags')} />
+          <div className="space-y-4">
+            {/* Title and selectors */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <Input
+                placeholder="输入标题..."
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                className="text-lg h-11"
+              />
+              <div className="flex items-center gap-2">
+                <CategorySelect value={categoryID ?? undefined} onChange={setCategoryID} />
+                <TagMultiSelect value={tagSlugs} onChange={setTagSlugs} />
               </div>
             </div>
+            <div className="text-xs text-gray-500">Slug：{slug}</div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-semibold">内容</label>
-              <Editor value={content} onChange={setContent} />
-            </div>
+            {/* Editor */}
+            <Editor value={content} onChange={setContent} />
 
             <div className="flex items-center gap-2 justify-end">
               <Button type="button" variant="outline" onClick={() => router.back()}>取消</Button>
-              <Button type="submit" disabled={saving}>
+              <Button type="button" onClick={onSave} disabled={!canSave || saving}>
                 {saving ? (<><Icons.spinner className="w-4 h-4 mr-2 animate-spin" /> 保存中...</>) : '保存'}
               </Button>
             </div>
-          </form>
+          </div>
         </CardContent>
       </Card>
     </div>
