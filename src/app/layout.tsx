@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { appConfig } from "@/config/app";
+import { ThemeProvider } from "@/components/theme-provider";
 export const metadata: Metadata = {
   title: appConfig.name,
   description: `${appConfig.name} - Personal Blog Platform`,
@@ -15,7 +16,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         {appConfig.iconUrl && (
           <>
@@ -26,9 +27,11 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body className="antialiased">
-        {children}
-        <Toaster />
+      <body className="antialiased min-h-screen bg-background text-foreground">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

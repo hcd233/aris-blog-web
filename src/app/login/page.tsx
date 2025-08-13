@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import authService from "@/services/auth.service";
 import oAuthService from "@/services/oauth.service";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import { Icons } from "@/components/icons";
 import type { OAuthProvider } from "@/types/api/auth.types";
 
 export default function LoginPage() {
-  const router = useRouter();
+  // const router = useRouter();
   const [loadingProvider, setLoadingProvider] = useState<OAuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,8 +37,6 @@ export default function LoginPage() {
     }
   };
 
-  // 向后兼容的GitHub登录方法
-  const handleGitHubLogin = () => handleOAuthLogin('github');
 
   return (
     <div className="container mx-auto flex h-screen w-screen flex-col items-center justify-center">

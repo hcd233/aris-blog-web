@@ -42,7 +42,8 @@ const oAuthService = {
    */
   initiateLogin: async (provider: OAuthProvider): Promise<LoginRedirectResponse> => {
     // GET /v1/oauth2/{provider}/login
-    return apiClient.get<LoginRedirectResponse>(`/v1/oauth2/${provider}/login`);
+    const res = await apiClient.get<LoginRedirectResponse>(`/v1/oauth2/${provider}/login`);
+    return res.data as LoginRedirectResponse;
   },
 
   /**
@@ -64,9 +65,10 @@ const oAuthService = {
       state: state,
     });
     
-    return apiClient.get<AuthTokensResponse>(
+    const res = await apiClient.get<AuthTokensResponse>(
       `/v1/oauth2/${provider}/callback?${params.toString()}`
     );
+    return res.data as AuthTokensResponse;
   },
 
   /**

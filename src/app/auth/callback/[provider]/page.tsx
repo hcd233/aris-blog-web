@@ -120,14 +120,18 @@ function OAuthCallbackContent({ provider }: { provider: OAuthProvider }) {
 }
 
 export default function OAuthCallbackPage({ params }: OAuthCallbackProps) {
-  const [provider, setProvider] = useState<string | null>(null);
+  const [provider, setProvider] = useState<OAuthProvider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // 异步获取路由参数
     params
       .then(({ provider: resolvedProvider }) => {
-        setProvider(resolvedProvider);
+        if (oAuthService.isSupportedProvider(resolvedProvider)) {
+          setProvider(resolvedProvider as OAuthProvider);
+        } else {
+          setError('Unsupported provider');
+        }
       })
       .catch((err) => {
         console.error('Failed to resolve params:', err);
@@ -163,7 +167,7 @@ export default function OAuthCallbackPage({ params }: OAuthCallbackProps) {
         <Icons.alertTriangle className="h-12 w-12 text-destructive" />
         <p className="mt-4 text-lg">不支持的OAuth提供商</p>
         <p className="text-sm text-muted-foreground">
-          提供商 "{provider}" 不受支持。
+          提供商 {provider} 不受支持。
         </p>
       </div>
     );

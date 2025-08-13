@@ -60,7 +60,8 @@ const authService = {
     // POST /v1/auth/callback/{provider}
     // Request body is { code: string }
     const body: ProviderCallbackBody = { code };
-    return apiClient.post<AuthTokensResponse>(`/v1/auth/callback/${provider}`, body);
+    const res = await apiClient.post<AuthTokensResponse>(`/v1/auth/callback/${provider}`, body);
+    return res.data as AuthTokensResponse;
   },
 
   logout: async (): Promise<LogoutResponse> => {
@@ -92,11 +93,13 @@ const authService = {
   },
 
   updateCurrentUser: async (data: UpdateUserBody): Promise<UpdateUserInfoResponse> => {
-    return apiClient.patch<UpdateUserInfoResponse>('/v1/user', data);
+    const res = await apiClient.patch<UpdateUserInfoResponse>('/v1/user', data);
+    return res.data as UpdateUserInfoResponse;
   },
 
   refreshToken: async (data: RefreshTokenBody): Promise<AuthTokensResponse> => {
-    return apiClient.post<AuthTokensResponse>('/v1/token/refresh', data);
+    const res = await apiClient.post<AuthTokensResponse>('/v1/token/refresh', data);
+    return res.data as AuthTokensResponse;
   },
 };
 

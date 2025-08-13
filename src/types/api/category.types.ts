@@ -109,15 +109,13 @@ export interface UpdateCategoryResponse {
 }
 
 // 删除分类
-export interface DeleteCategoryResponse {
-  // API返回空对象
-}
+export type DeleteCategoryResponse = Record<string, never>;
 
 // 树形结构操作类型
 export interface CategoryTreeAction {
   type: 'EXPAND' | 'COLLAPSE' | 'LOAD_CHILDREN' | 'LOAD_ARTICLES' | 'SET_LOADING' | 'ADD_CHILD' | 'UPDATE_NODE' | 'DELETE_NODE'
   categoryID: number
-  payload?: any
+  payload?: unknown
 }
 
 // 分类树状态类型

@@ -41,10 +41,6 @@ export interface UpdateTagBody {
   description?: string;
 }
 
-export interface UpdateTagResponse {
-  // API文档显示为空对象
-}
+export type UpdateTagResponse = Record<string, never>;
 
-export interface DeleteTagResponse {
-  // API文档显示为空对象
-} 
+export type DeleteTagResponse = Record<string, never>; 
