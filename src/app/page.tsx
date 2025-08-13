@@ -500,6 +500,7 @@ export default function HomePage() {
                       className="w-full justify-start"
                       variant="outline"
                       data-oid="bp2i9eg"
+                      onClick={() => router.push('/articles/new')}
                     >
                       <Icons.plus className="w-4 h-4 mr-2" data-oid="-1ko7j7" />
                       New Article
@@ -553,7 +554,7 @@ export default function HomePage() {
                         Recent Articles
                       </CardTitle>
                     </div>
-                    <Button variant="ghost" size="sm" data-oid="_ld.2wr">
+                    <Button variant="ghost" size="sm" data-oid="_ld.2wr" onClick={() => router.push('/articles')}>
                       <Icons.externalLink
                         className="w-4 h-4"
                         data-oid="ieg0-hh"
@@ -585,7 +586,7 @@ export default function HomePage() {
                     >
                       Start writing your first blog post
                     </p>
-                    <Button data-oid="zqgwpje">
+                    <Button data-oid="zqgwpje" onClick={() => router.push('/articles/new')}>
                       <Icons.plus className="w-4 h-4 mr-2" data-oid="bghtzyl" />
                       Write Your First Article
                     </Button>

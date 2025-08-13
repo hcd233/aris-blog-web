@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
 import { appConfig } from "@/config/app";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Inter } from "next/font/google";
+import Link from "next/link";
+
 export const metadata: Metadata = {
   title: appConfig.name,
   description: `${appConfig.name} - Personal Blog Platform`,
@@ -12,6 +14,9 @@ export const metadata: Metadata = {
     apple: "/favicon.ico",
   },
 };
+
+const inter = Inter({ subsets: ["latin"] });
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -27,10 +32,19 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body className="antialiased min-h-screen bg-background text-foreground">
+      <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-          <Toaster />
+          <div className="min-h-screen">
+            <header className="border-b">
+              <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+                <Link href="/" className="font-semibold">Home</Link>
+                <nav className="flex items-center gap-4 text-sm text-gray-600">
+                  <Link href="/articles">Articles</Link>
+                </nav>
+              </div>
+            </header>
+            <main>{children}</main>
+          </div>
         </ThemeProvider>
       </body>
     </html>
