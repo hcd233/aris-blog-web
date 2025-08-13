@@ -79,17 +79,12 @@ const authService = {
   },
 
   getCurrentUser: async (): Promise<CurrentUser> => {
-    // GET /v1/user/current returns { user: CurrentUser } after interceptor processing
-    const response = await apiClient.get('/v1/user/current') as GetCurrentUserResponse;
-    console.log('[AuthService] getCurrentUser raw response:', response);
-    
-    // Extract the user object from the response
-    if (response && typeof response === 'object' && 'user' in response) {
-      return response.user;
+    const res = await apiClient.get<GetCurrentUserResponse | CurrentUser>('/v1/user/current');
+    const payload = res.data as unknown;
+    if (payload && typeof payload === 'object' && 'user' in (payload as Record<string, unknown>)) {
+      return (payload as GetCurrentUserResponse).user;
     }
-    
-    // Fallback: if the response structure is different, return as-is
-    return response as CurrentUser;
+    return payload as CurrentUser;
   },
 
   updateCurrentUser: async (data: UpdateUserBody): Promise<UpdateUserInfoResponse> => {
