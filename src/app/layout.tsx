@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { appConfig } from "@/config/app";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Inter } from "next/font/google";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -15,7 +14,7 @@ export const metadata: Metadata = {
   },
 };
 
-const inter = Inter({ subsets: ["latin"] });
+// Removed next/font/google to avoid turbopack font resolution issue
 
 export default function RootLayout({
   children,
@@ -32,7 +31,7 @@ export default function RootLayout({
           </>
         )}
       </head>
-      <body className={inter.className}>
+      <body className="antialiased min-h-screen bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="min-h-screen">
             <header className="border-b">
