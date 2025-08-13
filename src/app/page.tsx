@@ -22,6 +22,7 @@ import AppIcon from "@/components/AppIcon";
 import { appConfig } from "@/config/app";
 import { CategoryTree } from "@/components/CategoryTree";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Navigation } from "@/components/Navigation";
 
 export default function HomePage() {
   const router = useRouter();
@@ -134,6 +135,7 @@ export default function HomePage() {
       className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
       data-oid="y7049e."
     >
+      <Navigation />
       {/* Header */}
       <header
         className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50"
