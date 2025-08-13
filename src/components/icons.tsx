@@ -27,6 +27,8 @@ import {
   Trash2,
   MoreHorizontal,
   File,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 // Google Icon as SVG component
@@ -75,4 +77,6 @@ export const Icons = {
   edit: Edit,
   trash: Trash2,
   moreHorizontal: MoreHorizontal,
+  sun: Sun,
+  moon: Moon,
 };

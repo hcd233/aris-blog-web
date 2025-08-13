@@ -77,7 +77,7 @@ export function DeleteConfirmDialog({
             <DialogDescription className={`text-center ${currentVariant.descColor}`}>
               {itemName && (
                 <>
-                  你确定要删除 <span className="font-semibold text-foreground">"{itemName}"</span> 吗？
+                  你确定要删除 <span className="font-semibold text-foreground">{itemName}</span> 吗？
                   <br />
                 </>
               )}

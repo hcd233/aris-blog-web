@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,13 +12,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { tagService } from "@/services/tag.service";
 import type { Tag, CreateTagBody } from "@/types/api/tag.types";
 import { toast } from "sonner";
 import { Icons } from "@/components/icons";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TagListProps {
   onTotalChange?: (total: number) => void;
@@ -42,7 +42,7 @@ export default function TagList({ onTotalChange }: TagListProps) {
     description: "",
   });
 
-  const fetchTags = async (currentPage = 1, append = false) => {
+  const fetchTags = useCallback(async (currentPage = 1, append = false) => {
     try {
       if (append) {
         setLoadingMore(true);
@@ -69,14 +69,15 @@ export default function TagList({ onTotalChange }: TagListProps) {
 
       // 向父组件传递总数
       onTotalChange?.(newTotal);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("获取标签列表失败:", error);
-      toast.error("获取标签列表失败");
+      const message = error instanceof Error ? error.message : "获取标签列表失败";
+      toast.error(message);
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [onTotalChange]);
 
   const loadMoreTags = () => {
     fetchTags(page + 1, true);
@@ -100,9 +101,10 @@ export default function TagList({ onTotalChange }: TagListProps) {
       // 重新获取标签列表（重置到第一页）
       setPage(1);
       fetchTags(1, false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("创建标签失败:", error);
-      toast.error(error.message || "创建标签失败");
+      const message = error instanceof Error ? error.message : "创建标签失败";
+      toast.error(message);
     } finally {
       setCreating(false);
     }
@@ -117,9 +119,10 @@ export default function TagList({ onTotalChange }: TagListProps) {
       // 重新获取标签列表（重置到第一页）
       setPage(1);
       fetchTags(1, false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("删除标签失败:", error);
-      toast.error(error.message || "删除标签失败");
+      const message = error instanceof Error ? error.message : "删除标签失败";
+      toast.error(message);
     } finally {
       setDeleting(false);
     }
@@ -139,12 +142,16 @@ export default function TagList({ onTotalChange }: TagListProps) {
 
   useEffect(() => {
     fetchTags();
-  }, []);
+  }, [fetchTags]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="space-y-4" aria-busy="true">
+        <div className="flex flex-wrap gap-3">
+          {Array.from({ length: 10 }).map((_, index) => (
+            <Skeleton key={index} className="h-7 w-24 rounded-full" />
+          ))}
+        </div>
       </div>
     );
   }
@@ -175,7 +182,7 @@ export default function TagList({ onTotalChange }: TagListProps) {
         <div className="space-y-4">
           <div className="flex flex-wrap gap-3">
             {/* 现有标签 */}
-            {tags.map((tag, index) => (
+            {tags.map((tag) => (
               <div key={tag.tagID} className="group relative">
                 {/* 标签气泡 */}
                 <Badge

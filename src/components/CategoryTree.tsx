@@ -11,10 +11,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger,
-  DialogFooter,
-  DialogDescription
-} from '@/components/ui/dialog'
+    DialogTrigger
+ } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { 

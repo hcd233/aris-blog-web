@@ -21,6 +21,7 @@ import TagList from "@/components/TagList";
 import AppIcon from "@/components/AppIcon";
 import { appConfig } from "@/config/app";
 import { CategoryTree } from "@/components/CategoryTree";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function HomePage() {
   const router = useRouter();
@@ -70,10 +71,11 @@ export default function HomePage() {
       localStorage.removeItem("refreshToken");
       toast.success("Logged out successfully");
       router.push("/login");
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error("Logout failed:", e);
+      const message = e instanceof Error ? e.message : "Could not log out.";
       toast.error("Logout failed", {
-        description: e.message || "Could not log out.",
+        description: message,
       });
     }
   };
@@ -139,8 +141,8 @@ export default function HomePage() {
       >
         <div className="container mx-auto px-6 py-4" data-oid=":crb_x0">
           <div className="flex items-center justify-between" data-oid="mhqz0f2">
-            <div className="flex items-center space-x-4" data-oid="82jpkpa">
-              <div className="flex items-center space-x-2" data-oid="26-20g2">
+            <div className="flex items-center gap-4" data-oid="82jpkpa">
+              <div className="flex items-center gap-2" data-oid="26-20g2">
                 <AppIcon size="md" data-oid="pkx4e5d" />
                 <h1
                   className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
@@ -206,6 +208,7 @@ export default function HomePage() {
                   )}
                 </div>
               )}
+              <ThemeToggle />
               <Button
                 onClick={handleLogout}
                 variant="outline"

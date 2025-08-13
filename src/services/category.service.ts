@@ -1,7 +1,6 @@
 import apiClient from '@/lib/api-client'
 import type {
   Category,
-  CategoryArticle,
   GetCategoryListParams,
   GetCategoryListResponse,
   GetCategoryInfoResponse,
@@ -22,52 +21,60 @@ class CategoryService {
   async getCategoryList(params: GetCategoryListParams = {}): Promise<GetCategoryListResponse> {
     const { page = 1, pageSize = 10 } = params
     
-    return await apiClient.get('/v1/category/list', {
+    const res = await apiClient.get<GetCategoryListResponse>('/v1/category/list', {
       params: { page, pageSize }
     })
+    return res.data as GetCategoryListResponse
   }
 
   // 获取根分类
   async getRootCategory(): Promise<GetRootCategoryResponse> {
-    return await apiClient.get('/v1/category/root')
+    const res = await apiClient.get<GetRootCategoryResponse>('/v1/category/root')
+    return res.data as GetRootCategoryResponse
   }
 
   // 获取分类详情
   async getCategoryInfo(categoryID: number): Promise<GetCategoryInfoResponse> {
-    return await apiClient.get(`/v1/category/${categoryID}`)
+    const res = await apiClient.get<GetCategoryInfoResponse>(`/v1/category/${categoryID}`)
+    return res.data as GetCategoryInfoResponse
   }
 
   // 获取子分类列表
   async getCategoryChildren(params: GetCategoryChildrenParams): Promise<GetCategoryChildrenResponse> {
     const { categoryID, page = 1, pageSize = 10 } = params
     
-    return await apiClient.get(`/v1/category/${categoryID}/subCategories`, {
+    const res = await apiClient.get<GetCategoryChildrenResponse>(`/v1/category/${categoryID}/subCategories`, {
       params: { page, pageSize }
     })
+    return res.data as GetCategoryChildrenResponse
   }
 
   // 获取分类下的文章列表
   async getCategoryArticles(params: GetCategoryArticlesParams): Promise<GetCategoryArticlesResponse> {
     const { categoryID, page = 1, pageSize = 10 } = params
     
-    return await apiClient.get(`/v1/category/${categoryID}/subArticles`, {
+    const res = await apiClient.get<GetCategoryArticlesResponse>(`/v1/category/${categoryID}/subArticles`, {
       params: { page, pageSize }
     })
+    return res.data as GetCategoryArticlesResponse
   }
 
   // 创建分类
   async createCategory(data: CreateCategoryRequest): Promise<CreateCategoryResponse> {
-    return await apiClient.post('/v1/category', data)
+    const res = await apiClient.post<CreateCategoryResponse>('/v1/category', data)
+    return res.data as CreateCategoryResponse
   }
 
   // 更新分类
   async updateCategory(categoryID: number, data: UpdateCategoryRequest): Promise<UpdateCategoryResponse> {
-    return await apiClient.patch(`/v1/category/${categoryID}`, data)
+    const res = await apiClient.patch<UpdateCategoryResponse>(`/v1/category/${categoryID}`, data)
+    return res.data as UpdateCategoryResponse
   }
 
   // 删除分类
   async deleteCategory(categoryID: number): Promise<DeleteCategoryResponse> {
-    return await apiClient.delete(`/v1/category/${categoryID}`)
+    const res = await apiClient.delete<DeleteCategoryResponse>(`/v1/category/${categoryID}`)
+    return res.data as DeleteCategoryResponse
   }
 
   // 工具方法：获取分类树（从二级目录开始）

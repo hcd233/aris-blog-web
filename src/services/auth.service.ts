@@ -60,7 +60,8 @@ const authService = {
     // POST /v1/auth/callback/{provider}
     // Request body is { code: string }
     const body: ProviderCallbackBody = { code };
-    return apiClient.post<AuthTokensResponse>(`/v1/auth/callback/${provider}`, body);
+    const res = await apiClient.post<AuthTokensResponse>(`/v1/auth/callback/${provider}`, body);
+    return res.data as AuthTokensResponse;
   },
 
   logout: async (): Promise<LogoutResponse> => {
@@ -78,25 +79,22 @@ const authService = {
   },
 
   getCurrentUser: async (): Promise<CurrentUser> => {
-    // GET /v1/user/current returns { user: CurrentUser } after interceptor processing
-    const response = await apiClient.get('/v1/user/current') as GetCurrentUserResponse;
-    console.log('[AuthService] getCurrentUser raw response:', response);
-    
-    // Extract the user object from the response
-    if (response && typeof response === 'object' && 'user' in response) {
-      return response.user;
+    const res = await apiClient.get<GetCurrentUserResponse | CurrentUser>('/v1/user/current');
+    const payload = res.data as unknown;
+    if (payload && typeof payload === 'object' && 'user' in (payload as Record<string, unknown>)) {
+      return (payload as GetCurrentUserResponse).user;
     }
-    
-    // Fallback: if the response structure is different, return as-is
-    return response as CurrentUser;
+    return payload as CurrentUser;
   },
 
   updateCurrentUser: async (data: UpdateUserBody): Promise<UpdateUserInfoResponse> => {
-    return apiClient.patch<UpdateUserInfoResponse>('/v1/user', data);
+    const res = await apiClient.patch<UpdateUserInfoResponse>('/v1/user', data);
+    return res.data as UpdateUserInfoResponse;
   },
 
   refreshToken: async (data: RefreshTokenBody): Promise<AuthTokensResponse> => {
-    return apiClient.post<AuthTokensResponse>('/v1/token/refresh', data);
+    const res = await apiClient.post<AuthTokensResponse>('/v1/token/refresh', data);
+    return res.data as AuthTokensResponse;
   },
 };
 
