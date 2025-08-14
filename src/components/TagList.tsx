@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { InputField, TextareaField } from "@/components/ui/form-field";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -52,14 +53,12 @@ export default function TagList({ onTotalChange }: TagListProps) {
 
       const response = await tagService.getTagList({
         page: currentPage,
-        pageSize: 10, // 改为每页10条
+        pageSize: 10,
       });
 
       if (append) {
-        // 追加模式：将新数据添加到现有列表
         setTags((prev) => [...prev, ...response.tags]);
       } else {
-        // 初始加载模式：替换整个列表
         setTags(response.tags);
       }
 
@@ -67,7 +66,6 @@ export default function TagList({ onTotalChange }: TagListProps) {
       setTotal(newTotal);
       setPage(currentPage);
 
-      // 向父组件传递总数
       onTotalChange?.(newTotal);
     } catch (error: unknown) {
       console.error("获取标签列表失败:", error);
@@ -83,7 +81,6 @@ export default function TagList({ onTotalChange }: TagListProps) {
     fetchTags(page + 1, true);
   };
 
-  // 判断是否还有更多标签可加载
   const hasMoreTags = tags.length < total;
 
   const handleCreateTag = async () => {
@@ -98,7 +95,6 @@ export default function TagList({ onTotalChange }: TagListProps) {
       toast.success("标签创建成功");
       setShowCreateDialog(false);
       setCreateForm({ name: "", slug: "", description: "" });
-      // 重新获取标签列表（重置到第一页）
       setPage(1);
       fetchTags(1, false);
     } catch (error: unknown) {
@@ -116,7 +112,6 @@ export default function TagList({ onTotalChange }: TagListProps) {
       await tagService.deleteTag(tagID);
       toast.success("标签删除成功");
       setDeleteConfirm(null);
-      // 重新获取标签列表（重置到第一页）
       setPage(1);
       fetchTags(1, false);
     } catch (error: unknown) {
@@ -128,7 +123,6 @@ export default function TagList({ onTotalChange }: TagListProps) {
     }
   };
 
-  // 根据name自动生成slug
   const handleNameChange = (name: string) => {
     setCreateForm((prev) => ({
       ...prev,
@@ -146,186 +140,182 @@ export default function TagList({ onTotalChange }: TagListProps) {
 
   if (loading) {
     return (
-      <div className="space-y-4" aria-busy="true">
-        <div className="flex flex-wrap gap-3">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <Skeleton key={index} className="h-7 w-24 rounded-full" />
-          ))}
-        </div>
-      </div>
+      <Card className="glass card-hover">
+        <CardHeader className="pb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+              <Icons.tag className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Tags</CardTitle>
+              <CardDescription>Label your articles</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <Separator className="mb-6" />
+        <CardContent>
+          <div className="flex flex-wrap gap-3">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <Skeleton key={index} className="h-7 w-24 rounded-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* 标签网格 */}
-      {tags.length === 0 ? (
-        <div className="text-center py-12 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl border-2 border-dashed border-orange-200 dark:border-orange-700">
-          <div className="w-16 h-16 bg-gradient-to-r from-orange-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <Icons.tag className="w-8 h-8 text-white" />
-          </div>
-          <h3 className="text-lg font-semibold text-orange-700 dark:text-orange-300 mb-2">
-            暂无标签
-          </h3>
-          <p className="text-orange-600 dark:text-orange-400 mb-6">
-            创建你的第一个标签来组织内容
-          </p>
-          <Button
-            onClick={() => setShowCreateDialog(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-          >
-            <Icons.plus className="w-4 h-4 mr-2" />
-            创建第一个标签
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <div className="flex flex-wrap gap-3">
-            {/* 现有标签 */}
-            {tags.map((tag) => (
-              <div key={tag.tagID} className="group relative">
-                {/* 标签气泡 */}
-                <Badge
-                  variant="secondary"
-                  className="cursor-pointer hover:scale-105 transition-all duration-200 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 text-orange-700 hover:from-orange-100 hover:to-amber-100 hover:border-orange-300 hover:shadow-md pr-8 py-1.5 text-sm font-medium"
-                >
-                  <span className="font-semibold">{tag.name}</span>
-                  <span className="ml-1.5 text-xs opacity-75 font-mono">
-                    #{tag.slug}
-                  </span>
-
-                  {/* 删除按钮 */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteConfirm(tag.tagID);
-                    }}
-                    className="absolute right-1.5 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 w-5 h-5 bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-600 rounded-md flex items-center justify-center transition-all duration-200 transform hover:scale-110"
-                  >
-                    <Icons.x className="w-3 h-3" />
-                  </button>
-                </Badge>
-
-                {/* 悬停显示描述 */}
-                {tag.description && (
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap max-w-xs z-10">
-                    {tag.description}
-                    {/* 箭头 */}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {/* 新增标签的特殊标签 */}
-            <div className="group relative">
-              <Badge
-                variant="outline"
-                className="cursor-pointer hover:scale-105 transition-all duration-200 border-2 border-dashed border-orange-300 text-orange-600 hover:border-orange-400 hover:text-orange-700 hover:bg-orange-50 py-1.5 text-sm font-medium bg-transparent"
-                onClick={() => setShowCreateDialog(true)}
-              >
-                <Icons.plus className="w-3 h-3 mr-1.5" />
-                <span className="font-medium">新增标签</span>
-              </Badge>
+    <Card className="glass card-hover">
+      <CardHeader className="pb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+              <Icons.tag className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Tags</CardTitle>
+              <CardDescription>Label your articles</CardDescription>
             </div>
           </div>
-
-          {/* 展开更多按钮 */}
-          {hasMoreTags && (
-            <div className="flex justify-center pt-4">
-              <Button
-                variant="outline"
-                onClick={loadMoreTags}
-                disabled={loadingMore}
-                className="border-2 border-orange-300 text-orange-600 hover:bg-orange-50 hover:border-orange-400 hover:text-orange-700 transition-all duration-200"
-              >
-                {loadingMore ? (
-                  <>
-                    <Icons.spinner className="w-4 h-4 mr-2 animate-spin" />
-                    加载中...
-                  </>
-                ) : (
-                  <>
-                    <Icons.chevronDown className="w-4 h-4 mr-2" />
-                    展开更多
-                  </>
-                )}
-              </Button>
-            </div>
+          {total > 0 && (
+            <Badge variant="secondary" className="text-xs bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 border-orange-200">
+              {total}
+            </Badge>
           )}
         </div>
-      )}
+      </CardHeader>
+      <Separator className="mb-6" />
+      <CardContent>
+        {tags.length === 0 ? (
+          <div className="text-center py-12 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 rounded-xl border-2 border-dashed border-orange-200 dark:border-orange-700">
+            <div className="w-16 h-16 bg-gradient-to-r from-orange-400 to-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+              <Icons.tag className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-lg font-semibold text-orange-700 dark:text-orange-300 mb-2">
+              暂无标签
+            </h3>
+            <p className="text-orange-600 dark:text-orange-400 mb-6">
+              创建你的第一个标签来组织内容
+            </p>
+            <Button
+              onClick={() => setShowCreateDialog(true)}
+              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+            >
+              <Icons.plus className="w-4 h-4 mr-2" />
+              创建第一个标签
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-3">
+              {tags.map((tag) => (
+                <div key={tag.tagID} className="group relative">
+                  <Badge
+                    variant="secondary"
+                    className="cursor-pointer hover:scale-105 transition-all duration-200 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 text-orange-700 hover:from-orange-100 hover:to-amber-100 hover:border-orange-300 hover:shadow-md pr-8 py-1.5 text-sm font-medium"
+                  >
+                    <span className="font-semibold">{tag.name}</span>
+                    <span className="ml-1.5 text-xs opacity-75 font-mono">
+                      #{tag.slug}
+                    </span>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirm(tag.tagID);
+                      }}
+                      className="absolute right-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 w-4 h-4 bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-600 rounded-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
+                    >
+                      <Icons.x className="w-2.5 h-2.5" />
+                    </button>
+                  </Badge>
+                </div>
+              ))}
+            </div>
+
+            {/* 加载更多按钮 */}
+            {hasMoreTags && (
+              <div className="text-center pt-4">
+                <Button
+                  variant="outline"
+                  onClick={loadMoreTags}
+                  disabled={loadingMore}
+                  className="btn-modern border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300"
+                >
+                  {loadingMore ? (
+                    <>
+                      <Icons.spinner className="w-4 h-4 mr-2 animate-spin" />
+                      加载中...
+                    </>
+                  ) : (
+                    <>
+                      <Icons.chevronDown className="w-4 h-4 mr-2" />
+                      加载更多
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+
+            {/* 新增标签按钮 */}
+            <div className="text-center pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateDialog(true)}
+                className="btn-modern border-2 border-dashed border-orange-200 text-orange-600 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-700 transition-all duration-200"
+              >
+                <Icons.plus className="w-4 h-4 mr-2" />
+                新增标签
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
 
       {/* 创建标签对话框 */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="sm:max-w-[450px] border-0 shadow-xl">
-          <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 p-6 rounded-t-lg border-b border-orange-100 dark:border-orange-800">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-orange-700 dark:text-orange-300 flex items-center">
-                <Icons.tag className="w-5 h-5 mr-2" />
-                创建新标签
-              </DialogTitle>
-              <DialogDescription className="text-orange-600 dark:text-orange-400">
-                填写标签信息，slug会根据标签名自动生成
-              </DialogDescription>
-            </DialogHeader>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">创建新标签</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              填写标签信息，slug会根据标签名自动生成
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <InputField
+              id="name"
+              label="标签名"
+              required
+              placeholder="输入标签名"
+              value={createForm.name}
+              onChange={(e) => handleNameChange(e.target.value)}
+            />
+            <InputField
+              id="slug"
+              label="Slug"
+              required
+              placeholder="标签slug"
+              value={createForm.slug}
+              onChange={(e) =>
+                setCreateForm((prev) => ({ ...prev, slug: e.target.value }))
+              }
+              className="font-mono text-sm"
+            />
+            <TextareaField
+              id="description"
+              label="描述"
+              placeholder="标签描述（可选）"
+              value={createForm.description}
+              onChange={(e) =>
+                setCreateForm((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              rows={3}
+            />
           </div>
-          <div className="px-6 py-6 space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor="name"
-                className="text-sm font-semibold text-gray-700 dark:text-gray-300"
-              >
-                标签名 *
-              </label>
-              <Input
-                id="name"
-                placeholder="输入标签名"
-                value={createForm.name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className="border-2 border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 rounded-lg transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="slug"
-                className="text-sm font-semibold text-gray-700 dark:text-gray-300"
-              >
-                Slug *
-              </label>
-              <Input
-                id="slug"
-                placeholder="标签slug"
-                value={createForm.slug}
-                onChange={(e) =>
-                  setCreateForm((prev) => ({ ...prev, slug: e.target.value }))
-                }
-                className="border-2 border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 rounded-lg transition-all duration-200 font-mono text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="description"
-                className="text-sm font-semibold text-gray-700 dark:text-gray-300"
-              >
-                描述
-              </label>
-              <Textarea
-                id="description"
-                placeholder="标签描述（可选）"
-                value={createForm.description}
-                onChange={(e) =>
-                  setCreateForm((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                rows={3}
-                className="border-2 border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 rounded-lg transition-all duration-200"
-              />
-            </div>
-          </div>
-          <DialogFooter className="px-6 pb-6 space-x-3 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
+          <DialogFooter className="gap-2">
             <Button
               variant="outline"
               onClick={() => setShowCreateDialog(false)}
@@ -337,7 +327,7 @@ export default function TagList({ onTotalChange }: TagListProps) {
             <Button
               onClick={handleCreateTag}
               disabled={creating}
-              className="bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
             >
               {creating ? (
                 <>
@@ -362,6 +352,6 @@ export default function TagList({ onTotalChange }: TagListProps) {
         loading={deleting}
         variant="orange"
       />
-    </div>
+    </Card>
   );
 }
