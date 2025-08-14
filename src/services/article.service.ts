@@ -1,4 +1,5 @@
 import { BaseService } from './base.service';
+import { cacheManager, generateCacheKey, withCache } from '@/lib/cache-manager';
 import {
   Article,
   ArticleVersion,
@@ -37,6 +38,10 @@ class ArticleService extends BaseService {
       '/v1/article',
       data
     );
+    
+    // 清除相关缓存
+    this.invalidateArticleCache();
+    
     return response.article;
   }
 
@@ -44,10 +49,22 @@ class ArticleService extends BaseService {
    * Get article information by ID
    */
   async getArticle(articleId: number): Promise<Article> {
-    const response = await this.get<GetArticleInfoResponseDTO>(
-      `/v1/article/${articleId}`
-    );
-    return response.article;
+    const cacheKey = generateCacheKey(`article:${articleId}`);
+    
+    return withCache(
+      async (id: number) => {
+        const response = await this.get<GetArticleInfoResponseDTO>(
+          `/v1/article/${id}`
+        );
+        return response.article;
+      },
+      (id: number) => generateCacheKey(`article:${id}`),
+      {
+        ttl: 5 * 60 * 1000, // 5分钟
+        priority: 8,
+        enablePreload: true,
+      }
+    )(articleId);
   }
 
   /**
@@ -57,10 +74,15 @@ class ArticleService extends BaseService {
     articleId: number,
     data: UpdateArticleRequestDTO
   ): Promise<UpdateArticleResponseDTO> {
-    return await this.patch<UpdateArticleRequestDTO, UpdateArticleResponseDTO>(
+    const response = await this.patch<UpdateArticleRequestDTO, UpdateArticleResponseDTO>(
       `/v1/article/${articleId}`,
       data
     );
+    
+    // 清除相关缓存
+    this.invalidateArticleCache(articleId);
+    
+    return response;
   }
 
   /**
@@ -70,25 +92,47 @@ class ArticleService extends BaseService {
     articleId: number,
     data: UpdateArticleStatusRequestDTO
   ): Promise<UpdateArticleStatusResponseDTO> {
-    return await this.patch<UpdateArticleStatusRequestDTO, UpdateArticleStatusResponseDTO>(
+    const response = await this.patch<UpdateArticleStatusRequestDTO, UpdateArticleStatusResponseDTO>(
       `/v1/article/${articleId}/status`,
       data
     );
+    
+    // 清除相关缓存
+    this.invalidateArticleCache(articleId);
+    
+    return response;
   }
 
   /**
    * Delete an article
    */
   async deleteArticle(articleId: number): Promise<DeleteArticleResponseDTO> {
-    return await this.delete<DeleteArticleResponseDTO>(`/v1/article/${articleId}`);
+    const response = await this.delete<DeleteArticleResponseDTO>(`/v1/article/${articleId}`);
+    
+    // 清除相关缓存
+    this.invalidateArticleCache(articleId);
+    
+    return response;
   }
 
   /**
    * List articles with pagination and filters
    */
   async listArticles(params?: ListArticlesQueryDTO): Promise<ListArticlesResponseDTO> {
-    const queryString = params ? this.buildQueryString(params) : '';
-    return await this.get<ListArticlesResponseDTO>(`/v1/articles${queryString}`);
+    const cacheKey = generateCacheKey('articles', params);
+    
+    return withCache(
+      async (queryParams?: ListArticlesQueryDTO) => {
+        const queryString = queryParams ? this.buildQueryString(queryParams) : '';
+        return await this.get<ListArticlesResponseDTO>(`/v1/articles${queryString}`);
+      },
+      (queryParams?: ListArticlesQueryDTO) => generateCacheKey('articles', queryParams),
+      {
+        ttl: 2 * 60 * 1000, // 2分钟
+        priority: 7,
+        enablePreload: false,
+      }
+    )(params);
   }
 
   /**
@@ -98,10 +142,23 @@ class ArticleService extends BaseService {
     categoryId: number,
     params?: ListArticlesQueryDTO
   ): Promise<ListChildrenArticlesResponseDTO> {
-    const queryString = params ? this.buildQueryString(params) : '';
-    return await this.get<ListChildrenArticlesResponseDTO>(
-      `/v1/categories/${categoryId}/articles${queryString}`
-    );
+    const cacheKey = generateCacheKey(`articles:category:${categoryId}`, params);
+    
+    return withCache(
+      async (catId: number, queryParams?: ListArticlesQueryDTO) => {
+        const queryString = queryParams ? this.buildQueryString(queryParams) : '';
+        return await this.get<ListChildrenArticlesResponseDTO>(
+          `/v1/category/${catId}/articles${queryString}`
+        );
+      },
+      (catId: number, queryParams?: ListArticlesQueryDTO) => 
+        generateCacheKey(`articles:category:${catId}`, queryParams),
+      {
+        ttl: 3 * 60 * 1000, // 3分钟
+        priority: 6,
+        enablePreload: false,
+      }
+    )(categoryId, params);
   }
 
   /**
@@ -185,6 +242,28 @@ class ArticleService extends BaseService {
       : '/v1/user/like/articles';
     const response = await this.get<ListUserLikeArticlesResponseDTO>(url);
     return response.articles;
+  }
+
+  /**
+   * 清除文章相关缓存
+   */
+  private invalidateArticleCache(articleId?: number): void {
+    if (articleId) {
+      // 清除特定文章的缓存
+      cacheManager.delete(generateCacheKey(`article:${articleId}`));
+      cacheManager.delete(generateCacheKey(`article:${articleId}:versions`));
+      cacheManager.delete(generateCacheKey(`article:${articleId}:version:latest`));
+    }
+    
+    // 清除文章列表缓存
+    const keysToDelete: string[] = [];
+    for (const key of cacheManager['cache'].keys()) {
+      if (key.startsWith('articles:') || key.startsWith('article:')) {
+        keysToDelete.push(key);
+      }
+    }
+    
+    keysToDelete.forEach(key => cacheManager.delete(key));
   }
 }
 

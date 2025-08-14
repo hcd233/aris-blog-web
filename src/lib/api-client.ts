@@ -6,6 +6,16 @@ function generateTraceId(): string {
   return crypto.randomUUID();
 }
 
+// 请求去重管理
+const pendingRequests = new Map<string, Promise<any>>();
+
+// 生成请求键
+function generateRequestKey(config: InternalAxiosRequestConfig): string {
+  const { method, url, params, data } = config;
+  const key = `${method?.toUpperCase()}:${url}:${JSON.stringify(params)}:${JSON.stringify(data)}`;
+  return key;
+}
+
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: API_TIMEOUT,
@@ -39,6 +49,27 @@ apiClient.interceptors.request.use(
     } else {
       console.warn('[APIClient] No accessToken found in localStorage. Authorization header not set.');
     }
+
+    // 请求去重逻辑
+    const requestKey = generateRequestKey(config);
+    const existingRequest = pendingRequests.get(requestKey);
+    
+    if (existingRequest) {
+      console.log(`[APIClient] Duplicate request detected, reusing existing request: ${requestKey}`);
+      // 返回现有的请求Promise
+      return Promise.reject({ __isDuplicateRequest: true, promise: existingRequest });
+    }
+
+    // 创建新的请求Promise
+    const requestPromise = new Promise((resolve, reject) => {
+      // 这里不需要做任何事情，实际的请求会在响应拦截器中处理
+    });
+    
+    pendingRequests.set(requestKey, requestPromise);
+    
+    // 将请求键存储在config中，用于后续清理
+    (config as InternalAxiosRequestConfig & { requestKey?: string }).requestKey = requestKey;
+
     return config;
   },
   (error) => {
@@ -50,6 +81,12 @@ apiClient.interceptors.request.use(
 // 响应拦截器
 apiClient.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse => {
+    // 清理已完成的请求
+    const requestKey = (response.config as InternalAxiosRequestConfig & { requestKey?: string }).requestKey;
+    if (requestKey) {
+      pendingRequests.delete(requestKey);
+    }
+
     // 后端API返回的数据结构在 response.data 中
     // 成功的业务数据在 response.data.data
     // 错误信息在 response.data.error
@@ -73,6 +110,18 @@ apiClient.interceptors.response.use(
     return response as AxiosResponse; 
   },
   (error) => {
+    // 处理重复请求的情况
+    if (error.__isDuplicateRequest) {
+      console.log('[APIClient] Returning duplicate request result');
+      return error.promise;
+    }
+
+    // 清理失败的请求
+    const requestKey = (error.config as InternalAxiosRequestConfig & { requestKey?: string })?.requestKey;
+    if (requestKey) {
+      pendingRequests.delete(requestKey);
+    }
+
     // 从请求配置中获取 Trace-ID
     const traceId = (error.config as (InternalAxiosRequestConfig & { traceId?: string }) | undefined)?.traceId || (error.response?.config as (InternalAxiosRequestConfig & { traceId?: string }) | undefined)?.traceId || 'unknown';
     
@@ -84,6 +133,19 @@ apiClient.interceptors.response.use(
         error.response.status,
         error.response.data
       );
+      
+      // 处理401错误 - 尝试刷新token
+      if (error.response.status === 401) {
+        const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+        if (refreshToken) {
+          console.log('[APIClient] Attempting to refresh token...');
+          // 这里可以添加token刷新逻辑
+          // 暂时清除无效的token
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+        }
+      }
+      
       // 尝试从 error.response.data.error 获取错误信息
       const apiError = error.response.data?.error;
       if (apiError) {
