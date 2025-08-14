@@ -29,6 +29,9 @@ import {
   File,
   Sun,
   Moon,
+  Eye,
+  MessageCircle,
+  TrendingUp,
 } from "lucide-react";
 
 // Google Icon as SVG component
@@ -79,4 +82,7 @@ export const Icons = {
   moreHorizontal: MoreHorizontal,
   sun: Sun,
   moon: Moon,
+  eye: Eye,
+  messageCircle: MessageCircle,
+  trendingUp: TrendingUp,
 };

@@ -22,6 +22,10 @@ import AppIcon from "@/components/AppIcon";
 import { appConfig } from "@/config/app";
 import { CategoryTree } from "@/components/CategoryTree";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LoadingPage } from "@/components/ui/loading";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatCard } from "@/components/ui/stat-card";
+import { Navigation } from "@/components/ui/navigation";
 
 export default function HomePage() {
   const router = useRouter();
@@ -85,124 +89,62 @@ export default function HomePage() {
   };
 
   if (isLoading) {
-    return (
-      <div
-        className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800"
-        data-oid="p20zdnw"
-      >
-        <div className="text-center" data-oid=":uqprgm">
-          <Icons.spinner
-            className="h-12 w-12 animate-spin mx-auto text-blue-600"
-            data-oid="ag7p3if"
-          />
-
-          <p
-            className="mt-4 text-lg font-medium text-gray-700 dark:text-gray-300"
-            data-oid="h_zjz7m"
-          >
-            Loading your dashboard...
-          </p>
-        </div>
-      </div>
-    );
+    return <LoadingPage text="Loading your dashboard..." />;
   }
 
   if (!localStorage.getItem("accessToken") && !currentUser) {
-    return (
-      <div
-        className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800"
-        data-oid="bdgni_e"
-      >
-        <div className="text-center" data-oid="2buxytp">
-          <p
-            className="text-lg mb-4 text-gray-700 dark:text-gray-300"
-            data-oid="wz84:wl"
-          >
-            Redirecting to login...
-          </p>
-          <Icons.spinner
-            className="h-10 w-10 animate-spin mx-auto text-blue-600"
-            data-oid="yvfqprx"
-          />
-        </div>
-      </div>
-    );
+    return <LoadingPage text="Redirecting to login..." />;
   }
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
-      data-oid="y7049e."
-    >
+    <div className="min-h-screen gradient-bg">
       {/* Header */}
-      <header
-        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50"
-        data-oid="ilkcq-5"
-      >
-        <div className="container mx-auto px-6 py-4" data-oid=":crb_x0">
-          <div className="flex items-center justify-between" data-oid="mhqz0f2">
-            <div className="flex items-center gap-4" data-oid="82jpkpa">
-              <div className="flex items-center gap-2" data-oid="26-20g2">
-                <AppIcon size="md" data-oid="pkx4e5d" />
-                <h1
-                  className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent"
-                  data-oid="e8n5:kh"
-                >
-                  {appConfig.name}
-                </h1>
+      <header className="glass border-b border-border/50 sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <AppIcon size="md" />
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                    {appConfig.name}
+                  </h1>
+                  <p className="text-xs text-muted-foreground -mt-1">Personal Blog Platform</p>
+                </div>
               </div>
-              <Badge
-                variant="secondary"
-                className="hidden sm:inline-flex"
-                data-oid="6x-91-3"
-              >
+              <Badge variant="secondary" className="hidden sm:inline-flex bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200">
                 Dashboard
               </Badge>
             </div>
 
-            <div className="flex items-center space-x-4" data-oid="_kb7a95">
+            <div className="flex items-center space-x-4">
               {currentUser && (
-                <div className="flex items-center space-x-3" data-oid="1w0pbuq">
-                  <div
-                    className="hidden md:block text-right"
-                    data-oid="eo-:2wa"
-                  >
-                    <p
-                      className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                      data-oid="z0qbw0l"
-                    >
+                <div className="flex items-center space-x-3">
+                  <div className="hidden md:block text-right">
+                    <p className="text-sm font-medium text-foreground">
                       {currentUser.name}
                     </p>
-                    <p
-                      className="text-xs text-gray-500 dark:text-gray-400"
-                      data-oid="azj.z7f"
-                    >
+                    <p className="text-xs text-muted-foreground">
                       {currentUser.email}
                     </p>
                   </div>
-                  <Avatar
-                    className="w-10 h-10 border-2 border-blue-200 dark:border-blue-700"
-                    data-oid="hkrxhj6"
-                  >
-                    <AvatarImage
-                      src={currentUser.avatar}
-                      alt={currentUser.name}
-                      data-oid="6e0h5ur"
-                    />
-
-                    <AvatarFallback
-                      className="bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-200 font-semibold"
-                      data-oid="y0wv4kg"
-                    >
-                      {currentUser.name?.charAt(0)?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
+                  <div className="relative">
+                    <Avatar className="w-10 h-10 border-2 border-primary/20 ring-2 ring-primary/10">
+                      <AvatarImage
+                        src={currentUser.avatar}
+                        alt={currentUser.name}
+                      />
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+                        {currentUser.name?.charAt(0)?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                  </div>
                   {currentUser.permission === "admin" && (
-                    <Badge
-                      variant="default"
-                      className="hidden sm:inline-flex text-xs"
-                      data-oid="63wgqj:"
-                    >
+                    <Badge variant="default" className="hidden sm:inline-flex text-xs bg-gradient-to-r from-red-500 to-pink-500 text-white border-0">
                       Admin
                     </Badge>
                   )}
@@ -213,9 +155,9 @@ export default function HomePage() {
                 onClick={handleLogout}
                 variant="outline"
                 size="sm"
-                data-oid="uozz6_a"
+                className="btn-modern border-border/50 hover:bg-destructive/10 hover:border-destructive/30"
               >
-                <Icons.logOut className="w-4 h-4 mr-2" data-oid="3gl:qm." />
+                <Icons.logOut className="w-4 h-4 mr-2" />
                 Logout
               </Button>
             </div>
@@ -223,34 +165,22 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8" data-oid="e40_agh">
+      <main className="container mx-auto px-6 py-8">
         {error && (
-          <Card
-            className="mb-6 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20"
-            data-oid="kv17vgv"
-          >
-            <CardHeader data-oid="5:cjyuk">
-              <CardTitle
-                className="text-red-800 dark:text-red-200 flex items-center"
-                data-oid="6q9p6.7"
-              >
-                <Icons.alertCircle
-                  className="w-5 h-5 mr-2"
-                  data-oid="t-e7vj4"
-                />
+          <Card className="mb-6 border-destructive/20 bg-destructive/5 card-hover">
+            <CardHeader>
+              <CardTitle className="text-destructive flex items-center">
+                <Icons.alertCircle className="w-5 h-5 mr-2" />
                 Error
               </CardTitle>
             </CardHeader>
-            <CardContent data-oid="i8w37fk">
-              <p className="text-red-700 dark:text-red-300" data-oid="sk.7mn6">
-                {error}
-              </p>
+            <CardContent>
+              <p className="text-destructive/80">{error}</p>
               {!currentUser && (
                 <Button
                   onClick={() => router.push("/login")}
-                  className="mt-3"
+                  className="mt-3 btn-modern"
                   size="sm"
-                  data-oid="al5kysd"
                 >
                   Go to Login
                 </Button>
@@ -261,152 +191,120 @@ export default function HomePage() {
 
         {currentUser && (
           <>
+            {/* Page Navigation */}
+            <Navigation
+              title="Dashboard"
+              description="Welcome back! Here&apos;s an overview of your blog activity."
+              breadcrumbs={[
+                { label: "Home", href: "/", icon: "logo" },
+                { label: "Dashboard", icon: "zap" }
+              ]}
+              actions={
+                <Button className="btn-modern bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white border-0">
+                  <Icons.plus className="w-4 h-4 mr-2" />
+                  New Article
+                </Button>
+              }
+            />
             {/* User Profile Overview */}
-            <Card
-              className="mb-6 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 dark:border-blue-800"
-              data-oid="d2:iy-."
-            >
-              <CardHeader className="pb-3" data-oid="ta.asjo">
-                <div className="flex items-center space-x-2" data-oid="5177sld">
-                  <Icons.user
-                    className="w-5 h-5 text-blue-600"
-                    data-oid="ykuq19p"
-                  />
-
-                  <CardTitle
-                    className="text-lg text-blue-800 dark:text-blue-200"
-                    data-oid="o3-t2u_"
-                  >
-                    Your Profile
-                  </CardTitle>
+            <Card className="mb-8 glass card-hover border-primary/20">
+              <CardHeader className="pb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <Icons.user className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl text-foreground">
+                      Your Profile
+                    </CardTitle>
+                    <CardDescription className="text-muted-foreground">
+                      Welcome back! Here's your account overview
+                    </CardDescription>
+                  </div>
                 </div>
               </CardHeader>
-              <Separator data-oid="gnza16s" />
-              <CardContent data-oid="9fiwbl8">
-                <div className="flex items-center space-x-6" data-oid="qrcfsl4">
-                  <Avatar
-                    className="w-20 h-20 border-4 border-blue-200 dark:border-blue-700"
-                    data-oid="akx8-_2"
-                  >
-                    <AvatarImage
-                      src={currentUser.avatar}
-                      alt={currentUser.name}
-                      data-oid="7gj4rxy"
-                    />
-
-                    <AvatarFallback
-                      className="bg-blue-100 dark:bg-blue-800 text-blue-600 dark:text-blue-200 text-2xl font-bold"
-                      data-oid="h:.jn5e"
-                    >
-                      {currentUser.name?.charAt(0)?.toUpperCase() || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1" data-oid="pio.rag">
-                    <div
-                      className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-                      data-oid=":vo56r."
-                    >
-                      <div data-oid="0jy:i7c">
-                        <p
-                          className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1"
-                          data-oid="pc5v6br"
-                        >
-                          Username
-                        </p>
-                        <p
-                          className="text-lg font-semibold text-gray-900 dark:text-gray-100"
-                          data-oid="2cv7.k_"
-                        >
-                          {currentUser.name || "Not set"}
-                        </p>
+              <Separator className="mb-6" />
+              <CardContent>
+                <div className="flex items-start space-x-8">
+                  <div className="relative">
+                    <Avatar className="w-24 h-24 border-4 border-primary/20 ring-4 ring-primary/10">
+                      <AvatarImage
+                        src={currentUser.avatar}
+                        alt={currentUser.name}
+                      />
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-3xl font-bold">
+                        {currentUser.name?.charAt(0)?.toUpperCase() || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-3 border-background flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">
+                            Username
+                          </p>
+                          <p className="text-lg font-semibold text-foreground">
+                            {currentUser.name || "Not set"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">
+                            Email
+                          </p>
+                          <p className="text-lg font-semibold text-foreground flex items-center">
+                            <Icons.mail className="w-4 h-4 mr-2 text-muted-foreground" />
+                            {currentUser.email || "Not set"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">
+                            User ID
+                          </p>
+                          <p className="text-lg font-semibold text-foreground">
+                            #{currentUser.userID}
+                          </p>
+                        </div>
                       </div>
-                      <div data-oid="9ext8df">
-                        <p
-                          className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1"
-                          data-oid="9m12fc9"
-                        >
-                          Email
-                        </p>
-                        <p
-                          className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center"
-                          data-oid="k:dqdfr"
-                        >
-                          <Icons.mail
-                            className="w-4 h-4 mr-2 text-gray-500"
-                            data-oid="qh3wp:u"
-                          />
-
-                          {currentUser.email || "Not set"}
-                        </p>
-                      </div>
-                      <div data-oid="k3y1.94">
-                        <p
-                          className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1"
-                          data-oid="28wld.6"
-                        >
-                          User ID
-                        </p>
-                        <p
-                          className="text-lg font-semibold text-gray-900 dark:text-gray-100"
-                          data-oid="6zo5ea6"
-                        >
-                          #{currentUser.userID}
-                        </p>
-                      </div>
-                      <div data-oid="iub-xk2">
-                        <p
-                          className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1"
-                          data-oid="dhnolad"
-                        >
-                          Permission
-                        </p>
-                        <Badge
-                          variant={
-                            currentUser.permission === "admin"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className="text-sm"
-                          data-oid="x0rkeda"
-                        >
-                          {currentUser.permission || "user"}
-                        </Badge>
-                      </div>
-                      <div data-oid=":6ifxwl">
-                        <p
-                          className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1"
-                          data-oid="mt17kpl"
-                        >
-                          Member Since
-                        </p>
-                        <p
-                          className="text-lg font-semibold text-gray-900 dark:text-gray-100"
-                          data-oid=":25jdak"
-                        >
-                          {currentUser.createdAt
-                            ? new Date(
-                                currentUser.createdAt,
-                              ).toLocaleDateString("zh-CN")
-                            : "Unknown"}
-                        </p>
-                      </div>
-                      <div data-oid="hwuu14f">
-                        <p
-                          className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1"
-                          data-oid="q179f.3"
-                        >
-                          Last Login
-                        </p>
-                        <p
-                          className="text-lg font-semibold text-gray-900 dark:text-gray-100"
-                          data-oid=".eqm4s2"
-                        >
-                          {currentUser.lastLogin
-                            ? new Date(
-                                currentUser.lastLogin,
-                              ).toLocaleDateString("zh-CN")
-                            : "Unknown"}
-                        </p>
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">
+                            Permission
+                          </p>
+                          <Badge
+                            variant={currentUser.permission === "admin" ? "default" : "secondary"}
+                            className={`text-sm ${
+                              currentUser.permission === "admin" 
+                                ? "bg-gradient-to-r from-red-500 to-pink-500 text-white border-0" 
+                                : "bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border-blue-200"
+                            }`}
+                          >
+                            {currentUser.permission || "user"}
+                          </Badge>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">
+                            Member Since
+                          </p>
+                          <p className="text-lg font-semibold text-foreground">
+                            {currentUser.createdAt
+                              ? new Date(currentUser.createdAt).toLocaleDateString("zh-CN")
+                              : "Unknown"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">
+                            Last Login
+                          </p>
+                          <p className="text-lg font-semibold text-foreground">
+                            {currentUser.lastLogin
+                              ? new Date(currentUser.lastLogin).toLocaleDateString("zh-CN")
+                              : "Unknown"}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -414,116 +312,97 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
+            {/* Statistics Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Total Articles"
+                value="0"
+                description="Published blog posts"
+                icon="fileText"
+                variant="default"
+              />
+              <StatCard
+                title="Total Views"
+                value="0"
+                description="Page views this month"
+                icon="eye"
+                variant="success"
+              />
+              <StatCard
+                title="Total Comments"
+                value="0"
+                description="Reader comments"
+                icon="messageCircle"
+                variant="warning"
+              />
+              <StatCard
+                title="Total Tags"
+                value={tagsTotal}
+                description="Article labels"
+                icon="tag"
+                variant="danger"
+              />
+            </div>
+
             {/* Main Content Grid */}
-            <div
-              className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-              data-oid="i.5t7s6"
-            >
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Categories Section */}
               <div className="lg:col-span-1">
                 <CategoryTree />
               </div>
 
               {/* Tags Section */}
-              <Card
-                className="lg:col-span-1 hover:shadow-lg transition-shadow duration-200"
-                data-oid="fmdvtp-"
-              >
-                <CardHeader className="pb-3" data-oid="9mps8zr">
-                  <div
-                    className="flex items-center justify-between"
-                    data-oid="07e12u0"
-                  >
-                    <div
-                      className="flex items-center space-x-2"
-                      data-oid=".5b6.4e"
-                    >
-                      <Icons.tag
-                        className="w-5 h-5 text-orange-600"
-                        data-oid="l1f9:y0"
-                      />
-
-                      <CardTitle className="text-lg" data-oid="742rsz0">
-                        Tags
-                      </CardTitle>
+              <Card className="lg:col-span-1 glass card-hover">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                        <Icons.tag className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">Tags</CardTitle>
+                        <CardDescription>Label your articles</CardDescription>
+                      </div>
                     </div>
                     {tagsTotal > 0 && (
-                      <Badge
-                        variant="secondary"
-                        className="text-xs bg-orange-100 text-orange-700 border-orange-200"
-                        data-oid="cps9isn"
-                      >
+                      <Badge variant="secondary" className="text-xs bg-gradient-to-r from-orange-100 to-red-100 text-orange-700 border-orange-200">
                         {tagsTotal}
                       </Badge>
                     )}
                   </div>
-                  <CardDescription data-oid="c7dbdmt">
-                    Label your articles
-                  </CardDescription>
                 </CardHeader>
-                <Separator data-oid="spb6_iv" />
-                <CardContent data-oid="j.j82x7">
-                  <TagList
-                    onTotalChange={handleTagsTotalChange}
-                    data-oid="yii2_cd"
-                  />
+                <Separator className="mb-6" />
+                <CardContent>
+                  <TagList onTotalChange={handleTagsTotalChange} />
                 </CardContent>
               </Card>
 
               {/* Quick Actions */}
-              <Card
-                className="lg:col-span-1 hover:shadow-lg transition-shadow duration-200"
-                data-oid="ht4951a"
-              >
-                <CardHeader className="pb-3" data-oid="ge-j5ox">
-                  <div
-                    className="flex items-center space-x-2"
-                    data-oid="us8qux3"
-                  >
-                    <Icons.zap
-                      className="w-5 h-5 text-yellow-600"
-                      data-oid="u-89-nw"
-                    />
-
-                    <CardTitle className="text-lg" data-oid="k4eypnd">
-                      Quick Actions
-                    </CardTitle>
+              <Card className="lg:col-span-1 glass card-hover">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center">
+                      <Icons.zap className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Quick Actions</CardTitle>
+                      <CardDescription>Common tasks</CardDescription>
+                    </div>
                   </div>
-                  <CardDescription data-oid="nf2mbkk">
-                    Common tasks
-                  </CardDescription>
                 </CardHeader>
-                <Separator data-oid="6jw0vcd" />
-                <CardContent data-oid="7jcb:d8">
-                  <div className="space-y-3" data-oid="gxg:z2c">
-                    <Button
-                      className="w-full justify-start"
-                      variant="outline"
-                      data-oid="bp2i9eg"
-                    >
-                      <Icons.plus className="w-4 h-4 mr-2" data-oid="-1ko7j7" />
+                <Separator className="mb-6" />
+                <CardContent>
+                  <div className="space-y-3">
+                    <Button className="w-full justify-start btn-modern" variant="outline">
+                      <Icons.plus className="w-4 h-4 mr-2" />
                       New Article
                     </Button>
-                    <Button
-                      className="w-full justify-start"
-                      variant="outline"
-                      data-oid="85ra7nu"
-                    >
-                      <Icons.upload
-                        className="w-4 h-4 mr-2"
-                        data-oid="c401oad"
-                      />
+                    <Button className="w-full justify-start btn-modern" variant="outline">
+                      <Icons.upload className="w-4 h-4 mr-2" />
                       Upload Images
                     </Button>
-                    <Button
-                      className="w-full justify-start"
-                      variant="outline"
-                      data-oid="fokvxt5"
-                    >
-                      <Icons.settings
-                        className="w-4 h-4 mr-2"
-                        data-oid="763-v8."
-                      />
+                    <Button className="w-full justify-start btn-modern" variant="outline">
+                      <Icons.settings className="w-4 h-4 mr-2" />
                       Settings
                     </Button>
                   </div>
@@ -531,65 +410,36 @@ export default function HomePage() {
               </Card>
 
               {/* Recent Articles */}
-              <Card
-                className="lg:col-span-3 hover:shadow-lg transition-shadow duration-200"
-                data-oid="ljmmp.h"
-              >
-                <CardHeader className="pb-3" data-oid="cczhq3v">
-                  <div
-                    className="flex items-center justify-between"
-                    data-oid="0keo1pq"
-                  >
-                    <div
-                      className="flex items-center space-x-2"
-                      data-oid="0wgd6ag"
-                    >
-                      <Icons.fileText
-                        className="w-5 h-5 text-blue-600"
-                        data-oid=":wzs2rs"
-                      />
-
-                      <CardTitle className="text-lg" data-oid="rnk3.uq">
-                        Recent Articles
-                      </CardTitle>
+              <Card className="lg:col-span-3 glass card-hover">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center">
+                        <Icons.fileText className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">Recent Articles</CardTitle>
+                        <CardDescription>Your latest blog posts</CardDescription>
+                      </div>
                     </div>
-                    <Button variant="ghost" size="sm" data-oid="_ld.2wr">
-                      <Icons.externalLink
-                        className="w-4 h-4"
-                        data-oid="ieg0-hh"
-                      />
+                    <Button variant="ghost" size="sm" className="btn-modern">
+                      <Icons.externalLink className="w-4 h-4" />
                       View All
                     </Button>
                   </div>
-                  <CardDescription data-oid="jy718_a">
-                    Your latest blog posts
-                  </CardDescription>
                 </CardHeader>
-                <Separator data-oid="-ridj6s" />
-                <CardContent data-oid="rs553l5">
-                  <div className="text-center py-12" data-oid="8qu9i3b">
-                    <Icons.fileText
-                      className="w-16 h-16 text-gray-400 mx-auto mb-4"
-                      data-oid="8c0l6md"
-                    />
-
-                    <h3
-                      className="text-lg font-semibold text-gray-700 mb-2"
-                      data-oid="5r7dj4h"
-                    >
-                      No articles yet
-                    </h3>
-                    <p
-                      className="text-sm text-gray-500 mb-6"
-                      data-oid="nu.rza7"
-                    >
-                      Start writing your first blog post
-                    </p>
-                    <Button data-oid="zqgwpje">
-                      <Icons.plus className="w-4 h-4 mr-2" data-oid="bghtzyl" />
-                      Write Your First Article
-                    </Button>
-                  </div>
+                <Separator className="mb-6" />
+                <CardContent>
+                  <EmptyState
+                    icon="fileText"
+                    title="No articles yet"
+                    description="Start writing your first blog post and share your thoughts with the world"
+                    action={{
+                      label: "Write Your First Article",
+                      onClick: () => console.log("Create article"),
+                      icon: "plus"
+                    }}
+                  />
                 </CardContent>
               </Card>
             </div>
