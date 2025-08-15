@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { appConfig } from "@/config/app";
 import { ThemeProvider } from "@/components/theme-provider";
+import { QueryProvider } from "@/providers/QueryProvider";
 export const metadata: Metadata = {
   title: appConfig.name,
   description: `${appConfig.name} - Personal Blog Platform`,
@@ -29,8 +30,10 @@ export default function RootLayout({
       </head>
       <body className="antialiased min-h-screen bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
-          <Toaster />
+          <QueryProvider>
+            {children}
+            <Toaster />
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>
