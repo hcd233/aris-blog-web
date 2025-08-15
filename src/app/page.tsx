@@ -161,6 +161,28 @@ export default function HomePage() {
             </div>
 
             <div className="flex items-center space-x-4" data-oid="_kb7a95">
+              {/* Navigation */}
+              <nav className="hidden md:flex items-center space-x-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push('/articles')}
+                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  <Icons.fileText className="w-4 h-4 mr-2" />
+                  Articles
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push('/demo')}
+                  className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  <Icons.eye className="w-4 h-4 mr-2" />
+                  Demo
+                </Button>
+              </nav>
+              
               {currentUser && (
                 <div className="flex items-center space-x-3" data-oid="1w0pbuq">
                   <div
@@ -500,6 +522,7 @@ export default function HomePage() {
                       className="w-full justify-start"
                       variant="outline"
                       data-oid="bp2i9eg"
+                      onClick={() => router.push('/articles')}
                     >
                       <Icons.plus className="w-4 h-4 mr-2" data-oid="-1ko7j7" />
                       New Article
@@ -553,7 +576,12 @@ export default function HomePage() {
                         Recent Articles
                       </CardTitle>
                     </div>
-                    <Button variant="ghost" size="sm" data-oid="_ld.2wr">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      data-oid="_ld.2wr"
+                      onClick={() => router.push('/articles')}
+                    >
                       <Icons.externalLink
                         className="w-4 h-4"
                         data-oid="ieg0-hh"
@@ -585,7 +613,10 @@ export default function HomePage() {
                     >
                       Start writing your first blog post
                     </p>
-                    <Button data-oid="zqgwpje">
+                    <Button 
+                      data-oid="zqgwpje"
+                      onClick={() => router.push('/articles')}
+                    >
                       <Icons.plus className="w-4 h-4 mr-2" data-oid="bghtzyl" />
                       Write Your First Article
                     </Button>
