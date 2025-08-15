@@ -16,6 +16,8 @@ export interface CategoryTreeNode extends Category {
   isLoading: boolean
   hasChildren: boolean
   hasLoadedChildren: boolean
+  hasMoreChildren: boolean
+  hasMoreArticles: boolean
   
   // 子节点数据
   children: CategoryTreeNode[]

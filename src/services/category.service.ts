@@ -78,7 +78,7 @@ class CategoryService {
   }
 
   // 工具方法：获取分类树（从二级目录开始）
-  async getCategoryTree(): Promise<Category[]> {
+  async getCategoryTree(): Promise<{ categories: Category[], totalCount: number }> {
     try {
       // 先获取根分类
       const rootResponse = await this.getRootCategory()
@@ -89,7 +89,10 @@ class CategoryService {
         categoryID: rootCategory.categoryID 
       })
       
-      return childrenResponse.categories
+      return {
+        categories: childrenResponse.categories,
+        totalCount: childrenResponse.pageInfo.totalCount || 0
+      }
     } catch (error) {
       console.error('获取分类树失败:', error)
       throw error

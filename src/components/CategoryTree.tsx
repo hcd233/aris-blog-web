@@ -87,7 +87,7 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
       >
         {/* 展开/折叠按钮占位 */}
         <div className="w-4 h-4 flex-shrink-0 flex items-center justify-center">
-          {(node.hasChildren || node.children.length > 0) ? (
+          {(node.hasChildren || (node.children && node.children.length > 0)) ? (
             <Button
               variant="ghost"
               size="sm"
@@ -174,9 +174,9 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
       </div>
 
       {/* 子分类 */}
-      {node.isExpanded && node.children.length > 0 && (
+      {node.isExpanded && node.children && node.children.length > 0 && (
         <div className="ml-4">
-          {node.children.map((child) => (
+          {node.children && node.children.map((child) => (
             <CategoryNode
               key={child.categoryID}
               node={child}
@@ -194,7 +194,7 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
       {/* 文章列表 */}
       {node.isExpanded && node.articles && node.articles.length > 0 && (
         <div className="ml-8 space-y-1">
-          {node.articles.map((article) => (
+          {node.articles && node.articles.map((article) => (
             <div
               key={article.articleID}
               className="flex items-center gap-2 py-1 px-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-md transition-colors duration-200"
@@ -310,7 +310,20 @@ export function CategoryTree() {
     try {
       setLoading(true)
       const response = await categoryService.getCategoryTree()
-      setCategories(response.categories)
+      // 将 Category 转换为 CategoryTreeNode，确保 children 数组被初始化
+      const treeNodes: CategoryTreeNode[] = response.categories.map(cat => ({
+        ...cat,
+        isExpanded: false,
+        isLoading: false,
+        hasChildren: false,
+        hasLoadedChildren: false,
+        hasMoreChildren: false,
+        hasMoreArticles: false,
+        children: [],
+        hasLoadedArticles: false,
+        articles: []
+      }))
+      setCategories(treeNodes)
       setTotalCount(response.totalCount || 0)
     } catch (error) {
       console.error('获取分类树失败:', error)
@@ -540,21 +553,16 @@ export function CategoryTree() {
                     <DialogTitle className="text-lg font-semibold">创建分类</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="categoryName" className="text-sm font-medium">
-                        分类名称
-                      </Label>
-                      <Input
-                        id="categoryName"
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        placeholder="请输入分类名称"
-                        className="border-2 border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 rounded-lg transition-all duration-200"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleCreateRootCategory()
-                        }}
-                      />
-                    </div>
+                    <InputField
+                      id="categoryName"
+                      label="分类名称"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      placeholder="请输入分类名称"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleCreateRootCategory()
+                      }}
+                    />
                   </div>
                   <DialogFooter className="gap-2">
                     <Button 
