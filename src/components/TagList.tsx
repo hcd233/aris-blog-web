@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { InputField, TextareaField } from "@/components/ui/form-field";
@@ -165,7 +165,8 @@ export default function TagList({ onTotalChange }: TagListProps) {
   }
 
   return (
-    <Card className="glass card-hover">
+    <>
+      <Card className="glass card-hover">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -271,87 +272,88 @@ export default function TagList({ onTotalChange }: TagListProps) {
           </div>
         )}
       </CardContent>
-
-      {/* 创建标签对话框 */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">创建新标签</DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
-              填写标签信息，slug会根据标签名自动生成
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <InputField
-              id="name"
-              label="标签名"
-              required
-              placeholder="输入标签名"
-              value={createForm.name}
-              onChange={(e) => handleNameChange(e.target.value)}
-            />
-            <InputField
-              id="slug"
-              label="Slug"
-              required
-              placeholder="标签slug"
-              value={createForm.slug}
-              onChange={(e) =>
-                setCreateForm((prev) => ({ ...prev, slug: e.target.value }))
-              }
-              className="font-mono text-sm"
-            />
-            <TextareaField
-              id="description"
-              label="描述"
-              placeholder="标签描述（可选）"
-              value={createForm.description}
-              onChange={(e) =>
-                setCreateForm((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
-              rows={3}
-            />
-          </div>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-              disabled={creating}
-              className="border-2 border-gray-300 hover:bg-gray-100 transition-colors"
-            >
-              取消
-            </Button>
-            <Button
-              onClick={handleCreateTag}
-              disabled={creating}
-              className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-            >
-              {creating ? (
-                <>
-                  <Icons.spinner className="w-4 h-4 mr-2 animate-spin" />
-                  创建中...
-                </>
-              ) : (
-                "创建标签"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 删除确认对话框 */}
-      <DeleteConfirmDialog
-        open={deleteConfirm !== null}
-        onOpenChange={() => setDeleteConfirm(null)}
-        title="确认删除标签"
-        itemName={deleteConfirm ? tags.find(tag => tag.tagID === deleteConfirm)?.name : undefined}
-        onConfirm={() => deleteConfirm && handleDeleteTag(deleteConfirm)}
-        loading={deleting}
-        variant="orange"
-      />
     </Card>
+
+    {/* 创建标签对话框 */}
+    <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold">创建新标签</DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            填写标签信息，slug会根据标签名自动生成
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <InputField
+            id="name"
+            label="标签名"
+            required
+            placeholder="输入标签名"
+            value={createForm.name}
+            onChange={(e) => handleNameChange(e.target.value)}
+          />
+          <InputField
+            id="slug"
+            label="Slug"
+            required
+            placeholder="标签slug"
+            value={createForm.slug}
+            onChange={(e) =>
+              setCreateForm((prev) => ({ ...prev, slug: e.target.value }))
+            }
+            className="font-mono text-sm"
+          />
+          <TextareaField
+            id="description"
+            label="描述"
+            placeholder="标签描述（可选）"
+            value={createForm.description}
+            onChange={(e) =>
+              setCreateForm((prev) => ({
+                ...prev,
+                description: e.target.value,
+              }))
+            }
+            rows={3}
+          />
+        </div>
+        <DialogFooter className="gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setShowCreateDialog(false)}
+            disabled={creating}
+            className="border-2 border-gray-300 hover:bg-gray-100 transition-colors"
+          >
+            取消
+          </Button>
+          <Button
+            onClick={handleCreateTag}
+            disabled={creating}
+            className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
+            {creating ? (
+              <>
+                <Icons.spinner className="w-4 h-4 mr-2 animate-spin" />
+                创建中...
+              </>
+            ) : (
+              "创建标签"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    {/* 删除确认对话框 */}
+    <DeleteConfirmDialog
+      open={deleteConfirm !== null}
+      onOpenChange={() => setDeleteConfirm(null)}
+      title="确认删除标签"
+      itemName={deleteConfirm ? tags.find(tag => tag.tagID === deleteConfirm)?.name : undefined}
+      onConfirm={() => deleteConfirm && handleDeleteTag(deleteConfirm)}
+      loading={deleting}
+      variant="orange"
+    />
+  </>
   );
 }

@@ -11,11 +11,8 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogTrigger,
   DialogFooter
  } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { InputField } from '@/components/ui/form-field'
 import { 
   DropdownMenu, 
@@ -439,7 +436,8 @@ export function CategoryTree() {
   }
 
   return (
-    <Card className="glass card-hover">
+    <>
+      <Card className="glass card-hover">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -471,56 +469,13 @@ export function CategoryTree() {
             <p className="text-purple-600 dark:text-purple-400 mb-6">
               创建你的第一个分类来组织内容
             </p>
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-              <DialogTrigger asChild>
-                <Button
-                  className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                >
-                  <Icons.plus className="w-4 h-4 mr-2" />
-                  创建第一个分类
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="text-lg font-semibold">创建分类</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <InputField
-                    id="categoryName"
-                    label="分类名称"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    placeholder="请输入分类名称"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleCreateRootCategory()
-                    }}
-                  />
-                </div>
-                <DialogFooter className="gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowCreateDialog(false)}
-                    className="border-2 border-gray-300 hover:bg-gray-100 transition-colors"
-                  >
-                    取消
-                  </Button>
-                  <Button 
-                    onClick={handleCreateRootCategory} 
-                    disabled={!newCategoryName.trim() || creating}
-                    className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                  >
-                    {creating ? (
-                      <>
-                        <Icons.spinner className="w-4 h-4 mr-2 animate-spin" />
-                        创建中...
-                      </>
-                    ) : (
-                      "创建"
-                    )}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button
+              onClick={() => setShowCreateDialog(true)}
+              className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+            >
+              <Icons.plus className="w-4 h-4 mr-2" />
+              创建第一个分类
+            </Button>
           </div>
         ) : (
           <div className="space-y-1">
@@ -539,60 +494,65 @@ export function CategoryTree() {
             
             {/* 新增分类按钮 */}
             <div className="py-1 px-1" style={{ paddingLeft: '4px' }}>
-              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-                <DialogTrigger asChild>
-                  <div className="inline-flex items-center justify-start gap-1 px-2 py-1 text-sm font-medium bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-dashed border-purple-200 text-purple-600 rounded-md cursor-pointer hover:from-purple-100 hover:to-indigo-100 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 hover:scale-[1.02] w-fit">
-                    <div className="w-4 h-4 flex items-center justify-center">
-                      <Icons.plus className="w-3 h-3" />
-                    </div>
-                    <span className="text-sm">新增分类</span>
-                  </div>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle className="text-lg font-semibold">创建分类</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <InputField
-                      id="categoryName"
-                      label="分类名称"
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="请输入分类名称"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleCreateRootCategory()
-                      }}
-                    />
-                  </div>
-                  <DialogFooter className="gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setShowCreateDialog(false)}
-                      className="border-2 border-gray-300 hover:bg-gray-100 transition-colors"
-                    >
-                      取消
-                    </Button>
-                    <Button 
-                      onClick={handleCreateRootCategory} 
-                      disabled={!newCategoryName.trim() || creating}
-                      className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                    >
-                      {creating ? (
-                        <>
-                          <Icons.spinner className="w-4 h-4 mr-2 animate-spin" />
-                          创建中...
-                        </>
-                      ) : (
-                        "创建"
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <Button
+                variant="outline"
+                onClick={() => setShowCreateDialog(true)}
+                className="inline-flex items-center justify-start gap-1 px-2 py-1 text-sm font-medium bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-dashed border-purple-200 text-purple-600 rounded-md cursor-pointer hover:from-purple-100 hover:to-indigo-100 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 hover:scale-[1.02] w-fit"
+              >
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <Icons.plus className="w-3 h-3" />
+                </div>
+                <span className="text-sm">新增分类</span>
+              </Button>
             </div>
           </div>
         )}
       </CardContent>
     </Card>
+
+    {/* 创建分类对话框 */}
+    <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold">创建分类</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <InputField
+            id="categoryName"
+            label="分类名称"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            placeholder="请输入分类名称"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleCreateRootCategory()
+            }}
+          />
+        </div>
+        <DialogFooter className="gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowCreateDialog(false)}
+            className="border-2 border-gray-300 hover:bg-gray-100 transition-colors"
+          >
+            取消
+          </Button>
+          <Button 
+            onClick={handleCreateRootCategory} 
+            disabled={!newCategoryName.trim() || creating}
+            className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+          >
+            {creating ? (
+              <>
+                <Icons.spinner className="w-4 h-4 mr-2 animate-spin" />
+                创建中...
+              </>
+            ) : (
+              "创建"
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </>
   )
 } 

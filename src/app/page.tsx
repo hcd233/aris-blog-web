@@ -218,7 +218,7 @@ export default function HomePage() {
                       Your Profile
                     </CardTitle>
                     <CardDescription className="text-muted-foreground">
-                      Welcome back! Here's your account overview
+                      Welcome back! Here&apos;s your account overview
                     </CardDescription>
                   </div>
                 </div>
