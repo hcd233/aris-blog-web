@@ -10,10 +10,12 @@ export interface BaseResponse<T = any> {
 
 // Page info for paginated responses
 export interface PageInfo {
-  page: number;
+  currentPage: number;
   pageSize: number;
   total: number;
   totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
 // Common paginated response
