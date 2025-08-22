@@ -10,12 +10,15 @@ import type { Tag } from "@/types/api/tag.types";
 import { toast } from "sonner";
 import { Icons } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentUser } from "@/hooks/useAuth";
+import { hasCreatorAccess } from "@/lib/permissions";
 
 interface TagListProps {
   onTotalChange?: (total: number) => void;
 }
 
 export default function TagList({ onTotalChange }: TagListProps) {
+  const { data: currentUser } = useCurrentUser();
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -147,13 +150,15 @@ export default function TagList({ onTotalChange }: TagListProps) {
           <p className="text-orange-600 dark:text-orange-400 mb-6">
             创建你的第一个标签来组织内容
           </p>
-          <Button
-            onClick={() => setShowCreateDialog(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-          >
-            <Icons.plus className="w-4 h-4 mr-2" />
-            创建第一个标签
-          </Button>
+          {hasCreatorAccess(currentUser?.permission) && (
+            <Button
+              onClick={() => setShowCreateDialog(true)}
+              className="bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+            >
+              <Icons.plus className="w-4 h-4 mr-2" />
+              创建第一个标签
+            </Button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -171,16 +176,18 @@ export default function TagList({ onTotalChange }: TagListProps) {
                     #{tag.slug}
                   </span>
 
-                  {/* 删除按钮 */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteConfirm(tag.tagID);
-                    }}
-                    className="absolute right-1.5 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 w-5 h-5 bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-600 rounded-md flex items-center justify-center transition-all duration-200 transform hover:scale-110"
-                  >
-                    <Icons.x className="w-3 h-3" />
-                  </button>
+                  {/* 删除按钮 - 仅限有权限的用户 */}
+                  {hasCreatorAccess(currentUser?.permission) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirm(tag.tagID);
+                      }}
+                      className="absolute right-1.5 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 w-5 h-5 bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-600 rounded-md flex items-center justify-center transition-all duration-200 transform hover:scale-110"
+                    >
+                      <Icons.x className="w-3 h-3" />
+                    </button>
+                  )}
                 </Badge>
 
                 {/* 悬停显示描述 */}
@@ -194,17 +201,19 @@ export default function TagList({ onTotalChange }: TagListProps) {
               </div>
             ))}
 
-            {/* 新增标签的特殊标签 */}
-            <div className="group relative">
-              <Badge
-                variant="outline"
-                className="cursor-pointer hover:scale-105 transition-all duration-200 border-2 border-dashed border-orange-300 text-orange-600 hover:border-orange-400 hover:text-orange-700 hover:bg-orange-50 py-1.5 text-sm font-medium bg-transparent"
-                onClick={() => setShowCreateDialog(true)}
-              >
-                <Icons.plus className="w-3 h-3 mr-1.5" />
-                <span className="font-medium">新增标签</span>
-              </Badge>
-            </div>
+            {/* 新增标签的特殊标签 - 仅限有权限的用户 */}
+            {hasCreatorAccess(currentUser?.permission) && (
+              <div className="group relative">
+                <Badge
+                  variant="outline"
+                  className="cursor-pointer hover:scale-105 transition-all duration-200 border-2 border-dashed border-orange-300 text-orange-600 hover:border-orange-400 hover:text-orange-700 hover:bg-orange-50 py-1.5 text-sm font-medium bg-transparent"
+                  onClick={() => setShowCreateDialog(true)}
+                >
+                  <Icons.plus className="w-3 h-3 mr-1.5" />
+                  <span className="font-medium">新增标签</span>
+                </Badge>
+              </div>
+            )}
           </div>
 
           {/* 展开更多按钮 */}

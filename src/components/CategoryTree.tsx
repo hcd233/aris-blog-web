@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { toast } from 'sonner'
+import { useCurrentUser } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { CreateItemDialog } from '@/components/ui/create-item-dialog'
 import { Input } from '@/components/ui/input'
+import { hasCreatorAccess } from '@/lib/permissions'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -31,6 +33,7 @@ interface CategoryNodeProps {
   onCreateChild: (parentID: number, name: string) => void
   onRename: (categoryID: number, newName: string) => void
   onDelete: (categoryID: number) => void
+  hasCreatorAccess: boolean
 }
 
 const CategoryNode: React.FC<CategoryNodeProps> = ({
@@ -41,6 +44,7 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
   onCreateChild,
   onRename,
   onDelete,
+  hasCreatorAccess,
 }) => {
   const [isRenaming, setIsRenaming] = useState(false)
   const [newName, setNewName] = useState(node.name)
@@ -117,26 +121,40 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
               <div className="group/badge relative">
                 <Badge
                   variant="secondary"
-                  className="cursor-pointer hover:scale-[1.02] transition-all duration-200 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 text-purple-700 hover:from-purple-100 hover:to-indigo-100 hover:border-purple-300 hover:shadow-sm pr-7 py-1 text-sm font-medium"
+                  className="cursor-pointer hover:scale-[1.02] transition-all duration-200 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 text-purple-700 hover:from-purple-100 hover:to-indigo-100 hover:border-purple-300 hover:shadow-sm pr-16 py-1 text-sm font-medium group-hover:pr-20"
                   onDoubleClick={() => setIsRenaming(true)}
                 >
-                  <Icons.folder className="w-3 h-3 mr-1.5 text-purple-500" />
-                  <span className="font-semibold">{node.name}</span>
-                  <span className="ml-1.5 text-xs opacity-70 font-mono">
+                  <Icons.folder className="w-3 h-3 mr-1.5 text-purple-500 group-hover:text-purple-600 transition-colors" />
+                  <span className="font-semibold group-hover:text-purple-800 transition-colors">{node.name}</span>
+                  <span className="ml-1.5 text-xs opacity-70 font-mono group-hover:opacity-90 transition-opacity">
                     #{node.categoryID}
                   </span>
                 </Badge>
 
-                {/* 删除按钮 */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowDeleteDialog(true);
-                  }}
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover/badge:opacity-100 w-4 h-4 bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-600 rounded-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
-                >
-                  <Icons.x className="w-2.5 h-2.5" />
-                </button>
+                {/* Quick action buttons that appear on hover */}
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover/badge:opacity-100 transition-all duration-200">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCreateDialog(true);
+                    }}
+                    className="w-4 h-4 bg-green-100 hover:bg-green-200 text-green-600 hover:text-green-700 rounded-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
+                    title="Add subcategory"
+                  >
+                    <Icons.plus className="w-2.5 h-2.5" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowDeleteDialog(true);
+                    }}
+                    className="w-4 h-4 bg-red-100 hover:bg-red-200 text-red-500 hover:text-red-600 rounded-sm flex items-center justify-center transition-all duration-200 hover:scale-110"
+                    title="Delete category"
+                  >
+                    <Icons.x className="w-2.5 h-2.5" />
+                  </button>
+                </div>
+
               </div>
 
               {/* 子分类总数显示 */}
@@ -152,33 +170,6 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
           )}
         </div>
 
-        {/* 操作菜单 */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 hover:bg-purple-100">
-                <Icons.moreHorizontal className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setShowCreateDialog(true)}>
-                <Icons.folderPlus className="h-4 w-4 mr-2" />
-                新建子分类
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setIsRenaming(true)}>
-                <Icons.edit className="h-4 w-4 mr-2" />
-                重命名
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setShowDeleteDialog(true)}
-                className="text-red-600 dark:text-red-400"
-              >
-                <Icons.trash className="h-4 w-4 mr-2" />
-                删除
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
       </div>
 
       {/* 子分类 */}
@@ -307,6 +298,7 @@ const findNodeById = (nodes: CategoryTreeNode[], id: number): CategoryTreeNode |
 
 // 主分类树组件
 export const CategoryTree: React.FC = () => {
+  const { data: currentUser } = useCurrentUser()
   const [categories, setCategories] = useState<CategoryTreeNode[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -659,8 +651,8 @@ export const CategoryTree: React.FC = () => {
       <Separator />
       <CardContent>
         {categories.length === 0 ? (
-          <div className="text-center py-12 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-dashed border-purple-200 dark:border-purple-700">
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <div className="text-center py-12 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-xl border-2 border-dashed border-purple-200 dark:border-purple-700 hover:border-purple-300 transition-all duration-300">
+            <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg transform hover:scale-110 transition-transform duration-300">
               <Icons.folder className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-lg font-semibold text-purple-700 dark:text-purple-300 mb-2">
@@ -669,13 +661,15 @@ export const CategoryTree: React.FC = () => {
             <p className="text-purple-600 dark:text-purple-400 mb-6">
               创建你的第一个分类来组织内容
             </p>
-            <Button
-              className="bg-purple-500 hover:bg-purple-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-              onClick={() => setShowCreateDialog(true)}
-            >
-              <Icons.plus className="w-4 h-4 mr-2" />
-              创建第一个分类
-            </Button>
+            {hasCreatorAccess(currentUser?.permission) && (
+              <Button
+                className="bg-purple-500 hover:bg-purple-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 group"
+                onClick={() => setShowCreateDialog(true)}
+              >
+                <Icons.plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-200" />
+                创建第一个分类
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-1">
@@ -689,21 +683,24 @@ export const CategoryTree: React.FC = () => {
                 onCreateChild={handleCreateChild}
                 onRename={handleRename}
                 onDelete={handleDelete}
+                hasCreatorAccess={hasCreatorAccess(currentUser?.permission)}
               />
             ))}
             
-            {/* 新增分类按钮 - 类似tag样式 */}
-            <div className="py-1 px-1" style={{ paddingLeft: '4px' }}>
-              <div 
-                className="inline-flex items-center justify-start gap-1 px-2 py-1 text-sm font-medium bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-dashed border-purple-200 text-purple-600 rounded-md cursor-pointer hover:from-purple-100 hover:to-indigo-100 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 hover:scale-[1.02] w-fit"
-                onClick={() => setShowCreateDialog(true)}
-              >
-                <div className="w-4 h-4 flex items-center justify-center">
-                  <Icons.plus className="w-3 h-3" />
+            {/* 新增分类按钮 - 类似tag样式 - 仅限有权限的用户 */}
+            {hasCreatorAccess(currentUser?.permission) && (
+              <div className="py-1 px-1" style={{ paddingLeft: '4px' }}>
+                <div 
+                  className="inline-flex items-center justify-start gap-1 px-3 py-2 text-sm font-medium bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-dashed border-purple-200 text-purple-600 rounded-lg cursor-pointer hover:from-purple-100 hover:to-indigo-100 hover:border-purple-300 hover:text-purple-700 hover:shadow-md transition-all duration-300 hover:scale-[1.02] w-fit group/add-button"
+                  onClick={() => setShowCreateDialog(true)}
+                >
+                  <div className="w-4 h-4 flex items-center justify-center transform group-hover/add-button:rotate-90 transition-transform duration-300">
+                    <Icons.plus className="w-3 h-3" />
+                  </div>
+                  <span className="text-sm font-medium">新增分类</span>
                 </div>
-                <span className="text-sm">新增分类</span>
               </div>
-            </div>
+            )}
           </div>
         )}
       </CardContent>

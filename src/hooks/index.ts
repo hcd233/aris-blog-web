@@ -11,6 +11,9 @@ export * from './useArticle';
 // Category hooks
 export * from './useCategory';
 
+// Tag hooks
+export * from './useTag';
+
 // Core hooks
 export { useApi } from './useApi';
 export { useQuery } from './useQuery';

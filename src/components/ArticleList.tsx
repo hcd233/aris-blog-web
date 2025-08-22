@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArticleFormDialog } from "@/components/ui/article-form-dialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { useArticles, useDeleteArticle, useUpdateArticleStatus } from "@/hooks";
 import { Icons } from "@/components/icons";
@@ -13,14 +13,17 @@ import { toast } from "sonner";
 import type { Article } from "@/types/dto";
 import { ArticleStatus } from "@/types/dto/article.dto";
 import { Eye } from "lucide-react";
+import { useCurrentUser } from "@/hooks/useAuth";
+import { hasCreatorAccess } from "@/lib/permissions";
 
 interface ArticleListProps {
   onTotalChange?: (total: number) => void;
 }
 
 export default function ArticleList({ onTotalChange }: ArticleListProps) {
+  const router = useRouter();
+  const { data: currentUser } = useCurrentUser();
   const [page, setPage] = useState(1);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
@@ -98,13 +101,15 @@ export default function ArticleList({ onTotalChange }: ArticleListProps) {
           <p className="text-blue-600 dark:text-blue-400 mb-6">
             创建你的第一篇文章来开始写作
           </p>
-          <Button
-            onClick={() => setShowCreateDialog(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-          >
-            <Icons.plus className="w-4 h-4 mr-2" />
-            创建第一篇文章
-          </Button>
+          {hasCreatorAccess(currentUser?.permission) && (
+            <Button
+              onClick={() => router.push("/articles/create")}
+              className="bg-blue-500 hover:bg-blue-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+            >
+              <Icons.plus className="w-4 h-4 mr-2" />
+              创建第一篇文章
+            </Button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
@@ -163,36 +168,29 @@ export default function ArticleList({ onTotalChange }: ArticleListProps) {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 ml-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setEditingArticle(article)}
-                        className="h-8 w-8 p-0"
-                      >
-                        <Icons.edit className="w-3 h-3" />
-                      </Button>
-                      
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeleteConfirm(article.articleID)}
-                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                      >
-                        <Icons.trash className="w-3 h-3" />
-                      </Button>
-
-                      {article.status === ArticleStatus.DRAFT && (
+                    {hasCreatorAccess(currentUser?.permission) && (
+                      <div className="flex items-center gap-2 ml-4">
                         <Button
-                          variant="default"
+                          variant="ghost"
                           size="sm"
-                          onClick={() => handleUpdateStatus(article.articleID, ArticleStatus.PUBLISH)}
-                          className="h-8 text-xs"
+                          onClick={() => setDeleteConfirm(article.articleID)}
+                          className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
                         >
-                          Publish
+                          <Icons.trash className="w-3 h-3" />
                         </Button>
-                      )}
-                    </div>
+
+                        {article.status === ArticleStatus.DRAFT && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleUpdateStatus(article.articleID, ArticleStatus.PUBLISH)}
+                            className="h-8 text-xs"
+                          >
+                            Publish
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -213,43 +211,23 @@ export default function ArticleList({ onTotalChange }: ArticleListProps) {
             </div>
           )}
 
-          {/* 新增文章按钮 */}
-          <div className="pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateDialog(true)}
-              className="w-full border-2 border-dashed border-blue-300 text-blue-600 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200"
-            >
-              <Icons.plus className="w-4 h-4 mr-2" />
-              新增文章
-            </Button>
-          </div>
+          {/* 新增文章按钮 - 仅限有权限的用户 */}
+          {hasCreatorAccess(currentUser?.permission) && (
+            <div className="pt-4">
+              <Button
+                variant="outline"
+                onClick={() => router.push("/articles/create")}
+                className="w-full border-2 border-dashed border-blue-300 text-blue-600 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200"
+              >
+                <Icons.plus className="w-4 h-4 mr-2" />
+                新增文章
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
-      {/* 创建文章对话框 */}
-      <ArticleFormDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        mode="create"
-        onSubmitSuccess={handleCreateSuccess}
-      />
 
-      {/* 编辑文章对话框 */}
-      <ArticleFormDialog
-        open={!!editingArticle}
-        onOpenChange={(open) => !open && setEditingArticle(null)}
-        mode="edit"
-        initialData={{
-          ...editingArticle,
-          articleID: editingArticle?.articleID,
-          content: "" // 这里需要从版本API获取内容
-        }}
-        onSubmitSuccess={() => {
-          setEditingArticle(null);
-          refetch();
-        }}
-      />
 
       {/* 删除确认对话框 */}
       <DeleteConfirmDialog

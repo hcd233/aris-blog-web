@@ -19,11 +19,12 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import TagList from "@/components/TagList";
 import ArticleList from "@/components/ArticleList";
-import { ArticleFormDialog } from "@/components/ui/article-form-dialog";
+import Link from "next/link";
 import AppIcon from "@/components/AppIcon";
 import { appConfig } from "@/config/app";
 import { CategoryTree } from "@/components/CategoryTree";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { hasCreatorAccess } from "@/lib/permissions";
 
 export default function HomePage() {
   const router = useRouter();
@@ -32,7 +33,6 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [tagsTotal, setTagsTotal] = useState<number>(0);
   const [articlesTotal, setArticlesTotal] = useState<number>(0);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -423,125 +423,10 @@ export default function HomePage() {
             </Card>
 
             {/* Main Content Grid */}
-            <div
-              className="grid grid-cols-1 lg:grid-cols-3 gap-6"
-              data-oid="i.5t7s6"
-            >
-              {/* Categories Section */}
-              <div className="lg:col-span-1">
-                <CategoryTree />
-              </div>
-
-              {/* Tags Section */}
+            <div className="space-y-6" data-oid="i.5t7s6">
+              {/* Articles Section */}
               <Card
-                className="lg:col-span-1 hover:shadow-lg transition-shadow duration-200"
-                data-oid="fmdvtp-"
-              >
-                <CardHeader className="pb-3" data-oid="9mps8zr">
-                  <div
-                    className="flex items-center justify-between"
-                    data-oid="07e12u0"
-                  >
-                    <div
-                      className="flex items-center space-x-2"
-                      data-oid=".5b6.4e"
-                    >
-                      <Icons.tag
-                        className="w-5 h-5 text-orange-600"
-                        data-oid="l1f9:y0"
-                      />
-
-                      <CardTitle className="text-lg" data-oid="742rsz0">
-                        Tags
-                      </CardTitle>
-                    </div>
-                    {tagsTotal > 0 && (
-                      <Badge
-                        variant="secondary"
-                        className="text-xs bg-orange-100 text-orange-700 border-orange-200"
-                        data-oid="cps9isn"
-                      >
-                        {tagsTotal}
-                      </Badge>
-                    )}
-                  </div>
-                  <CardDescription data-oid="c7dbdmt">
-                    Label your articles
-                  </CardDescription>
-                </CardHeader>
-                <Separator data-oid="spb6_iv" />
-                <CardContent data-oid="j.j82x7">
-                  <TagList
-                    onTotalChange={handleTagsTotalChange}
-                    data-oid="yii2_cd"
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions */}
-              <Card
-                className="lg:col-span-1 hover:shadow-lg transition-shadow duration-200"
-                data-oid="ht4951a"
-              >
-                <CardHeader className="pb-3" data-oid="ge-j5ox">
-                  <div
-                    className="flex items-center space-x-2"
-                    data-oid="us8qux3"
-                  >
-                    <Icons.zap
-                      className="w-5 h-5 text-yellow-600"
-                      data-oid="u-89-nw"
-                    />
-
-                    <CardTitle className="text-lg" data-oid="k4eypnd">
-                      Quick Actions
-                    </CardTitle>
-                  </div>
-                  <CardDescription data-oid="nf2mbkk">
-                    Common tasks
-                  </CardDescription>
-                </CardHeader>
-                <Separator data-oid="6jw0vcd" />
-                <CardContent data-oid="7jcb:d8">
-                  <div className="space-y-3" data-oid="gxg:z2c">
-                    <Button
-                      className="w-full justify-start"
-                      variant="outline"
-                      onClick={() => setShowCreateDialog(true)}
-                      data-oid="bp2i9eg"
-                    >
-                      <Icons.plus className="w-4 h-4 mr-2" data-oid="-1ko7j7" />
-                      New Article
-                    </Button>
-                    <Button
-                      className="w-full justify-start"
-                      variant="outline"
-                      data-oid="85ra7nu"
-                    >
-                      <Icons.upload
-                        className="w-4 h-4 mr-2"
-                        data-oid="c401oad"
-                      />
-                      Upload Images
-                    </Button>
-                    <Button
-                      className="w-full justify-start"
-                      variant="outline"
-                      data-oid="fokvxt5"
-                    >
-                      <Icons.settings
-                        className="w-4 h-4 mr-2"
-                        data-oid="763-v8."
-                      />
-                      Settings
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Recent Articles */}
-              <Card
-                className="lg:col-span-3 hover:shadow-lg transition-shadow duration-200"
+                className="hover:shadow-lg transition-shadow duration-200"
                 data-oid="ljmmp.h"
               >
                 <CardHeader className="pb-3" data-oid="cczhq3v">
@@ -559,7 +444,7 @@ export default function HomePage() {
                       />
 
                       <CardTitle className="text-lg" data-oid="rnk3.uq">
-                        Recent Articles
+                        Articles
                       </CardTitle>
                     </div>
                     {articlesTotal > 0 && (
@@ -573,7 +458,7 @@ export default function HomePage() {
                     )}
                   </div>
                   <CardDescription data-oid="jy718_a">
-                    Your latest blog posts
+                    Your blog posts
                   </CardDescription>
                 </CardHeader>
                 <Separator data-oid="-ridj6s" />
@@ -584,20 +469,66 @@ export default function HomePage() {
                   />
                 </CardContent>
               </Card>
+
+              {/* Categories and Tags Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Categories Section - Only show for creators and admins */}
+                {hasCreatorAccess(currentUser?.permission) && (
+                  <div className="lg:col-span-1">
+                    <CategoryTree />
+                  </div>
+                )}
+
+                {/* Tags Section */}
+                <Card
+                  className="hover:shadow-lg transition-shadow duration-200"
+                  data-oid="fmdvtp-"
+                >
+                  <CardHeader className="pb-3" data-oid="9mps8zr">
+                    <div
+                      className="flex items-center justify-between"
+                      data-oid="07e12u0"
+                    >
+                      <div
+                        className="flex items-center space-x-2"
+                        data-oid=".5b6.4e"
+                      >
+                        <Icons.tag
+                          className="w-5 h-5 text-orange-600"
+                          data-oid="l1f9:y0"
+                        />
+
+                        <CardTitle className="text-lg" data-oid="742rsz0">
+                          Tags
+                        </CardTitle>
+                      </div>
+                      {tagsTotal > 0 && (
+                        <Badge
+                          variant="secondary"
+                          className="text-xs bg-orange-100 text-orange-700 border-orange-200"
+                          data-oid="cps9isn"
+                        >
+                          {tagsTotal}
+                        </Badge>
+                      )}
+                    </div>
+                    <CardDescription data-oid="c7dbdmt">
+                      Label your articles
+                    </CardDescription>
+                  </CardHeader>
+                  <Separator data-oid="spb6_iv" />
+                  <CardContent data-oid="j.j82x7">
+                    <TagList
+                      onTotalChange={handleTagsTotalChange}
+                      data-oid="yii2_cd"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </>
         )}
 
-        {/* 创建文章对话框 */}
-        <ArticleFormDialog
-          open={showCreateDialog}
-          onOpenChange={setShowCreateDialog}
-          mode="create"
-          onSubmitSuccess={() => {
-            setShowCreateDialog(false);
-            setArticlesTotal(prev => prev + 1);
-          }}
-        />
       </main>
     </div>
   );

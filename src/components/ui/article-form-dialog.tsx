@@ -147,7 +147,7 @@ export function ArticleFormDialog({
       });
       setTagsInput(initialData?.tags?.join(", ") || "");
     }
-  }, [open, initialData]);
+  }, [open]); // Removed initialData from dependencies to prevent infinite loop
 
   const getDialogConfig = () => {
     if (mode === "create") {
