@@ -16,8 +16,12 @@ import { Icons } from "@/components/icons";
 import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { useArticles, useCreateArticle, useUpdateArticle } from "@/hooks";
 import { toast } from "sonner";
-import type { CreateArticleRequestDTO, UpdateArticleRequestDTO } from "@/types/dto";
-import { generateSlug } from "@/lib/slugify";
+import type { CreateArticleRequestDTO, UpdateArticleRequestDTO, CreateArticleVersionRequestDTO } from "@/types/dto";
+import { generateSlugWithFallback } from "@/lib/slugify";
+import { CategorySelector } from "./category-selector";
+import { TagSelector } from "./tag-selector";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import articleService from "@/services/article.service";
 
 export interface ArticleFormData {
   title: string;
@@ -51,15 +55,16 @@ export function ArticleFormDialog({
     ...initialData,
   });
 
-  const [tagsInput, setTagsInput] = useState("");
+  const [currentStep, setCurrentStep] = useState<"article" | "content">("article");
+  const [createdArticleId, setCreatedArticleId] = useState<number | null>(null);
   const { refetch: refetchArticles } = useArticles();
   const createArticleMutation = useCreateArticle();
   const updateArticleMutation = useUpdateArticle(initialData?.articleID || 0);
 
-  const isLoading = createArticleMutation.isLoading || updateArticleMutation.isLoading;
+  const isLoading = createArticleMutation.loading || updateArticleMutation.loading;
 
   // 使用防抖处理标题变化，避免频繁的异步slug生成
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
   
   const handleTitleChange = useCallback((title: string) => {
     setFormData(prev => ({ ...prev, title }));
@@ -73,7 +78,10 @@ export function ArticleFormDialog({
     if (title.trim()) {
       debounceRef.current = setTimeout(async () => {
         try {
-          const slug = await generateSlug(title);
+          const slug = await generateSlugWithFallback(title, {
+            maxLength: 60,
+            fallback: 'untitled-article'
+          });
           setFormData(prev => ({ ...prev, slug }));
         } catch (error) {
           console.warn('Failed to generate slug:', error);
@@ -82,55 +90,103 @@ export function ArticleFormDialog({
     }
   }, []);
 
-  // 处理标签输入
-  const handleTagsInputChange = (value: string) => {
-    setTagsInput(value);
-    const tags = value
-      .split(",")
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0);
-    setFormData(prev => ({ ...prev, tags }));
+  const handleCreateArticle = async () => {
+    if (!formData.title.trim() || !formData.slug.trim() || formData.categoryID === 0) {
+      toast.error("Please fill in all required fields (title, slug, category)");
+      return;
+    }
+
+    try {
+      const createData: CreateArticleRequestDTO = {
+        title: formData.title.trim(),
+        slug: formData.slug.trim(),
+        categoryID: formData.categoryID,
+        tags: formData.tags,
+      };
+      
+      const createdArticle = await createArticleMutation.mutateAsync(createData);
+      setCreatedArticleId(createdArticle.articleID);
+      
+      toast.success("Article created successfully");
+      
+      // 如果有内容，切换到内容编辑步骤
+      if (formData.content.trim()) {
+        setCurrentStep("content");
+      } else {
+        // 没有内容，直接完成
+        onOpenChange(false);
+        refetchArticles();
+        onSubmitSuccess?.();
+      }
+    } catch (error) {
+      console.error("Failed to create article:", error);
+      toast.error("Failed to create article");
+    }
   };
 
-  const handleSubmit = async () => {
+  const handleCreateVersion = async () => {
+    if (!createdArticleId || !formData.content.trim()) {
+      toast.error("No content to save");
+      return;
+    }
+
+    try {
+      const versionData: CreateArticleVersionRequestDTO = {
+        content: formData.content.trim(),
+      };
+      
+      await articleService.createArticleVersion(createdArticleId, versionData);
+      
+      toast.success("Article version created successfully");
+      onOpenChange(false);
+      refetchArticles();
+      onSubmitSuccess?.();
+    } catch (error) {
+      console.error("Failed to create article version:", error);
+      toast.error("Failed to create article version");
+    }
+  };
+
+  const handleUpdateArticle = async () => {
     if (!formData.title.trim() || !formData.slug.trim() || formData.categoryID === 0) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     try {
-      if (mode === "create") {
-        const createData: CreateArticleRequestDTO = {
-          title: formData.title.trim(),
-          slug: formData.slug.trim(),
-          categoryID: formData.categoryID,
-          tags: formData.tags,
+      const updateData: UpdateArticleRequestDTO = {
+        categoryID: formData.categoryID,
+        slug: formData.slug.trim(),
+        tags: formData.tags,
+      };
+      await updateArticleMutation.mutateAsync(updateData);
+      
+      // For edit mode, also create a new version if content is provided
+      if (formData.content.trim() && initialData?.articleID) {
+        const versionData: CreateArticleVersionRequestDTO = {
+          content: formData.content.trim(),
         };
-        await createArticleMutation.mutateAsync(createData);
-        
-        // 创建版本
-        if (formData.content.trim()) {
-          // 这里需要调用创建版本的API
-          // await arisSDK.articles.createVersion(article.articleID, { content: formData.content });
-        }
-        
-        toast.success("Article created successfully");
-      } else {
-        const updateData: UpdateArticleRequestDTO = {
-          title: formData.title.trim(),
-          slug: formData.slug.trim(),
-          categoryID: formData.categoryID,
-          tags: formData.tags,
-        };
-        await updateArticleMutation.mutateAsync(updateData);
-        toast.success("Article updated successfully");
+        await articleService.createArticleVersion(initialData.articleID, versionData);
       }
-
+      
+      toast.success("Article updated successfully");
       onOpenChange(false);
       refetchArticles();
       onSubmitSuccess?.();
     } catch (error) {
-      console.error("Failed to save article:", error);
+      console.error("Failed to update article:", error);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (mode === "create") {
+      if (currentStep === "article") {
+        handleCreateArticle();
+      } else {
+        handleCreateVersion();
+      }
+    } else {
+      handleUpdateArticle();
     }
   };
 
@@ -145,15 +201,16 @@ export function ArticleFormDialog({
         content: "",
         ...initialData,
       });
-      setTagsInput(initialData?.tags?.join(", ") || "");
+      setCurrentStep("article");
+      setCreatedArticleId(null);
     }
-  }, [open]); // Removed initialData from dependencies to prevent infinite loop
+  }, [open, initialData]);
 
   const getDialogConfig = () => {
     if (mode === "create") {
       return {
-        title: "Create New Article",
-        description: "Fill in the article details and content",
+        title: currentStep === "article" ? "Create New Article" : "Add Content",
+        description: currentStep === "article" ? "Fill in the article details" : "Write your article content",
         icon: <Icons.fileText className="w-5 h-5 mr-2" />,
         color: "blue",
         gradient: "from-blue-50 to-indigo-50",
@@ -179,7 +236,7 @@ export function ArticleFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] border-0 shadow-xl p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[800px] border-0 shadow-xl p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* 头部渐变背景 */}
         <div
           className={`p-6 rounded-t-lg border-b ${config.border} dark:border-${config.color}-800 bg-gradient-to-br ${config.gradient} dark:from-${config.color}-900/20 dark:to-amber-900/20`}
@@ -196,95 +253,192 @@ export function ArticleFormDialog({
         </div>
 
         {/* 表单内容 */}
-        <div className="px-6 py-6 space-y-4">
-          {/* 标题字段 */}
-          <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-semibold">
-              Title *
-            </Label>
-            <Input
-              id="title"
-              placeholder="Enter article title"
-              value={formData.title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              className="border-2 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all duration-200"
-            />
-          </div>
+        <div className="px-6 py-6">
+          {mode === "create" && currentStep === "article" ? (
+            // Article creation step
+            <div className="space-y-6">
+              {/* 标题字段 */}
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-sm font-semibold">
+                  Title *
+                </Label>
+                <Input
+                  id="title"
+                  placeholder="Enter article title"
+                  value={formData.title}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                  className="border-2 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all duration-200"
+                />
+              </div>
 
-          {/* Slug字段 */}
-          <div className="space-y-2">
-            <Label htmlFor="slug" className="text-sm font-semibold">
-              Slug *
-            </Label>
-            <Input
-              id="slug"
-              placeholder="Article slug"
-              value={formData.slug}
-              onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-              className="border-2 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all duration-200 font-mono text-sm"
-            />
-          </div>
+              {/* Slug字段 */}
+              <div className="space-y-2">
+                <Label htmlFor="slug" className="text-sm font-semibold">
+                  Slug *
+                </Label>
+                <Input
+                  id="slug"
+                  placeholder="Article slug"
+                  value={formData.slug}
+                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                  className="border-2 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all duration-200 font-mono text-sm"
+                />
+              </div>
 
-          {/* 分类ID字段 */}
-          <div className="space-y-2">
-            <Label htmlFor="categoryID" className="text-sm font-semibold">
-              Category ID *
-            </Label>
-            <Input
-              id="categoryID"
-              type="number"
-              placeholder="Enter category ID"
-              value={formData.categoryID || ""}
-              onChange={(e) => setFormData(prev => ({ ...prev, categoryID: parseInt(e.target.value) || 0 }))}
-              className="border-2 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all duration-200"
-            />
-          </div>
+              {/* 分类选择 */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Category *</Label>
+                <CategorySelector
+                  value={formData.categoryID}
+                  onChange={(categoryID) => setFormData(prev => ({ ...prev, categoryID }))}
+                />
+              </div>
 
-          {/* 标签字段 */}
-          <div className="space-y-2">
-            <Label htmlFor="tags" className="text-sm font-semibold">
-              Tags (comma-separated)
-            </Label>
-            <Input
-              id="tags"
-              placeholder="tag1, tag2, tag3"
-              value={tagsInput}
-              onChange={(e) => handleTagsInputChange(e.target.value)}
-              className="border-2 border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 rounded-lg transition-all duration-200"
-            />
-          </div>
+              {/* 标签选择 */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Tags</Label>
+                <TagSelector
+                  value={formData.tags}
+                  onChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
+                />
+              </div>
+            </div>
+          ) : mode === "create" && currentStep === "content" ? (
+            // Content creation step
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <Icons.check className="w-4 h-4 text-green-600" />
+                <span>Article &quot;{formData.title}&quot; created successfully</span>
+              </div>
+              
+              <MarkdownEditor
+                value={formData.content}
+                onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                label="Content"
+                placeholder="Write your article content in Markdown format..."
+              />
+            </div>
+          ) : (
+            // Edit mode - show all fields in tabs
+            <Tabs defaultValue="details" className="space-y-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="content">Content</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="details" className="space-y-6">
+                {/* 标题字段 */}
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="text-sm font-semibold">
+                    Title *
+                  </Label>
+                  <Input
+                    id="title"
+                    placeholder="Enter article title"
+                    value={formData.title}
+                    onChange={(e) => handleTitleChange(e.target.value)}
+                    className="border-2 border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 rounded-lg transition-all duration-200"
+                  />
+                </div>
 
-          {/* 内容编辑器 */}
-          <MarkdownEditor
-            value={formData.content}
-            onChange={(content) => setFormData(prev => ({ ...prev, content }))}
-            label="Content"
-            placeholder="Write your article content in Markdown format..."
-          />
+                {/* Slug字段 */}
+                <div className="space-y-2">
+                  <Label htmlFor="slug" className="text-sm font-semibold">
+                    Slug *
+                  </Label>
+                  <Input
+                    id="slug"
+                    placeholder="Article slug"
+                    value={formData.slug}
+                    onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                    className="border-2 border-gray-200 focus:border-green-400 focus:ring-2 focus:ring-green-100 rounded-lg transition-all duration-200 font-mono text-sm"
+                  />
+                </div>
+
+                {/* 分类选择 */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Category *</Label>
+                  <CategorySelector
+                    value={formData.categoryID}
+                    onChange={(categoryID) => setFormData(prev => ({ ...prev, categoryID }))}
+                  />
+                </div>
+
+                {/* 标签选择 */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Tags</Label>
+                  <TagSelector
+                    value={formData.tags}
+                    onChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
+                  />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="content">
+                <MarkdownEditor
+                  value={formData.content}
+                  onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                  label="Content"
+                  placeholder="Write your article content in Markdown format..."
+                />
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
 
         {/* 底部按钮 */}
         <DialogFooter className="px-6 pb-6 space-x-3 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
           <Button
             variant="outline"
-            onClick={() => onOpenChange(false)}
+            onClick={() => {
+              if (mode === "create" && currentStep === "content") {
+                setCurrentStep("article");
+              } else {
+                onOpenChange(false);
+              }
+            }}
             disabled={isLoading}
             className="border-2 border-gray-300 hover:bg-gray-100 transition-colors"
           >
-            取消
+            {mode === "create" && currentStep === "content" ? "Back" : "Cancel"}
           </Button>
+          
+          {mode === "create" && currentStep === "article" && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                // Skip content step - create article without content
+                handleCreateArticle();
+              }}
+              disabled={isLoading || !formData.title.trim() || !formData.slug.trim() || formData.categoryID === 0}
+              className="border-2 border-blue-300 text-blue-600 hover:bg-blue-50 transition-colors"
+            >
+              Create Without Content
+            </Button>
+          )}
+          
           <Button
             onClick={handleSubmit}
-            disabled={isLoading || !formData.title.trim() || !formData.slug.trim() || formData.categoryID === 0}
+            disabled={
+              isLoading || 
+              !formData.title.trim() || 
+              !formData.slug.trim() || 
+              formData.categoryID === 0 ||
+              (mode === "create" && currentStep === "content" && !formData.content.trim())
+            }
             className={`${config.button} text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200`}
           >
             {isLoading ? (
               <>
                 <Icons.spinner className="w-4 h-4 mr-2 animate-spin" />
-                {mode === "create" ? "Creating..." : "Updating..."}
+                {mode === "create" 
+                  ? (currentStep === "article" ? "Creating..." : "Saving Content...") 
+                  : "Updating..."}
               </>
             ) : (
-              `${mode === "create" ? "Create Article" : "Update Article"}`
+              mode === "create" 
+                ? (currentStep === "article" ? "Create & Add Content" : "Save Content")
+                : "Update Article"
             )}
           </Button>
         </DialogFooter>

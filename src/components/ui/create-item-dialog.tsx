@@ -53,7 +53,7 @@ export function CreateItemDialog({
   const isTag = itemType === "tag";
 
   // 使用防抖处理名称变化，避免频繁的异步slug生成
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
   
   const handleNameChange = useCallback((name: string) => {
     setFormData(prev => ({ ...prev, name }));
