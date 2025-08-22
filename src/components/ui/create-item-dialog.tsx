@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Icons } from "@/components/icons";
+import { generateSlug } from "@/lib/slugify";
 
 export interface CreateItemForm {
   name: string;
@@ -52,16 +53,12 @@ export function CreateItemDialog({
   const isTag = itemType === "tag";
 
   // 根据name自动生成slug（仅对标签有效）
-  const handleNameChange = (name: string) => {
+  const handleNameChange = async (name: string) => {
+    const slug = isTag ? await generateSlug(name) : formData.slug;
     setFormData((prev) => ({
       ...prev,
       name,
-      slug: isTag
-        ? name
-            .toLowerCase()
-            .replace(/\s+/g, "-")
-            .replace(/[^\w\-]/g, "")
-        : prev.slug,
+      slug,
     }));
   };
 

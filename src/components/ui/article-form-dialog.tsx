@@ -17,6 +17,7 @@ import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { useArticles, useCreateArticle, useUpdateArticle } from "@/hooks";
 import { toast } from "sonner";
 import type { CreateArticleRequestDTO, UpdateArticleRequestDTO } from "@/types/dto";
+import { generateSlug } from "@/lib/slugify";
 
 export interface ArticleFormData {
   title: string;
@@ -58,14 +59,12 @@ export function ArticleFormDialog({
   const isLoading = createArticleMutation.isLoading || updateArticleMutation.isLoading;
 
   // 根据title自动生成slug
-  const handleTitleChange = (title: string) => {
+  const handleTitleChange = async (title: string) => {
+    const slug = await generateSlug(title);
     setFormData((prev) => ({
       ...prev,
       title,
-      slug: title
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^\w\-]/g, ""),
+      slug,
     }));
   };
 
