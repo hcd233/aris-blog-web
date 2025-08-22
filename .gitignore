@@ -43,3 +43,7 @@ next-env.d.ts
 # cursor
 .cursorrules
 .cursorignore
+
+# claude code
+.claude
+CLAUDE.md

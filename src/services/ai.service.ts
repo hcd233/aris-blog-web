@@ -24,7 +24,7 @@ class AIService extends BaseService {
   async createPrompt(templates: Template[]): Promise<CreatePromptResponseDTO> {
     const data: CreatePromptRequestDTO = { templates };
     return await this.post<CreatePromptRequestDTO, CreatePromptResponseDTO>(
-      '/v1/prompt',
+      '/v1/ai/prompt/contentCompletion',
       data
     );
   }
@@ -33,7 +33,7 @@ class AIService extends BaseService {
    * Get the latest prompt
    */
   async getLatestPrompt(): Promise<Prompt> {
-    const response = await this.get<GetLatestPromptResponseDTO>('/v1/prompt/latest');
+    const response = await this.get<GetLatestPromptResponseDTO>('/v1/ai/prompt/contentCompletion/latest');
     return response.prompt;
   }
 
@@ -42,7 +42,7 @@ class AIService extends BaseService {
    */
   async listPrompts(params?: ListPromptsQueryDTO): Promise<ListPromptResponseDTO> {
     const queryString = params ? this.buildQueryString(params) : '';
-    return await this.get<ListPromptResponseDTO>(`/v1/prompts${queryString}`);
+    return await this.get<ListPromptResponseDTO>(`/v1/ai/prompt/contentCompletion${queryString}`);
   }
 
   /**
@@ -55,11 +55,11 @@ class AIService extends BaseService {
     onChunk?: (chunk: SSEResponse) => void
   ): Promise<string> {
     if (data.stream && onChunk) {
-      return this.streamGeneration('/v1/generate/article/qa', data, onChunk);
+      return this.streamGeneration('/v1/ai/app/reader/articleQA', data, onChunk);
     }
     
     const response = await this.post<GenerateArticleQARequestDTO, { content: string }>(
-      '/v1/generate/article/qa',
+      '/v1/ai/app/reader/articleQA',
       data
     );
     return response.content;
@@ -75,11 +75,11 @@ class AIService extends BaseService {
     onChunk?: (chunk: SSEResponse) => void
   ): Promise<string> {
     if (data.stream && onChunk) {
-      return this.streamGeneration('/v1/generate/article/summary', data, onChunk);
+      return this.streamGeneration('/v1/ai/app/creator/articleSummary', data, onChunk);
     }
     
     const response = await this.post<GenerateArticleSummaryRequestDTO, { content: string }>(
-      '/v1/generate/article/summary',
+      '/v1/ai/app/creator/articleSummary',
       data
     );
     return response.content;
@@ -95,11 +95,11 @@ class AIService extends BaseService {
     onChunk?: (chunk: SSEResponse) => void
   ): Promise<string> {
     if (data.stream && onChunk) {
-      return this.streamGeneration('/v1/generate/content/completion', data, onChunk);
+      return this.streamGeneration('/v1/ai/app/creator/contentCompletion', data, onChunk);
     }
     
     const response = await this.post<GenerateContentCompletionRequestDTO, { content: string }>(
-      '/v1/generate/content/completion',
+      '/v1/ai/app/creator/contentCompletion',
       data
     );
     return response.content;
@@ -115,11 +115,11 @@ class AIService extends BaseService {
     onChunk?: (chunk: SSEResponse) => void
   ): Promise<string> {
     if (data.stream && onChunk) {
-      return this.streamGeneration('/v1/generate/term/explanation', data, onChunk);
+      return this.streamGeneration('/v1/ai/app/reader/termExplaination', data, onChunk);
     }
     
     const response = await this.post<GenerateTermExplanationRequestDTO, { content: string }>(
-      '/v1/generate/term/explanation',
+      '/v1/ai/app/reader/termExplaination',
       data
     );
     return response.content;

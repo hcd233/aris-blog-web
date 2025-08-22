@@ -60,8 +60,8 @@ export default function LoginPage() {
 
         {/* OAuth登录按钮 */}
         <div className="space-y-3">
-          {oAuthService.getSupportedProviders().map((provider) => {
-            const config = oAuthService.getProviderConfig(provider);
+          {arisSDK.oauth.getSupportedProviders().map((provider) => {
+            const config = arisSDK.oauth.getProviderConfig(provider);
             const isLoading = loadingProvider === provider;
             const IconComponent = Icons[config.icon as keyof typeof Icons];
             

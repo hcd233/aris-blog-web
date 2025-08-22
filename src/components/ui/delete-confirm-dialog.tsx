@@ -18,7 +18,7 @@ interface DeleteConfirmDialogProps {
   itemName?: string
   onConfirm: () => void
   loading?: boolean
-  variant?: 'red' | 'purple' | 'orange'
+  variant?: 'red' | 'purple' | 'orange' | 'blue'
 }
 
 export function DeleteConfirmDialog({
@@ -58,6 +58,15 @@ export function DeleteConfirmDialog({
       titleColor: 'text-orange-600 dark:text-orange-400',
       descColor: 'text-orange-600 dark:text-orange-400',
       buttonColor: 'bg-orange-500 hover:bg-orange-600'
+    },
+    blue: {
+      gradient: 'from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20',
+      border: 'border-blue-100 dark:border-blue-800',
+      iconBg: 'bg-blue-100 dark:bg-blue-900/40',
+      iconColor: 'text-blue-500',
+      titleColor: 'text-blue-600 dark:text-blue-400',
+      descColor: 'text-blue-600 dark:text-blue-400',
+      buttonColor: 'bg-blue-500 hover:bg-blue-600'
     }
   }
 

@@ -15,7 +15,7 @@ class ImageService extends BaseService {
    * Get presigned URL for an image
    */
   async getImageUrl(imageId: number): Promise<string> {
-    const response = await this.get<GetImageResponseDTO>(`/v1/image/${imageId}`);
+    const response = await this.get<GetImageResponseDTO>(`/v1/asset/object/image/${imageId}`);
     return response.presignedURL;
   }
 
@@ -28,7 +28,7 @@ class ImageService extends BaseService {
     formData.append('image', file);
 
     return await this.post<FormData, UploadImageResponseDTO>(
-      '/v1/image',
+      '/v1/asset/object/image',
       formData,
       {
         headers: {
@@ -42,14 +42,14 @@ class ImageService extends BaseService {
    * Delete an image
    */
   async deleteImage(imageId: number): Promise<DeleteImageResponseDTO> {
-    return await this.delete<DeleteImageResponseDTO>(`/v1/image/${imageId}`);
+    return await this.delete<DeleteImageResponseDTO>(`/v1/asset/object/image/${imageId}`);
   }
 
   /**
    * List user's images
    */
   async listImages(userId?: number): Promise<Image[]> {
-    const url = userId ? `/v1/user/${userId}/images` : '/v1/images';
+    const url = '/v1/asset/object/images';
     const response = await this.get<ListImagesResponseDTO>(url);
     return response.images;
   }

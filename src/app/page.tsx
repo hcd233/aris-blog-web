@@ -18,6 +18,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import TagList from "@/components/TagList";
+import ArticleList from "@/components/ArticleList";
+import { ArticleFormDialog } from "@/components/ui/article-form-dialog";
 import AppIcon from "@/components/AppIcon";
 import { appConfig } from "@/config/app";
 import { CategoryTree } from "@/components/CategoryTree";
@@ -29,6 +31,8 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tagsTotal, setTagsTotal] = useState<number>(0);
+  const [articlesTotal, setArticlesTotal] = useState<number>(0);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -82,6 +86,10 @@ export default function HomePage() {
 
   const handleTagsTotalChange = (total: number) => {
     setTagsTotal(total);
+  };
+
+  const handleArticlesTotalChange = (total: number) => {
+    setArticlesTotal(total);
   };
 
   if (isLoading) {
@@ -499,6 +507,7 @@ export default function HomePage() {
                     <Button
                       className="w-full justify-start"
                       variant="outline"
+                      onClick={() => setShowCreateDialog(true)}
                       data-oid="bp2i9eg"
                     >
                       <Icons.plus className="w-4 h-4 mr-2" data-oid="-1ko7j7" />
@@ -553,13 +562,15 @@ export default function HomePage() {
                         Recent Articles
                       </CardTitle>
                     </div>
-                    <Button variant="ghost" size="sm" data-oid="_ld.2wr">
-                      <Icons.externalLink
-                        className="w-4 h-4"
-                        data-oid="ieg0-hh"
-                      />
-                      View All
-                    </Button>
+                    {articlesTotal > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="text-xs bg-blue-100 text-blue-700 border-blue-200"
+                        data-oid="cps9isn"
+                      >
+                        {articlesTotal}
+                      </Badge>
+                    )}
                   </div>
                   <CardDescription data-oid="jy718_a">
                     Your latest blog posts
@@ -567,34 +578,26 @@ export default function HomePage() {
                 </CardHeader>
                 <Separator data-oid="-ridj6s" />
                 <CardContent data-oid="rs553l5">
-                  <div className="text-center py-12" data-oid="8qu9i3b">
-                    <Icons.fileText
-                      className="w-16 h-16 text-gray-400 mx-auto mb-4"
-                      data-oid="8c0l6md"
-                    />
-
-                    <h3
-                      className="text-lg font-semibold text-gray-700 mb-2"
-                      data-oid="5r7dj4h"
-                    >
-                      No articles yet
-                    </h3>
-                    <p
-                      className="text-sm text-gray-500 mb-6"
-                      data-oid="nu.rza7"
-                    >
-                      Start writing your first blog post
-                    </p>
-                    <Button data-oid="zqgwpje">
-                      <Icons.plus className="w-4 h-4 mr-2" data-oid="bghtzyl" />
-                      Write Your First Article
-                    </Button>
-                  </div>
+                  <ArticleList
+                    onTotalChange={handleArticlesTotalChange}
+                    data-oid="yii2_cd"
+                  />
                 </CardContent>
               </Card>
             </div>
           </>
         )}
+
+        {/* 创建文章对话框 */}
+        <ArticleFormDialog
+          open={showCreateDialog}
+          onOpenChange={setShowCreateDialog}
+          mode="create"
+          onSubmitSuccess={() => {
+            setShowCreateDialog(false);
+            setArticlesTotal(prev => prev + 1);
+          }}
+        />
       </main>
     </div>
   );

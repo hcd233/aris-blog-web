@@ -124,7 +124,7 @@ class ArticleService extends BaseService {
     return withCache(
       async (queryParams?: ListArticlesQueryDTO) => {
         const queryString = queryParams ? this.buildQueryString(queryParams) : '';
-        return await this.get<ListArticlesResponseDTO>(`/v1/articles${queryString}`);
+        return await this.get<ListArticlesResponseDTO>(`/v1/article/list${queryString}`);
       },
       (queryParams?: ListArticlesQueryDTO) => generateCacheKey('articles', queryParams),
       {
