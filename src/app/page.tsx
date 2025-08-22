@@ -216,6 +216,16 @@ export default function HomePage() {
                   )}
                 </div>
               )}
+              {currentUser && hasCreatorAccess(currentUser.role) && (
+                <Button
+                  onClick={() => router.push("/articles/create")}
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200"
+                >
+                  <Icons.plus className="w-4 h-4 mr-2" />
+                  Create Article
+                </Button>
+              )}
               <ThemeToggle />
               <Button
                 onClick={handleLogout}
