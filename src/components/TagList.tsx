@@ -3,19 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { CreateItemDialog } from "@/components/ui/create-item-dialog";
 import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import { tagService } from "@/services/tag.service";
-import type { Tag, CreateTagBody } from "@/types/api/tag.types";
+import type { Tag } from "@/types/api/tag.types";
 import { toast } from "sonner";
 import { Icons } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,12 +26,6 @@ export default function TagList({ onTotalChange }: TagListProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // 创建标签表单状态
-  const [createForm, setCreateForm] = useState<CreateTagBody>({
-    name: "",
-    slug: "",
-    description: "",
-  });
 
   const fetchTags = useCallback(async (currentPage = 1, append = false) => {
     try {
@@ -86,18 +71,21 @@ export default function TagList({ onTotalChange }: TagListProps) {
   // 判断是否还有更多标签可加载
   const hasMoreTags = tags.length < total;
 
-  const handleCreateTag = async () => {
-    if (!createForm.name.trim() || !createForm.slug.trim()) {
+  const handleCreateTag = async (formData: { name: string; slug?: string; description?: string }) => {
+    if (!formData.name.trim() || !formData.slug?.trim()) {
       toast.error("标签名和slug不能为空");
       return;
     }
 
     try {
       setCreating(true);
-      await tagService.createTag(createForm);
+      await tagService.createTag({
+        name: formData.name.trim(),
+        slug: formData.slug.trim(),
+        description: formData.description || ""
+      });
       toast.success("标签创建成功");
       setShowCreateDialog(false);
-      setCreateForm({ name: "", slug: "", description: "" });
       // 重新获取标签列表（重置到第一页）
       setPage(1);
       fetchTags(1, false);
@@ -128,17 +116,6 @@ export default function TagList({ onTotalChange }: TagListProps) {
     }
   };
 
-  // 根据name自动生成slug
-  const handleNameChange = (name: string) => {
-    setCreateForm((prev) => ({
-      ...prev,
-      name,
-      slug: name
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^\w\-]/g, ""),
-    }));
-  };
 
   useEffect(() => {
     fetchTags();
@@ -256,101 +233,14 @@ export default function TagList({ onTotalChange }: TagListProps) {
         </div>
       )}
 
-      {/* 创建标签对话框 */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent className="sm:max-w-[450px] border-0 shadow-xl">
-          <div className="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 p-6 rounded-t-lg border-b border-orange-100 dark:border-orange-800">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-orange-700 dark:text-orange-300 flex items-center">
-                <Icons.tag className="w-5 h-5 mr-2" />
-                创建新标签
-              </DialogTitle>
-              <DialogDescription className="text-orange-600 dark:text-orange-400">
-                填写标签信息，slug会根据标签名自动生成
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-          <div className="px-6 py-6 space-y-4">
-            <div className="space-y-2">
-              <label
-                htmlFor="name"
-                className="text-sm font-semibold text-gray-700 dark:text-gray-300"
-              >
-                标签名 *
-              </label>
-              <Input
-                id="name"
-                placeholder="输入标签名"
-                value={createForm.name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                className="border-2 border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 rounded-lg transition-all duration-200"
-              />
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="slug"
-                className="text-sm font-semibold text-gray-700 dark:text-gray-300"
-              >
-                Slug *
-              </label>
-              <Input
-                id="slug"
-                placeholder="标签slug"
-                value={createForm.slug}
-                onChange={(e) =>
-                  setCreateForm((prev) => ({ ...prev, slug: e.target.value }))
-                }
-                className="border-2 border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 rounded-lg transition-all duration-200 font-mono text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <label
-                htmlFor="description"
-                className="text-sm font-semibold text-gray-700 dark:text-gray-300"
-              >
-                描述
-              </label>
-              <Textarea
-                id="description"
-                placeholder="标签描述（可选）"
-                value={createForm.description}
-                onChange={(e) =>
-                  setCreateForm((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                rows={3}
-                className="border-2 border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 rounded-lg transition-all duration-200"
-              />
-            </div>
-          </div>
-          <DialogFooter className="px-6 pb-6 space-x-3 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
-            <Button
-              variant="outline"
-              onClick={() => setShowCreateDialog(false)}
-              disabled={creating}
-              className="border-2 border-gray-300 hover:bg-gray-100 transition-colors"
-            >
-              取消
-            </Button>
-            <Button
-              onClick={handleCreateTag}
-              disabled={creating}
-              className="bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-            >
-              {creating ? (
-                <>
-                  <Icons.spinner className="w-4 h-4 mr-2 animate-spin" />
-                  创建中...
-                </>
-              ) : (
-                "创建标签"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* 统一创建标签对话框 */}
+      <CreateItemDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        itemType="tag"
+        onSubmit={handleCreateTag}
+        loading={creating}
+      />
 
       {/* 删除确认对话框 */}
       <DeleteConfirmDialog

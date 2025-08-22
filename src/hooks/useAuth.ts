@@ -1,6 +1,6 @@
 import { useQuery } from './useQuery';
 import { useMutation } from './useMutation';
-import { authService } from '@/services';
+import { arisSDK } from '@/lib/sdk';
 import {
   CurrentUser,
   UpdateUserRequestDTO,
@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 export function useCurrentUser() {
   return useQuery<CurrentUser>(
     ['currentUser'],
-    () => authService.getCurrentUser(),
+    () => arisSDK.auth.getCurrentUser(),
     {
       staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: true,
@@ -38,7 +38,7 @@ export function useUpdateUser() {
   const { refetch } = useCurrentUser();
   
   return useMutation<void, any, UpdateUserRequestDTO>(
-    (data) => authService.updateCurrentUser(data),
+    (data) => arisSDK.auth.updateCurrentUser(data),
     {
       onSuccess: async () => {
         toast.success('Profile updated successfully');
@@ -58,7 +58,7 @@ export function useOAuthLogin() {
   const router = useRouter();
   
   return useMutation<{ redirectURL: string }, any, OAuthProvider>(
-    (provider) => authService.initiateOAuth(provider),
+    (provider) => arisSDK.auth.initiateOAuth(provider),
     {
       onSuccess: (data) => {
         // Redirect to OAuth provider
@@ -83,7 +83,7 @@ export function useOAuthCallback() {
     { provider: OAuthProvider; code: string; state: string }
   >(
     ({ provider, code, state }) => 
-      authService.handleOAuthCallback(provider, code, state),
+      arisSDK.auth.handleOAuthCallback(provider, code, state),
     {
       onSuccess: (tokens) => {
         // Store tokens
@@ -108,7 +108,7 @@ export function useLogout() {
   const router = useRouter();
   
   return useMutation<void, any, void>(
-    () => authService.logout(),
+    () => arisSDK.auth.logout(),
     {
       onSuccess: () => {
         toast.success('Logged out successfully');
@@ -128,7 +128,7 @@ export function useLogout() {
  */
 export function useRefreshToken() {
   return useMutation<AuthTokens, any, string>(
-    (refreshToken) => authService.refreshToken({ refreshToken }),
+    (refreshToken) => arisSDK.auth.refreshToken({ refreshToken }),
     {
       onSuccess: (tokens) => {
         // Update stored tokens

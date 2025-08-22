@@ -2,7 +2,7 @@
 
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import authService from "@/services/auth.service";
+import { arisSDK } from "@/lib/sdk";
 import { Icons } from "@/components/icons";
 import { toast } from "sonner"; // 从 sonner 导入 toast
 
@@ -14,7 +14,7 @@ function GitHubCallback() {
 
   useEffect(() => {
     if (code && state) {
-      authService
+      arisSDK.auth
         .handleGitHubOAuthCallback(code, state)
         .then((data) => {
           // DEBUG LOG: Log data received from backend

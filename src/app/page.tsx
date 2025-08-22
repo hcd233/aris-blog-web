@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import authService from "@/services/auth.service";
+import { arisSDK } from "@/lib/sdk";
 import type { CurrentUser } from "@/types/api/auth.types";
 import { Icons } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,7 @@ export default function HomePage() {
       return;
     }
 
-    authService
+    arisSDK.auth
       .getCurrentUser()
       .then((data) => {
         console.log("[HomePage] Raw getCurrentUser response:", data);
@@ -66,7 +66,7 @@ export default function HomePage() {
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
+      await arisSDK.auth.logout();
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       toast.success("Logged out successfully");

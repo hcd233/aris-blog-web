@@ -112,6 +112,28 @@ class CategoryService {
     }
   }
 
+  // 优化方法：检查分类是否有子分类并返回子分类数据（避免重复请求）
+  async checkAndGetChildren(categoryID: number, pageSize: number = 10): Promise<{
+    hasChildren: boolean;
+    children?: GetCategoryChildrenResponse;
+  }> {
+    try {
+      const response = await this.getCategoryChildren({
+        categoryID,
+        page: 1,
+        pageSize
+      })
+      
+      return {
+        hasChildren: response.categories.length > 0,
+        children: response
+      }
+    } catch (error) {
+      console.error('检查并获取子分类失败:', error)
+      return { hasChildren: false }
+    }
+  }
+
   // 工具方法：检查分类是否有文章
   async hasArticles(categoryID: number): Promise<boolean> {
     try {

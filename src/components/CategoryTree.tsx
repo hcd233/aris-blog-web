@@ -6,15 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-    DialogTrigger
- } from '@/components/ui/dialog'
+import { CreateItemDialog } from '@/components/ui/create-item-dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -53,7 +46,6 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
   const [newName, setNewName] = useState(node.name)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-  const [childName, setChildName] = useState('')
 
   const handleRename = async () => {
     if (newName.trim() && newName !== node.name) {
@@ -62,12 +54,8 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
     setIsRenaming(false)
   }
 
-  const handleCreateChild = async () => {
-    if (childName.trim()) {
-      await onCreateChild(node.categoryID, childName.trim())
-      setChildName('')
-      setShowCreateDialog(false)
-    }
+  const handleCreateChild = async (parentID: number, name: string) => {
+    await onCreateChild(parentID, name)
   }
 
   const handleDeleteConfirm = async () => {
@@ -279,35 +267,16 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
       )}
 
       {/* 创建子分类对话框 */}
-      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>创建子分类</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="childName">分类名称</Label>
-              <Input
-                id="childName"
-                value={childName}
-                onChange={(e) => setChildName(e.target.value)}
-                placeholder="请输入分类名称"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleCreateChild()
-                }}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                取消
-              </Button>
-              <Button onClick={handleCreateChild} disabled={!childName.trim()}>
-                创建
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CreateItemDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        itemType="category"
+        onSubmit={async (formData) => {
+          await handleCreateChild(node.categoryID, formData.name)
+          setShowCreateDialog(false)
+        }}
+        parentName={node.name}
+      />
 
       {/* 删除确认对话框 */}
       <DeleteConfirmDialog
@@ -343,7 +312,6 @@ export const CategoryTree: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [totalCount, setTotalCount] = useState(0)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
-  const [newCategoryName, setNewCategoryName] = useState('')
 
   // 将Category转换为CategoryTreeNode
   const convertToTreeNode = (category: Category): CategoryTreeNode => ({
@@ -365,22 +333,14 @@ export const CategoryTree: React.FC = () => {
       const categories = await categoryService.getCategoryTree()
       const treeNodes = categories.map(convertToTreeNode)
       
-      // 检查每个节点是否有子分类，并加载子分类数量
+      // 优化：检查分类是否有子分类并预加载第一页数据（避免重复请求）
       for (const node of treeNodes) {
-        node.hasChildren = await categoryService.hasChildren(node.categoryID)
+        const result = await categoryService.checkAndGetChildren(node.categoryID, 10)
+        node.hasChildren = result.hasChildren
         
-        // 如果有子分类，预加载第一页来获取总数
-        if (node.hasChildren) {
-          try {
-            const childrenResponse = await categoryService.getCategoryChildren({ 
-              categoryID: node.categoryID, 
-              page: 1, 
-              pageSize: 10 
-            })
-            node.childrenPageInfo = childrenResponse.pageInfo
-          } catch (error) {
-            console.warn(`Failed to load children count for category ${node.categoryID}:`, error)
-          }
+        // 如果有子分类，使用已加载的数据
+        if (result.hasChildren && result.children) {
+          node.childrenPageInfo = result.children.pageInfo
         }
       }
       
@@ -453,9 +413,10 @@ export const CategoryTree: React.FC = () => {
 
       const newChildren = response.categories.map(convertToTreeNode)
       
-      // 检查新子分类是否还有子分类
+      // 优化：使用更高效的方式检查子分类（避免立即检查，采用懒加载方式）
+      // 默认设置为 false，当用户展开时再检查
       for (const child of newChildren) {
-        child.hasChildren = await categoryService.hasChildren(child.categoryID)
+        child.hasChildren = false // 初始设为false，展开时再检查
       }
 
       setCategories(prev => {
@@ -567,8 +528,8 @@ export const CategoryTree: React.FC = () => {
   }, [loadCategoryChildren])
 
   // 创建根级分类
-  const handleCreateRootCategory = useCallback(async () => {
-    if (!newCategoryName.trim()) return
+  const handleCreateRootCategory = useCallback(async (formData: { name: string }) => {
+    if (!formData.name.trim()) return
 
     try {
       // 先获取根分类ID
@@ -576,12 +537,11 @@ export const CategoryTree: React.FC = () => {
       const rootCategoryID = rootResponse.category.categoryID
 
       await categoryService.createCategory({ 
-        name: newCategoryName.trim(), 
+        name: formData.name.trim(), 
         parentID: rootCategoryID 
       })
       
       toast.success('分类创建成功')
-      setNewCategoryName('')
       setShowCreateDialog(false)
       
       // 重新加载整个分类树
@@ -590,7 +550,7 @@ export const CategoryTree: React.FC = () => {
       console.error('创建分类失败:', error)
       toast.error('创建分类失败')
     }
-  }, [newCategoryName, loadInitialCategories])
+  }, [loadInitialCategories])
 
   // 重命名分类
   const handleRename = useCallback(async (categoryID: number, newName: string) => {
@@ -709,47 +669,13 @@ export const CategoryTree: React.FC = () => {
             <p className="text-purple-600 dark:text-purple-400 mb-6">
               创建你的第一个分类来组织内容
             </p>
-            <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-              <DialogTrigger asChild>
-                <Button
-                  className="bg-purple-500 hover:bg-purple-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
-                >
-                  <Icons.plus className="w-4 h-4 mr-2" />
-                  创建第一个分类
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>创建分类</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="categoryName">分类名称</Label>
-                    <Input
-                      id="categoryName"
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="请输入分类名称"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleCreateRootCategory()
-                      }}
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                      取消
-                    </Button>
-                    <Button 
-                      onClick={handleCreateRootCategory} 
-                      disabled={!newCategoryName.trim()}
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                    >
-                      创建
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button
+              className="bg-purple-500 hover:bg-purple-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+              onClick={() => setShowCreateDialog(true)}
+            >
+              <Icons.plus className="w-4 h-4 mr-2" />
+              创建第一个分类
+            </Button>
           </div>
         ) : (
           <div className="space-y-1">
@@ -768,51 +694,27 @@ export const CategoryTree: React.FC = () => {
             
             {/* 新增分类按钮 - 类似tag样式 */}
             <div className="py-1 px-1" style={{ paddingLeft: '4px' }}>
-              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-                <DialogTrigger asChild>
-                  <div className="inline-flex items-center justify-start gap-1 px-2 py-1 text-sm font-medium bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-dashed border-purple-200 text-purple-600 rounded-md cursor-pointer hover:from-purple-100 hover:to-indigo-100 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 hover:scale-[1.02] w-fit">
-                    <div className="w-4 h-4 flex items-center justify-center">
-                      <Icons.plus className="w-3 h-3" />
-                    </div>
-                    <span className="text-sm">新增分类</span>
-                  </div>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>创建分类</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="categoryName">分类名称</Label>
-                      <Input
-                        id="categoryName"
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        placeholder="请输入分类名称"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') handleCreateRootCategory()
-                        }}
-                      />
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                        取消
-                      </Button>
-                      <Button 
-                        onClick={handleCreateRootCategory} 
-                        disabled={!newCategoryName.trim()}
-                        className="bg-purple-600 hover:bg-purple-700 text-white"
-                      >
-                        创建
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <div 
+                className="inline-flex items-center justify-start gap-1 px-2 py-1 text-sm font-medium bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-dashed border-purple-200 text-purple-600 rounded-md cursor-pointer hover:from-purple-100 hover:to-indigo-100 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 hover:scale-[1.02] w-fit"
+                onClick={() => setShowCreateDialog(true)}
+              >
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <Icons.plus className="w-3 h-3" />
+                </div>
+                <span className="text-sm">新增分类</span>
+              </div>
             </div>
           </div>
         )}
       </CardContent>
+
+      {/* 统一创建分类对话框 */}
+      <CreateItemDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        itemType="category"
+        onSubmit={handleCreateRootCategory}
+      />
     </Card>
   )
 } 

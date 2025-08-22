@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import authService from "@/services/auth.service";
-import oAuthService from "@/services/oauth.service";
+import { arisSDK } from "@/lib/sdk";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/icons";
 import type { OAuthProvider } from "@/types/api/auth.types";
@@ -16,10 +15,10 @@ export default function LoginPage() {
     setLoadingProvider(provider);
     setError(null);
     
-    const providerConfig = oAuthService.getProviderConfig(provider);
+    const providerConfig = arisSDK.oauth.getProviderConfig(provider);
     
     try {
-      const response = await authService.initiateOAuth(provider);
+      const response = await arisSDK.auth.initiateOAuth(provider);
       if (response.redirectURL) {
         window.location.href = response.redirectURL;
       } else {

@@ -2,8 +2,7 @@
 
 import { useEffect, Suspense, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import authService from "@/services/auth.service";
-import oAuthService from "@/services/oauth.service";
+import { arisSDK } from "@/lib/sdk";
 import { Icons } from "@/components/icons";
 import { toast } from "sonner";
 import type { OAuthProvider } from "@/types/api/auth.types";
@@ -21,7 +20,7 @@ function OAuthCallbackContent({ provider }: { provider: OAuthProvider }) {
   const state = searchParams.get("state");
   const hasProcessed = useRef(false);
 
-  const providerConfig = oAuthService.getProviderConfig(provider);
+  const providerConfig = arisSDK.oauth.getProviderConfig(provider);
 
   useEffect(() => {
     // 使用 useRef 防止重复调用，即使组件重新渲染也不会重置
@@ -42,7 +41,7 @@ function OAuthCallbackContent({ provider }: { provider: OAuthProvider }) {
         stateLength: state.length
       });
       
-      authService
+      arisSDK.auth
         .handleOAuthCallback(provider, code, state)
         .then((data) => {
           console.log(
@@ -127,7 +126,7 @@ export default function OAuthCallbackPage({ params }: OAuthCallbackProps) {
     // 异步获取路由参数
     params
       .then(({ provider: resolvedProvider }) => {
-        if (oAuthService.isSupportedProvider(resolvedProvider)) {
+        if (arisSDK.oauth.isSupportedProvider(resolvedProvider)) {
           setProvider(resolvedProvider as OAuthProvider);
         } else {
           setError('Unsupported provider');
@@ -161,7 +160,7 @@ export default function OAuthCallbackPage({ params }: OAuthCallbackProps) {
   }
 
   // 检查是否为支持的OAuth提供商
-  if (provider && !oAuthService.isSupportedProvider(provider)) {
+  if (provider && !arisSDK.oauth.isSupportedProvider(provider)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <Icons.alertTriangle className="h-12 w-12 text-destructive" />
