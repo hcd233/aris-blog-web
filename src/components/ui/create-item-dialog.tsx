@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -52,15 +52,29 @@ export function CreateItemDialog({
   const isCategory = itemType === "category";
   const isTag = itemType === "tag";
 
-  // 根据name自动生成slug（仅对标签有效）
-  const handleNameChange = async (name: string) => {
-    const slug = isTag ? await generateSlug(name) : formData.slug;
-    setFormData((prev) => ({
-      ...prev,
-      name,
-      slug,
-    }));
-  };
+  // 使用防抖处理名称变化，避免频繁的异步slug生成
+  const debounceRef = useRef<NodeJS.Timeout>();
+  
+  const handleNameChange = useCallback((name: string) => {
+    setFormData(prev => ({ ...prev, name }));
+    
+    // 清除之前的定时器
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    // 只有标签才需要生成slug
+    if (isTag && name.trim()) {
+      debounceRef.current = setTimeout(async () => {
+        try {
+          const slug = await generateSlug(name);
+          setFormData(prev => ({ ...prev, slug }));
+        } catch (error) {
+          console.warn('Failed to generate slug:', error);
+        }
+      }, 300); // 300ms防抖延迟
+    }
+  }, [isTag]);
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -58,15 +58,29 @@ export function ArticleFormDialog({
 
   const isLoading = createArticleMutation.isLoading || updateArticleMutation.isLoading;
 
-  // 根据title自动生成slug
-  const handleTitleChange = async (title: string) => {
-    const slug = await generateSlug(title);
-    setFormData((prev) => ({
-      ...prev,
-      title,
-      slug,
-    }));
-  };
+  // 使用防抖处理标题变化，避免频繁的异步slug生成
+  const debounceRef = useRef<NodeJS.Timeout>();
+  
+  const handleTitleChange = useCallback((title: string) => {
+    setFormData(prev => ({ ...prev, title }));
+    
+    // 清除之前的定时器
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    // 生成slug
+    if (title.trim()) {
+      debounceRef.current = setTimeout(async () => {
+        try {
+          const slug = await generateSlug(title);
+          setFormData(prev => ({ ...prev, slug }));
+        } catch (error) {
+          console.warn('Failed to generate slug:', error);
+        }
+      }, 300); // 300ms防抖延迟
+    }
+  }, []);
 
   // 处理标签输入
   const handleTagsInputChange = (value: string) => {
