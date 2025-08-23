@@ -75,7 +75,7 @@ export default function CreateArticlePage() {
     );
   }
 
-  if (!currentUser || !hasCreatorAccess(currentUser.role)) {
+  if (!currentUser || !hasCreatorAccess(currentUser.permission)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20">
         <Card className="w-full max-w-md">
