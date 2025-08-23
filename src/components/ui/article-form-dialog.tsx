@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -46,6 +47,7 @@ export function ArticleFormDialog({
   initialData,
   onSubmitSuccess,
 }: ArticleFormDialogProps) {
+  const router = useRouter();
   const [formData, setFormData] = useState<ArticleFormData>({
     title: "",
     slug: "",
@@ -55,8 +57,7 @@ export function ArticleFormDialog({
     ...initialData,
   });
 
-  const [currentStep, setCurrentStep] = useState<"article" | "content">("article");
-  const [createdArticleId, setCreatedArticleId] = useState<number | null>(null);
+  // 移除两步流程，只保留单步创建
   const { refetch: refetchArticles } = useArticles();
   const createArticleMutation = useCreateArticle();
   const updateArticleMutation = useUpdateArticle(initialData?.articleID || 0);
@@ -105,47 +106,23 @@ export function ArticleFormDialog({
       };
       
       const createdArticle = await createArticleMutation.mutateAsync(createData);
-      setCreatedArticleId(createdArticle.articleID);
       
       toast.success("Article created successfully");
       
-      // 如果有内容，切换到内容编辑步骤
-      if (formData.content.trim()) {
-        setCurrentStep("content");
-      } else {
-        // 没有内容，直接完成
-        onOpenChange(false);
-        refetchArticles();
-        onSubmitSuccess?.();
-      }
+      // 关闭对话框并跳转到写作页面
+      onOpenChange(false);
+      refetchArticles();
+      onSubmitSuccess?.();
+      
+      // 跳转到写作页面
+      router.push(`/article/${formData.slug.trim()}/write`);
     } catch (error) {
       console.error("Failed to create article:", error);
       toast.error("Failed to create article");
     }
   };
 
-  const handleCreateVersion = async () => {
-    if (!createdArticleId || !formData.content.trim()) {
-      toast.error("No content to save");
-      return;
-    }
-
-    try {
-      const versionData: CreateArticleVersionRequestDTO = {
-        content: formData.content.trim(),
-      };
-      
-      await articleService.createArticleVersion(createdArticleId, versionData);
-      
-      toast.success("Article version created successfully");
-      onOpenChange(false);
-      refetchArticles();
-      onSubmitSuccess?.();
-    } catch (error) {
-      console.error("Failed to create article version:", error);
-      toast.error("Failed to create article version");
-    }
-  };
+  // handleCreateVersion removed - no longer needed in simplified flow
 
   const handleUpdateArticle = async () => {
     if (!formData.title.trim() || !formData.slug.trim() || formData.categoryID === 0) {
@@ -180,11 +157,7 @@ export function ArticleFormDialog({
 
   const handleSubmit = () => {
     if (mode === "create") {
-      if (currentStep === "article") {
-        handleCreateArticle();
-      } else {
-        handleCreateVersion();
-      }
+      handleCreateArticle();
     } else {
       handleUpdateArticle();
     }
@@ -201,16 +174,14 @@ export function ArticleFormDialog({
         content: "",
         ...initialData,
       });
-      setCurrentStep("article");
-      setCreatedArticleId(null);
     }
   }, [open, initialData]);
 
   const getDialogConfig = () => {
     if (mode === "create") {
       return {
-        title: currentStep === "article" ? "Create New Article" : "Add Content",
-        description: currentStep === "article" ? "Fill in the article details" : "Write your article content",
+        title: "Create New Article",
+        description: "Fill in the article details",
         icon: <Icons.fileText className="w-5 h-5 mr-2" />,
         color: "blue",
         gradient: "from-blue-50 to-indigo-50",
@@ -254,8 +225,8 @@ export function ArticleFormDialog({
 
         {/* 表单内容 */}
         <div className="px-6 py-6">
-          {mode === "create" && currentStep === "article" ? (
-            // Article creation step
+          {mode === "create" ? (
+            // Article creation form
             <div className="space-y-6">
               {/* 标题字段 */}
               <div className="space-y-2">
@@ -302,21 +273,6 @@ export function ArticleFormDialog({
                   onChange={(tags) => setFormData(prev => ({ ...prev, tags }))}
                 />
               </div>
-            </div>
-          ) : mode === "create" && currentStep === "content" ? (
-            // Content creation step
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Icons.check className="w-4 h-4 text-green-600" />
-                <span>Article &quot;{formData.title}&quot; created successfully</span>
-              </div>
-              
-              <MarkdownEditor
-                value={formData.content}
-                onChange={(content) => setFormData(prev => ({ ...prev, content }))}
-                label="Content"
-                placeholder="Write your article content in Markdown format..."
-              />
             </div>
           ) : (
             // Edit mode - show all fields in tabs
@@ -390,32 +346,12 @@ export function ArticleFormDialog({
         <DialogFooter className="px-6 pb-6 space-x-3 bg-gray-50 dark:bg-gray-800 rounded-b-lg">
           <Button
             variant="outline"
-            onClick={() => {
-              if (mode === "create" && currentStep === "content") {
-                setCurrentStep("article");
-              } else {
-                onOpenChange(false);
-              }
-            }}
+            onClick={() => onOpenChange(false)}
             disabled={isLoading}
             className="border-2 border-gray-300 hover:bg-gray-100 transition-colors"
           >
-            {mode === "create" && currentStep === "content" ? "Back" : "Cancel"}
+            Cancel
           </Button>
-          
-          {mode === "create" && currentStep === "article" && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Skip content step - create article without content
-                handleCreateArticle();
-              }}
-              disabled={isLoading || !formData.title.trim() || !formData.slug.trim() || formData.categoryID === 0}
-              className="border-2 border-blue-300 text-blue-600 hover:bg-blue-50 transition-colors"
-            >
-              Create Without Content
-            </Button>
-          )}
           
           <Button
             onClick={handleSubmit}
@@ -423,22 +359,17 @@ export function ArticleFormDialog({
               isLoading || 
               !formData.title.trim() || 
               !formData.slug.trim() || 
-              formData.categoryID === 0 ||
-              (mode === "create" && currentStep === "content" && !formData.content.trim())
+              formData.categoryID === 0
             }
             className={`${config.button} text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200`}
           >
             {isLoading ? (
               <>
                 <Icons.spinner className="w-4 h-4 mr-2 animate-spin" />
-                {mode === "create" 
-                  ? (currentStep === "article" ? "Creating..." : "Saving Content...") 
-                  : "Updating..."}
+                {mode === "create" ? "Creating..." : "Updating..."}
               </>
             ) : (
-              mode === "create" 
-                ? (currentStep === "article" ? "Create & Add Content" : "Save Content")
-                : "Update Article"
+              mode === "create" ? "Create & Start Writing" : "Update Article"
             )}
           </Button>
         </DialogFooter>

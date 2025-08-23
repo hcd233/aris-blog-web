@@ -1,24 +1,23 @@
-# Article Creation Feature
+# Article Creation & Writing System
 
 ## Overview
 
-I have implemented a comprehensive article creation and version management system with a Medium-inspired interface. The system provides a clean, user-friendly experience for creating and managing articles with proper metadata and content separation.
+I have implemented a comprehensive article creation and writing system with a streamlined workflow. The system separates article creation from content writing, providing a focused and efficient writing experience.
 
 ## 🌟 Key Features
 
-### 📝 Article Creation Page (`/articles/create`)
-- **Beautiful Landing Page**: Medium-inspired design with hero section, feature cards, and quick tips
-- **Permission-based Access**: Only users with creator access can access the page
-- **Responsive Design**: Works seamlessly on desktop and mobile devices
-- **Authentication**: Automatic redirect to login if not authenticated
+### 📝 Article Creation Flow
+- **Dialog-based Creation**: Clean modal dialog for article metadata
+- **Quick Creation**: Simple form with title, slug, category, and tags
+- **Immediate Redirect**: After creation, redirects to dedicated writing page
+- **Permission-based**: Only users with creator access can create articles
 
-### 🔧 Enhanced Article Form Dialog
-- **Two-step Creation Process**: 
-  1. **Article Metadata**: Title, slug, category, tags
-  2. **Content Creation**: Rich Markdown editor for article content
-- **Flexible Workflow**: Users can create articles without content or add content immediately
-- **Smart Slug Generation**: Automatic SEO-friendly slug generation from titles
-- **Real-time Validation**: Form validation with proper error messages
+### ✍️ Dedicated Writing Page (`/article/{slug}/write`)
+- **Focused Writing Environment**: Distraction-free editor with sidebar settings
+- **TipTap Markdown Editor**: Rich text editing with Markdown support
+- **Auto-save**: Automatic draft saving every 5 seconds
+- **Live Statistics**: Real-time word count, character count, and reading time
+- **Side Panel**: Article settings (slug, category, tags) in convenient sidebar
 
 ### 🏷️ Category & Tag Management
 - **CategorySelector**: Dropdown with search functionality

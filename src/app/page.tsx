@@ -25,6 +25,7 @@ import { appConfig } from "@/config/app";
 import { CategoryTree } from "@/components/CategoryTree";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { hasCreatorAccess } from "@/lib/permissions";
+import { ArticleFormDialog } from "@/components/ui/article-form-dialog";
 
 export default function HomePage() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [tagsTotal, setTagsTotal] = useState<number>(0);
   const [articlesTotal, setArticlesTotal] = useState<number>(0);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -218,7 +220,7 @@ export default function HomePage() {
               )}
               {currentUser && hasCreatorAccess(currentUser.role) && (
                 <Button
-                  onClick={() => router.push("/articles/create")}
+                  onClick={() => setShowCreateDialog(true)}
                   size="sm"
                   className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200"
                 >
@@ -540,6 +542,16 @@ export default function HomePage() {
         )}
 
       </main>
+
+      {/* Article Creation Dialog */}
+      <ArticleFormDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        mode="create"
+        onSubmitSuccess={() => {
+          toast.success("Article created! Redirecting to editor...");
+        }}
+      />
     </div>
   );
 }
