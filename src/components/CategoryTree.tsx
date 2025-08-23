@@ -9,13 +9,13 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { CreateItemDialog } from '@/components/ui/create-item-dialog'
 import { Input } from '@/components/ui/input'
-import { hasCreatorAccess } from '@/lib/permissions'
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu'
+import { hasCreatorAccess as checkCreatorAccess } from '@/lib/permissions'
+// import { 
+//   DropdownMenu, 
+//   DropdownMenuContent, 
+//   DropdownMenuItem, 
+//   DropdownMenuTrigger 
+// } from '@/components/ui/dropdown-menu'
 import { Icons } from '@/components/icons'
 import { DeleteConfirmDialog } from '@/components/ui/delete-confirm-dialog'
 import { categoryService } from '@/services/category.service'
@@ -33,7 +33,7 @@ interface CategoryNodeProps {
   onCreateChild: (parentID: number, name: string) => void
   onRename: (categoryID: number, newName: string) => void
   onDelete: (categoryID: number) => void
-  hasCreatorAccess: boolean
+  // hasCreatorAccess: boolean
 }
 
 const CategoryNode: React.FC<CategoryNodeProps> = ({
@@ -44,7 +44,7 @@ const CategoryNode: React.FC<CategoryNodeProps> = ({
   onCreateChild,
   onRename,
   onDelete,
-  hasCreatorAccess,
+  // hasCreatorAccess,
 }) => {
   const [isRenaming, setIsRenaming] = useState(false)
   const [newName, setNewName] = useState(node.name)
@@ -661,15 +661,15 @@ export const CategoryTree: React.FC = () => {
             <p className="text-purple-600 dark:text-purple-400 mb-6">
               创建你的第一个分类来组织内容
             </p>
-            {hasCreatorAccess(currentUser?.permission) && (
-              <Button
-                className="bg-purple-500 hover:bg-purple-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 group"
-                onClick={() => setShowCreateDialog(true)}
-              >
-                <Icons.plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-200" />
-                创建第一个分类
-              </Button>
-            )}
+                      {checkCreatorAccess(currentUser?.permission) && (
+            <Button
+              className="bg-purple-500 hover:bg-purple-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 group"
+              onClick={() => setShowCreateDialog(true)}
+            >
+              <Icons.plus className="w-4 h-4 mr-2 group-hover:rotate-90 transition-transform duration-200" />
+              创建第一个分类
+            </Button>
+          )}
           </div>
         ) : (
           <div className="space-y-1">
@@ -683,12 +683,12 @@ export const CategoryTree: React.FC = () => {
                 onCreateChild={handleCreateChild}
                 onRename={handleRename}
                 onDelete={handleDelete}
-                hasCreatorAccess={hasCreatorAccess(currentUser?.permission)}
+                // hasCreatorAccess={checkCreatorAccess(currentUser?.permission)}
               />
             ))}
             
             {/* 新增分类按钮 - 类似tag样式 - 仅限有权限的用户 */}
-            {hasCreatorAccess(currentUser?.permission) && (
+            {checkCreatorAccess(currentUser?.permission) && (
               <div className="py-1 px-1" style={{ paddingLeft: '4px' }}>
                 <div 
                   className="inline-flex items-center justify-start gap-1 px-3 py-2 text-sm font-medium bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-dashed border-purple-200 text-purple-600 rounded-lg cursor-pointer hover:from-purple-100 hover:to-indigo-100 hover:border-purple-300 hover:text-purple-700 hover:shadow-md transition-all duration-300 hover:scale-[1.02] w-fit group/add-button"

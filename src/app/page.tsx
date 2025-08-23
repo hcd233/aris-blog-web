@@ -19,12 +19,13 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import TagList from "@/components/TagList";
 import ArticleList from "@/components/ArticleList";
-import Link from "next/link";
+// import Link from "next/link";
 import AppIcon from "@/components/AppIcon";
 import { appConfig } from "@/config/app";
 import { CategoryTree } from "@/components/CategoryTree";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { hasCreatorAccess } from "@/lib/permissions";
+import { ArticleFormDialog } from "@/components/ui/article-form-dialog";
 
 export default function HomePage() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [tagsTotal, setTagsTotal] = useState<number>(0);
   const [articlesTotal, setArticlesTotal] = useState<number>(0);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
@@ -215,6 +217,16 @@ export default function HomePage() {
                     </Badge>
                   )}
                 </div>
+              )}
+              {currentUser && hasCreatorAccess(currentUser.role) && (
+                <Button
+                  onClick={() => setShowCreateDialog(true)}
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-sm hover:shadow-md transform hover:scale-105 transition-all duration-200"
+                >
+                  <Icons.plus className="w-4 h-4 mr-2" />
+                  Create Article
+                </Button>
               )}
               <ThemeToggle />
               <Button
@@ -465,6 +477,7 @@ export default function HomePage() {
                 <CardContent data-oid="rs553l5">
                   <ArticleList
                     onTotalChange={handleArticlesTotalChange}
+                    onCreateArticle={() => setShowCreateDialog(true)}
                     data-oid="yii2_cd"
                   />
                 </CardContent>
@@ -530,6 +543,16 @@ export default function HomePage() {
         )}
 
       </main>
+
+      {/* Article Creation Dialog */}
+      <ArticleFormDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        mode="create"
+        onSubmitSuccess={() => {
+          toast.success("Article created! Redirecting to editor...");
+        }}
+      />
     </div>
   );
 }

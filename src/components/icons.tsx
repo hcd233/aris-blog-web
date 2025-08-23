@@ -31,6 +31,8 @@ import {
   Moon,
   Heart,
   MessageSquare,
+  Check,
+  ChevronsUpDown,
 } from "lucide-react";
 
 // Google Icon as SVG component
@@ -83,4 +85,6 @@ export const Icons = {
   moon: Moon,
   heart: Heart,
   messageSquare: MessageSquare,
+  check: Check,
+  chevronUpDown: ChevronsUpDown,
 };
