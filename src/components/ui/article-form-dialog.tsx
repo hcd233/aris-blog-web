@@ -105,7 +105,7 @@ export function ArticleFormDialog({
         tags: formData.tags,
       };
       
-      const createdArticle = await createArticleMutation.mutateAsync(createData);
+      await createArticleMutation.mutateAsync(createData);
       
       toast.success("Article created successfully");
       

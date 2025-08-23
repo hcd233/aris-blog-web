@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,7 @@ import { useArticles, useDeleteArticle, useUpdateArticleStatus } from "@/hooks";
 import { Icons } from "@/components/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import type { Article } from "@/types/dto";
+// import type { Article } from "@/types/dto";
 import { ArticleStatus } from "@/types/dto/article.dto";
 import { Eye } from "lucide-react";
 import { useCurrentUser } from "@/hooks/useAuth";
@@ -18,13 +18,14 @@ import { hasCreatorAccess } from "@/lib/permissions";
 
 interface ArticleListProps {
   onTotalChange?: (total: number) => void;
+  onCreateArticle?: () => void;
 }
 
-export default function ArticleList({ onTotalChange }: ArticleListProps) {
-  const router = useRouter();
+export default function ArticleList({ onTotalChange, onCreateArticle }: ArticleListProps) {
+  // const router = useRouter();
   const { data: currentUser } = useCurrentUser();
   const [page, setPage] = useState(1);
-  const [editingArticle, setEditingArticle] = useState<Article | null>(null);
+  // const [editingArticle, setEditingArticle] = useState<Article | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
   const { data: articlesResponse, isLoading, refetch } = useArticles({ 
@@ -41,10 +42,10 @@ export default function ArticleList({ onTotalChange }: ArticleListProps) {
   const total = articlesResponse?.pageInfo?.total || 0;
   const hasMore = articles.length < total;
 
-  const handleCreateSuccess = () => {
-    refetch();
-    onTotalChange?.(total + 1);
-  };
+  // const handleCreateSuccess = () => {
+  //   refetch();
+  //   onTotalChange?.(total + 1);
+  // };
 
   const handleDeleteArticle = async (articleID: number) => {
     try {
@@ -103,7 +104,7 @@ export default function ArticleList({ onTotalChange }: ArticleListProps) {
           </p>
           {hasCreatorAccess(currentUser?.permission) && (
             <Button
-              onClick={() => router.push("/articles/create")}
+              onClick={onCreateArticle}
               className="bg-blue-500 hover:bg-blue-600 text-white border-0 shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200"
             >
               <Icons.plus className="w-4 h-4 mr-2" />
@@ -216,7 +217,7 @@ export default function ArticleList({ onTotalChange }: ArticleListProps) {
             <div className="pt-4">
               <Button
                 variant="outline"
-                onClick={() => router.push("/articles/create")}
+                onClick={onCreateArticle}
                 className="w-full border-2 border-dashed border-blue-300 text-blue-600 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50 transition-all duration-200"
               >
                 <Icons.plus className="w-4 h-4 mr-2" />

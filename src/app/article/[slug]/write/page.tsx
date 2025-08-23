@@ -21,7 +21,7 @@ import AppIcon from "@/components/AppIcon";
 import { appConfig } from "@/config/app";
 import { arisSDK } from "@/lib/sdk";
 import type { CurrentUser } from "@/types/api/auth.types";
-import type { Article, ArticleVersion, CreateArticleVersionRequestDTO, UpdateArticleRequestDTO } from "@/types/dto";
+import type { Article, CreateArticleVersionRequestDTO, UpdateArticleRequestDTO } from "@/types/dto";
 import { toast } from "sonner";
 import { hasCreatorAccess } from "@/lib/permissions";
 import { generateSlugWithFallback } from "@/lib/slugify";
@@ -34,7 +34,7 @@ export default function ArticleWritePage() {
 
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [article, setArticle] = useState<Article | null>(null);
-  const [articleVersion, setArticleVersion] = useState<ArticleVersion | null>(null);
+  // const [articleVersion, setArticleVersion] = useState<ArticleVersion | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -90,9 +90,9 @@ export default function ArticleWritePage() {
         // Get latest version
         try {
           const latestVersion = await articleService.getLatestArticleVersion(foundArticle.articleID);
-          setArticleVersion(latestVersion);
+          // setArticleVersion(latestVersion);
           setContent(latestVersion.content || "");
-        } catch (error) {
+        } catch {
           // No version exists yet
           console.log("No version found, starting with empty content");
           setContent("");
@@ -189,7 +189,7 @@ export default function ArticleWritePage() {
       
       // Then update status to publish
       await articleService.updateArticleStatus(article.articleID, { 
-        status: "publish" as any 
+        status: "publish" 
       });
       
       toast.success("Article published successfully");

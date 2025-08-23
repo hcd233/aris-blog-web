@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -40,7 +40,7 @@ export function CategorySelector({
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
   // Load categories when component mounts or popover opens
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     if (categories.length > 0) return; // Already loaded
 
     try {
@@ -53,14 +53,14 @@ export function CategorySelector({
     } finally {
       setLoading(false);
     }
-  };
+  }, [categories.length]);
 
   // Load categories when popover opens
   useEffect(() => {
     if (open) {
       loadCategories();
     }
-  }, [open]); // loadCategories is stable, no need to include
+  }, [open, loadCategories]);
 
   // Find and set selected category when value changes
   useEffect(() => {

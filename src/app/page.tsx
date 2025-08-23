@@ -19,7 +19,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import TagList from "@/components/TagList";
 import ArticleList from "@/components/ArticleList";
-import Link from "next/link";
+// import Link from "next/link";
 import AppIcon from "@/components/AppIcon";
 import { appConfig } from "@/config/app";
 import { CategoryTree } from "@/components/CategoryTree";
@@ -477,6 +477,7 @@ export default function HomePage() {
                 <CardContent data-oid="rs553l5">
                   <ArticleList
                     onTotalChange={handleArticlesTotalChange}
+                    onCreateArticle={() => setShowCreateDialog(true)}
                     data-oid="yii2_cd"
                   />
                 </CardContent>
