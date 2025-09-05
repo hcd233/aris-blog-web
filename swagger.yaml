@@ -12,6 +12,8 @@ definitions:
     properties:
       articleID:
         type: integer
+      category:
+        $ref: '#/definitions/protocol.Category'
       comments:
         type: integer
       createdAt:
@@ -26,14 +28,14 @@ definitions:
         type: string
       tags:
         items:
-          type: string
+          $ref: '#/definitions/protocol.Tag'
         type: array
       title:
         type: string
       updatedAt:
         type: string
       userID:
-        type: integer
+        $ref: '#/definitions/protocol.User'
       views:
         type: integer
     type: object
@@ -63,13 +65,13 @@ definitions:
     properties:
       categoryID:
         type: integer
-      createdAt:
+      createdAt;omitempty:
         type: string
       name:
         type: string
-      parentID:
+      parentID;omitempty:
         type: integer
-      updatedAt:
+      updatedAt;omitempty:
         type: string
     type: object
   protocol.Comment:
@@ -190,11 +192,11 @@ definitions:
     properties:
       avatar:
         type: string
-      createdAt:
+      createdAt;omitempty:
         type: string
-      email:
+      email;omitempty:
         type: string
-      lastLogin:
+      lastLogin;omitempty:
         type: string
       name:
         type: string
@@ -563,11 +565,11 @@ definitions:
     type: object
   protocol.Tag:
     properties:
-      createdAt:
+      createdAt;omitempty:
         type: string
-      description:
+      description;omitempty:
         type: string
-      likes:
+      likes;omitempty:
         type: integer
       name:
         type: string
@@ -575,9 +577,9 @@ definitions:
         type: string
       tagID:
         type: integer
-      updatedAt:
+      updatedAt;omitempty:
         type: string
-      userID:
+      userID;omitempty:
         type: integer
     type: object
   protocol.Template:
@@ -655,11 +657,11 @@ definitions:
     properties:
       avatar:
         type: string
-      createdAt:
+      createdAt;omitempty:
         type: string
-      email:
+      email;omitempty:
         type: string
-      lastLogin:
+      lastLogin;omitempty:
         type: string
       name:
         type: string
@@ -3691,11 +3693,11 @@ paths:
       summary: 列出文章一级评论
       tags:
       - comment
-  /v1/oauth2/github/callback:
+  /v1/oauth2/{provider}/callback:
     get:
       consumes:
       - application/json
-      description: Github OAuth2回调请求,验证code和state
+      description: OAuth2回调请求,验证code和state
       parameters:
       - description: 授权码
         in: query
@@ -3765,14 +3767,14 @@ paths:
                 error:
                   type: string
               type: object
-      summary: Github OAuth2回调
+      summary: OAuth2回调
       tags:
       - oauth2
-  /v1/oauth2/github/login:
+  /v1/oauth2/{provider}/login:
     get:
       consumes:
       - application/json
-      description: Github OAuth2登录请求,返回重定向URL
+      description: OAuth2登录请求,返回重定向URL
       produces:
       - application/json
       responses:
@@ -3831,7 +3833,7 @@ paths:
                 error:
                   type: string
               type: object
-      summary: Github OAuth2登录
+      summary: OAuth2登录
       tags:
       - oauth2
   /v1/operation/like/article:
