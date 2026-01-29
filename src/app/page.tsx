@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { ArticleCard } from "@/components/article-card";
+import { ArticleDetailModal } from "@/components/article-detail-modal";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { listTags, listArticles } from "@/lib/api/sdk.gen";
@@ -15,6 +16,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [articles, setArticles] = useState<ListedArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedArticleSlug, setSelectedArticleSlug] = useState<string | null>(null);
 
   // 获取 tags 列表
   useEffect(() => {
@@ -70,6 +72,14 @@ export default function Home() {
 
     fetchArticles();
   }, [activeCategory, searchQuery]);
+
+  const handleArticleClick = (slug: string) => {
+    setSelectedArticleSlug(slug);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedArticleSlug(null);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#0a0a0a]">
@@ -137,13 +147,23 @@ export default function Home() {
             <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
               {articles.map((article) => (
                 <div key={article.id} className="break-inside-avoid">
-                  <ArticleCard article={article} />
+                  <ArticleCard 
+                    article={article} 
+                    onClick={() => handleArticleClick(article.slug)}
+                  />
                 </div>
               ))}
             </div>
           )}
         </div>
       </main>
+
+      {/* Article Detail Modal */}
+      <ArticleDetailModal
+        articleSlug={selectedArticleSlug || ""}
+        isOpen={!!selectedArticleSlug}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 }
