@@ -2,28 +2,16 @@ version: '3.8'
 
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      # 启用 BuildKit 以使用高级特性
-      additional_contexts:
-        - cache=/tmp/docker-cache
-    container_name: nextjs-web
+    image: ghcr.io/hcd233/aris-blog-web:master # aris-mem-api:latest
+    container_name: aris-blog-web
+    restart: always
+    networks:
+      - 1panel-network
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
-    restart: unless-stopped
-    # 资源限制（可选）
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-        reservations:
-          cpus: '0.5'
-          memory: 256M
     # 健康检查
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
@@ -31,17 +19,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-
-  # 可选：配合 Nginx 反向代理使用
-  # nginx:
-  #   image: nginx:alpine
-  #   container_name: nginx-proxy
-  #   ports:
-  #     - "80:80"
-  #     - "443:443"
-  #   volumes:
-  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./ssl:/etc/nginx/ssl:ro
-  #   depends_on:
-  #     - web
-  #   restart: unless-stopped
