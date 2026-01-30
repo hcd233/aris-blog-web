@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, PenLine, Search, User, LogOut, Settings } from "lucide-react";
-import { getCurrentUserInfo } from "@/lib/api/config";
+import { getCurrentUser } from "@/lib/api/config";
 import type { DetailedUser } from "@/lib/api/types.gen";
 
 const navItems = [
@@ -36,8 +36,8 @@ export function Navigation() {
     // 检查是否已登录
     const token = localStorage.getItem("accessToken");
     if (token) {
-      getCurrentUserInfo()
-        .then((response) => {
+      getCurrentUser()
+        .then((response: { data?: { user?: DetailedUser } }) => {
           if (response.data?.user) {
             setUser(response.data.user);
           }

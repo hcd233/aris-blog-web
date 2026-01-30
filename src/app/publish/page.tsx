@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CoverUpload } from "@/components/cover-upload";
 import { RichTextEditor } from "@/components/rich-text-editor";
-import { createArticle } from "@/lib/api/sdk.gen";
+import { createArticle } from "@/lib/api/config";
 import { cn } from "@/lib/utils";
 
 export default function PublishPage() {
@@ -39,7 +39,7 @@ export default function PublishPage() {
         body: {
           title: formData.title,
           content: formData.content,
-          CoverImage: formData.coverImage,
+          coverImage: formData.coverImage,
         },
       });
 

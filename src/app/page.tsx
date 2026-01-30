@@ -6,7 +6,7 @@ import { ArticleCard } from "@/components/article-card";
 import { ArticleDetailModal } from "@/components/article-detail-modal";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { listTags, listArticles } from "@/lib/api/sdk.gen";
+import { listTags, listArticles } from "@/lib/api/config";
 import type { DetailedTag, ListedArticle } from "@/lib/api/types.gen";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +17,7 @@ export default function Home() {
   const [articles, setArticles] = useState<ListedArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedArticleSlug, setSelectedArticleSlug] = useState<string | null>(null);
+  const [tagMap, setTagMap] = useState<Map<string, string>>(new Map());
 
   // 获取 tags 列表
   useEffect(() => {
@@ -26,8 +27,14 @@ export default function Home() {
           query: { page: 1, pageSize: 10 },
         });
         if (data?.tags) {
-          const tagNames = data.tags.map((tag: DetailedTag) => tag.name);
+          const tagNames: string[] = [];
+          const newTagMap = new Map<string, string>();
+          data.tags.forEach((tag: DetailedTag) => {
+            tagNames.push(tag.name);
+            newTagMap.set(tag.name, tag.slug);
+          });
           setCategories(["全部", ...tagNames]);
+          setTagMap(newTagMap);
         }
       } catch (error) {
         console.error("获取标签失败:", error);
@@ -56,7 +63,10 @@ export default function Home() {
 
         // 如果选择了非"全部"的分类
         if (activeCategory !== "全部") {
-          params.query.tagName = activeCategory;
+          const tagSlug = tagMap.get(activeCategory);
+          if (tagSlug) {
+            params.query.tagSlug = tagSlug;
+          }
         }
 
         const { data } = await listArticles(params);
@@ -71,7 +81,7 @@ export default function Home() {
     };
 
     fetchArticles();
-  }, [activeCategory, searchQuery]);
+  }, [activeCategory, searchQuery, tagMap]);
 
   const handleArticleClick = (slug: string) => {
     setSelectedArticleSlug(slug);

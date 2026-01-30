@@ -5,7 +5,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X, Heart, MessageCircle, Star, Share2, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getArticle } from "@/lib/api/sdk.gen";
+import { getArticle } from "@/lib/api/config";
 import type { DetailedArticle, User } from "@/lib/api/types.gen";
 import { RichTextContent } from "@/components/rich-text-content";
 import { cn } from "@/lib/utils";
@@ -171,7 +171,7 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                             key={index}
                             className="text-[#576b95] dark:text-[#7b9bd1] text-sm cursor-pointer hover:opacity-80"
                           >
-                            #{tag}
+                            #{tag.name}
                           </span>
                         ))}
                       </div>

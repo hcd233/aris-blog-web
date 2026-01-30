@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { listTags } from "@/lib/api/sdk.gen";
+import { listTags } from "@/lib/api/config";
 
 // Custom Tag Node Extension
 const TagNode = Node.create({

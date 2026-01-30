@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
-import { getCurrentUserInfo, setAuthToken } from "@/lib/api/config";
+import { getCurrentUser, setAuthToken } from "@/lib/api/config";
 import type { DetailedUser } from "@/lib/api/types.gen";
 
 interface AuthContextType {
@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // 设置 token 到 API 客户端
         setAuthToken(token);
         try {
-          const { data } = await getCurrentUserInfo();
+          const { data } = await getCurrentUser();
           if (data?.user) {
             setUser(data.user);
           }
@@ -67,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      const { data } = await getCurrentUserInfo();
+      const { data } = await getCurrentUser();
       if (data?.user) {
         setUser(data.user);
       }

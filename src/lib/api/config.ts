@@ -1,5 +1,4 @@
 import { client } from "./client.gen";
-import { getCurrentUser } from "./sdk.gen";
 
 // 配置 API 客户端
 client.setConfig({
@@ -30,8 +29,11 @@ if (typeof window !== "undefined") {
   }
 }
 
+// 导出 client
+export { client };
+
 // 导出 getCurrentUser 函数，方便 auth.tsx 使用
-export const getCurrentUserInfo = getCurrentUser;
+export { getCurrentUser } from "./sdk.gen";
 
 // 重新导出 SDK 中的其他函数
 export {
