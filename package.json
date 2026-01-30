@@ -23,6 +23,7 @@
     "@tiptap/starter-kit": "^3.18.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "cos-js-sdk-v5": "^1.10.1",
     "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "next-themes": "^0.4.6",

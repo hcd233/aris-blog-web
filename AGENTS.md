@@ -383,18 +383,16 @@ src/
   4. 获取临时密钥后直传到腾讯云COS
   5. 上传完成后调用createArticle创建文章
 - **实现方案**:
-  1. 创建 `src/lib/cos-upload.ts` 工具库，包含：
+  1. 安装官方 SDK: `npm install cos-js-sdk-v5`
+  2. 创建 `src/lib/cos-upload.ts` 工具库，包含：
      - `compressImage()`: 将图片转为JPEG，逐步降低质量直到文件大小<2MB
      - `calculateMD5()`: 计算文件MD5（使用SHA-256取前8位）
-     - `getCosCredential()`: 获取COS临时密钥（带缓存，过期前5分钟自动刷新）
-     - `generateCosSignature()`: 生成COS请求签名（HMAC-SHA1）
-     - `uploadToCos()`: 使用XMLHttpRequest直传到COS，支持进度回调
-     - `processAndUploadImage()`: 组合上述功能的便捷函数
-  2. 修改 `src/components/cover-upload.tsx`:
+     - `processAndUploadImage()`: 使用COS SDK上传图片
+  3. 修改 `src/components/cover-upload.tsx`:
      - 移除原有的上传逻辑和状态管理
      - 改为只收集File对象，通过onChange传递给父组件
      - 保留拖拽排序、删除、预览功能
-  3. 修改 `src/app/publish/page.tsx`:
+  4. 修改 `src/app/publish/page.tsx`:
      - formData.images改为`ImageItem[]`类型（包含file和preview）
      - 发布流程改为：
        a. 显示进度覆盖层，计算总进度 = 图片数 + 1（创建文章）
@@ -402,14 +400,18 @@ src/
        c. 收集返回的文件名数组
        d. 调用createArticle创建文章
      - 使用Progress组件显示上传进度
-  4. 修改 `src/components/rich-text-editor.tsx`:
+  5. 修改 `src/components/rich-text-editor.tsx`:
      - 添加`disabled`属性支持，在发布时禁用编辑
 - **Bug修复**:
   - **COS URL格式错误**: 缺少`-{appId}`后缀，已修正为`{bucket}-{appId}.cos.{region}.myqcloud.com`
   - **上传路径错误**: 从`articles/{filename}`改为`user-{userId}/image/{filename}`
+  - **签名算法错误**: 从手动实现签名改为使用官方`cos-js-sdk-v5` SDK，避免签名验证失败
+  - **Bucket名称格式错误**: SDK要求bucket名称格式为`{bucketName}-{appId}`，已修正
 - **文件位置**:
   - src/lib/cos-upload.ts
   - src/components/cover-upload.tsx
   - src/app/publish/page.tsx
   - src/components/rich-text-editor.tsx
-- **参考文档**: https://cloud.tencent.com/document/product/436/14048
+- **参考文档**: 
+  - https://cloud.tencent.com/document/product/436/14048
+  - https://github.com/tencentyun/cos-js-sdk-v5
