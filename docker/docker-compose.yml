@@ -5,7 +5,7 @@ networks:
     external: true
 
 services:
-  web:
+  aris-blog-web:
     image: ghcr.io/hcd233/aris-blog-web:master # aris-mem-api:latest
     container_name: aris-blog-web
     restart: always
