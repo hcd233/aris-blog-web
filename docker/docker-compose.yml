@@ -13,9 +13,8 @@ services:
       - 1panel-network
     ports:
       - "6000:3000"
-    environment:
-      - NODE_ENV=production
-      - NEXT_TELEMETRY_DISABLED=1
+    env_file:
+      - .env
     # 健康检查
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]

@@ -48,7 +48,7 @@ export const setAuthToken = (token: string | null) => {
 
 // 配置 API 客户端 baseUrl
 client.setConfig({
-  baseUrl: "https://mem.lvlvko.top",
+  baseUrl: "/backend",
   auth: async () => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("accessToken") || undefined;

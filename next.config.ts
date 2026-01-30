@@ -9,6 +9,15 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
+  // API 代理配置
+  async rewrites() {
+    return [
+      {
+        source: '/backend/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_BASE_URL}/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

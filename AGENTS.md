@@ -60,6 +60,21 @@ NODE_ENV=production        # 生产模式
 NEXT_TELEMETRY_DISABLED=1  # 禁用 Next.js 遥测
 PORT=3000                  # 服务端口
 HOSTNAME=0.0.0.0           # 监听地址
+NEXT_PUBLIC_API_BASE_URL=https://mem.lvlvko.top  # API 基础地址（默认）
+```
+
+### 自定义后端地址
+
+开发环境：
+```bash
+# 编辑 .env.local 文件
+NEXT_PUBLIC_API_BASE_URL=https://your-backend.com
+```
+
+生产环境：
+```bash
+# 运行容器时传入环境变量
+docker run -p 3000:3000 -e NEXT_PUBLIC_API_BASE_URL=https://your-backend.com nextjs-web
 ```
 
 ## 代码风格规范
