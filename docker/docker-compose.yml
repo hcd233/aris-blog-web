@@ -6,7 +6,7 @@ networks:
 
 services:
   aris-blog-web:
-    image: ghcr.io/hcd233/aris-blog-web:master # aris-mem-api:latest
+    image: ghcr.io/hcd233/aris-blog-web:master
     container_name: aris-blog-web
     restart: always
     networks:

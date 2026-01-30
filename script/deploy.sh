@@ -7,5 +7,5 @@ docker compose -f docker/docker-compose.yml up -d
 echo -e "\033[1;31mPruning unused Docker images...\033[0m"
 docker image prune -a -f
 
-echo -e "\033[1;33mDisplaying Docker logs for aris-mem-api...\033[0m"
+echo -e "\033[1;33mDisplaying Docker logs for aris-blog-web...\033[0m"
 docker logs -f aris-blog-web --details
