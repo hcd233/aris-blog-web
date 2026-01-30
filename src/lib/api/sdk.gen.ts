@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ChatData, ChatErrors, ChatResponses, CreateArticleData, CreateArticleErrors, CreateArticleResponses, CreateTodoItemsData, CreateTodoItemsErrors, CreateTodoItemsResponses, DeleteArticleData, DeleteArticleErrors, DeleteArticleResponses, DeleteTodoItemData, DeleteTodoItemErrors, DeleteTodoItemResponses, DoActionData, DoActionErrors, DoActionResponses, GetArticleData, GetArticleErrors, GetArticleResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, HealthCheckData, HealthCheckErrors, HealthCheckResponses, ListArticlesData, ListArticlesErrors, ListArticlesResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTodoItemsData, ListTodoItemsErrors, ListTodoItemsResponses, Oauth2CallbackData, Oauth2CallbackErrors, Oauth2CallbackResponses, Oauth2LoginData, Oauth2LoginErrors, Oauth2LoginResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, SseHealthCheckData, SseHealthCheckErrors, SseHealthCheckResponses, UndoActionData, UndoActionErrors, UndoActionResponses, UpdateArticleData, UpdateArticleErrors, UpdateArticleResponses, UpdateTodoItemData, UpdateTodoItemErrors, UpdateTodoItemResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
+import type { ChatData, ChatErrors, ChatResponses, CreateArticleData, CreateArticleErrors, CreateArticleResponses, CreateTodoItemsData, CreateTodoItemsErrors, CreateTodoItemsResponses, DeleteArticleData, DeleteArticleErrors, DeleteArticleResponses, DeleteTagData, DeleteTagErrors, DeleteTagResponses, DeleteTodoItemData, DeleteTodoItemErrors, DeleteTodoItemResponses, DoActionData, DoActionErrors, DoActionResponses, GetArticleData, GetArticleErrors, GetArticleResponses, GetCredentialData, GetCredentialErrors, GetCredentialResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, HealthCheckData, HealthCheckErrors, HealthCheckResponses, ListArticlesData, ListArticlesErrors, ListArticlesResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTodoItemsData, ListTodoItemsErrors, ListTodoItemsResponses, Oauth2CallbackData, Oauth2CallbackErrors, Oauth2CallbackResponses, Oauth2LoginData, Oauth2LoginErrors, Oauth2LoginResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, SseHealthCheckData, SseHealthCheckErrors, SseHealthCheckResponses, UndoActionData, UndoActionErrors, UndoActionResponses, UpdateArticleData, UpdateArticleErrors, UpdateArticleResponses, UpdateTodoItemData, UpdateTodoItemErrors, UpdateTodoItemResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -144,6 +144,17 @@ export const uploadImage = <ThrowOnError extends boolean = false>(options?: Opti
 });
 
 /**
+ * GetCredential
+ *
+ * Get COS temporary credential for direct upload from frontend. Returns temporary SecretId, SecretKey and SessionToken.
+ */
+export const getCredential = <ThrowOnError extends boolean = false>(options?: Options<GetCredentialData, ThrowOnError>) => (options?.client ?? client).get<GetCredentialResponses, GetCredentialErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/image/credential',
+    ...options
+});
+
+/**
  * OAuth2Callback
  *
  * Handle OAuth2 callback with authorization code and state
@@ -163,6 +174,17 @@ export const oauth2Callback = <ThrowOnError extends boolean = false>(options?: O
  * Get OAuth2 authorization URL for the specified platform (github/google/qq)
  */
 export const oauth2Login = <ThrowOnError extends boolean = false>(options: Options<Oauth2LoginData, ThrowOnError>) => (options.client ?? client).get<Oauth2LoginResponses, Oauth2LoginErrors, ThrowOnError>({ url: '/api/v1/oauth2/login', ...options });
+
+/**
+ * DeleteTag
+ *
+ * Delete tag and its article associations
+ */
+export const deleteTag = <ThrowOnError extends boolean = false>(options: Options<DeleteTagData, ThrowOnError>) => (options.client ?? client).delete<DeleteTagResponses, DeleteTagErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/tag/',
+    ...options
+});
 
 /**
  * ListTags

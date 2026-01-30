@@ -3,6 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // 启用 Turbopack
   turbopack: {},
+  // 启用 standalone 模式，用于 Docker 部署
+  output: 'standalone',
+  // 禁用图片优化（如果使用外部 CDN，可设为 true）
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

@@ -49,6 +49,49 @@ export type CallbackRsp = {
     refreshToken: string;
 };
 
+export type CosTempCredential = {
+    /**
+     * 应用ID
+     */
+    appId: string;
+    /**
+     * Bucket名称
+     */
+    bucketName: string;
+    /**
+     * ISO8601格式的过期时间
+     */
+    expiration: string;
+    /**
+     * 临时密钥过期时间戳(秒)
+     */
+    expiredTime: number;
+    /**
+     * 地域
+     */
+    region: string;
+    /**
+     * 请求ID
+     */
+    requestId?: string;
+    /**
+     * 临时密钥 SecretId
+     */
+    secretId: string;
+    /**
+     * 临时密钥 SecretKey
+     */
+    secretKey: string;
+    /**
+     * 临时密钥 SessionToken
+     */
+    sessionToken: string;
+    /**
+     * 临时密钥开始时间戳(秒)
+     */
+    startTime: number;
+};
+
 export type CreateArticleReqBody = {
     /**
      * Content of the article
@@ -298,6 +341,17 @@ export type GetArticleRsp = {
     error?: Error;
 };
 
+export type GetCosTempCredentialRsp = {
+    /**
+     * COS临时密钥信息
+     */
+    cosTempCredential?: CosTempCredential;
+    /**
+     * Error body
+     */
+    error?: Error;
+};
+
 export type GetCurUserRsp = {
     /**
      * Error body
@@ -362,7 +416,7 @@ export type ListedArticle = {
     /**
      * Cover image URL of the article
      */
-    coverImage?: string;
+    coverImage: string;
     /**
      * Created time of the article
      */
@@ -845,6 +899,31 @@ export type UploadImageResponses = {
 
 export type UploadImageResponse = UploadImageResponses[keyof UploadImageResponses];
 
+export type GetCredentialData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/image/credential';
+};
+
+export type GetCredentialErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type GetCredentialError = GetCredentialErrors[keyof GetCredentialErrors];
+
+export type GetCredentialResponses = {
+    /**
+     * OK
+     */
+    200: GetCosTempCredentialRsp;
+};
+
+export type GetCredentialResponse = GetCredentialResponses[keyof GetCredentialResponses];
+
 export type Oauth2CallbackData = {
     /**
      * Request body containing the authorization code and state
@@ -902,6 +981,36 @@ export type Oauth2LoginResponses = {
 };
 
 export type Oauth2LoginResponse = Oauth2LoginResponses[keyof Oauth2LoginResponses];
+
+export type DeleteTagData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Unique identifier for the tag
+         */
+        id: number;
+    };
+    url: '/api/v1/tag/';
+};
+
+export type DeleteTagErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type DeleteTagError = DeleteTagErrors[keyof DeleteTagErrors];
+
+export type DeleteTagResponses = {
+    /**
+     * OK
+     */
+    200: EmptyRsp;
+};
+
+export type DeleteTagResponse = DeleteTagResponses[keyof DeleteTagResponses];
 
 export type ListTagsData = {
     body?: never;

@@ -57,6 +57,7 @@ export function Sidebar() {
 
   // 判断是否是当前路径
   const isActive = (href: string) => {
+    if (!pathname) return false;
     if (href === "/") {
       return pathname === "/";
     }

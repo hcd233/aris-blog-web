@@ -65,6 +65,7 @@ interface RichTextEditorProps {
   onChange: (content: string) => void;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 interface ToolbarButtonProps {
@@ -100,11 +101,14 @@ function ToolbarButton({
   );
 }
 
-function EditorToolbar({ editor }: { editor: Editor | null }) {
+function EditorToolbar({ editor, disabled }: { editor: Editor | null; disabled?: boolean }) {
   if (!editor) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/30 rounded-t-lg">
+    <div className={cn(
+      "flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/30 rounded-t-lg",
+      disabled && "opacity-50 pointer-events-none"
+    )}>
       {/* Text Style */}
       <div className="flex items-center gap-0.5 pr-2 border-r border-border">
         <ToolbarButton
@@ -280,6 +284,7 @@ export function RichTextEditor({
   onChange,
   placeholder = "输入正文内容...",
   className,
+  disabled = false,
 }: RichTextEditorProps) {
   const [showTagDropdown, setShowTagDropdown] = useState(false);
   const [tagQuery, setTagQuery] = useState("");
@@ -470,6 +475,7 @@ export function RichTextEditor({
       }),
     ],
     content,
+    editable: !disabled,
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
@@ -537,10 +543,11 @@ export function RichTextEditor({
       ref={containerRef}
       className={cn(
         "border border-border rounded-lg overflow-hidden bg-background relative",
+        disabled && "opacity-50",
         className
       )}
     >
-      <EditorToolbar editor={editor} />
+      <EditorToolbar editor={editor} disabled={disabled} />
       <EditorContent editor={editor} />
 
       {showTagDropdown && (

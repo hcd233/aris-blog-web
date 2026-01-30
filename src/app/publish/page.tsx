@@ -1,24 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CoverUpload } from "@/components/cover-upload";
+import { CoverUpload, type ImageItem } from "@/components/cover-upload";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { createArticle } from "@/lib/api/config";
+import { processAndUploadImage } from "@/lib/cos-upload";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 
 export default function PublishPage() {
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState("");
+  const formDataRef = useRef({
     title: "",
     content: "",
-    images: [] as string[],
+    images: [] as ImageItem[],
   });
+  const [formData, setFormData] = useState(formDataRef.current);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error("请先登录", {
+        description: "登录后才能发布文章",
+      });
+      router.push("/login");
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,13 +54,42 @@ export default function PublishPage() {
     }
 
     setIsSubmitting(true);
+    setUploadProgress(0);
 
     try {
+      const totalSteps = formData.images.length + 1; // 所有图片 + 创建文章
+      let currentStep = 0;
+      const uploadedImageNames: string[] = [];
+
+      // 1. 上传所有图片到 COS
+      for (let i = 0; i < formData.images.length; i++) {
+        const imageItem = formData.images[i];
+        setUploadStatus(`正在上传第 ${i + 1}/${formData.images.length} 张图片...`);
+
+        const fileName = await processAndUploadImage(
+          imageItem.file,
+          String(user!.id),
+          (percent: number) => {
+            // 计算总体进度
+            const fileProgress = percent / 100;
+            const overallProgress = ((currentStep + fileProgress) / totalSteps) * 100;
+            setUploadProgress(Math.round(overallProgress));
+          }
+        );
+
+        uploadedImageNames.push(fileName);
+        currentStep++;
+      }
+
+      // 2. 创建文章
+      setUploadStatus("正在发布文章...");
+      setUploadProgress(Math.round((currentStep / totalSteps) * 100));
+
       const { error } = await createArticle({
         body: {
           title: formData.title,
           content: formData.content,
-          images: formData.images.length > 0 ? formData.images : null,
+          images: uploadedImageNames.length > 0 ? uploadedImageNames : null,
         },
       });
 
@@ -52,6 +97,7 @@ export default function PublishPage() {
         throw new Error("发布失败");
       }
 
+      setUploadProgress(100);
       toast.success("发布成功！", {
         description: "您的文章已成功发布",
       });
@@ -67,6 +113,7 @@ export default function PublishPage() {
       });
     } finally {
       setIsSubmitting(false);
+      setUploadStatus("");
     }
   };
 
@@ -74,11 +121,10 @@ export default function PublishPage() {
     router.back();
   };
 
-  const handleImagesChange = (images: string[]) => {
-    setFormData((prev) => ({
-      ...prev,
-      images,
-    }));
+  const handleImagesChange = (images: ImageItem[]) => {
+    const newData = { ...formData, images };
+    setFormData(newData);
+    formDataRef.current = newData;
   };
 
   return (
@@ -142,9 +188,9 @@ export default function PublishPage() {
             />
             {formData.images.length > 0 && (
               <p className="text-xs text-muted-foreground mt-2">
-                已上传 {formData.images.length} 张图片
-                <span className="ml-2 text-green-600">
-                  ✓ 按顺序上传完成
+                已选择 {formData.images.length} 张图片
+                <span className="ml-2 text-muted-foreground">
+                  （发布时会上传到云端）
                 </span>
               </p>
             )}
@@ -159,7 +205,8 @@ export default function PublishPage() {
                 setFormData((prev) => ({ ...prev, title: e.target.value }))
               }
               placeholder="一个好标题会有更多赞哦~"
-              className="text-lg font-medium border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60"
+              disabled={isSubmitting}
+              className="text-lg font-medium border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary placeholder:text-muted-foreground/60 disabled:opacity-50"
             />
           </section>
 
@@ -171,6 +218,7 @@ export default function PublishPage() {
                 setFormData((prev) => ({ ...prev, content }))
               }
               placeholder="输入正文描述，真诚有价值的分享予人温暖"
+              disabled={isSubmitting}
             />
           </section>
 
@@ -199,6 +247,24 @@ export default function PublishPage() {
           </div>
         </form>
       </main>
+
+      {/* Upload Progress Overlay */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-background rounded-xl p-6 w-full max-w-sm mx-4 shadow-xl">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                <span className="font-medium">{uploadStatus || "处理中..."}</span>
+              </div>
+              <Progress value={uploadProgress} className="h-2" />
+              <p className="text-sm text-muted-foreground text-center">
+                {uploadProgress}%
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

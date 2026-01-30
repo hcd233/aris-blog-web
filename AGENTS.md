@@ -12,6 +12,7 @@ Next.js 16.1.6 + TypeScript 5 + Tailwind CSS 4 + shadcn/ui 博客应用。
 - **UI组件**: shadcn/ui (New York 风格), Lucide 图标
 - **API客户端**: @hey-api/client-fetch (OpenAPI生成)
 - **认证**: OAuth2 + JWT (localStorage存储)
+- **容器化**: Docker (多阶段构建 + Alpine Linux)
 
 ## 构建命令
 
@@ -21,6 +22,44 @@ npm run build        # 生产构建
 npm run start        # 生产服务器
 npm install          # 安装依赖
 npx shadcn add <组件名>  # 添加shadcn组件
+```
+
+## Docker 部署
+
+### 快速启动
+
+```bash
+# 使用 Docker Compose（推荐）
+docker-compose up -d
+
+# 或手动构建和运行
+docker build -t nextjs-web .
+docker run -p 3000:3000 nextjs-web
+```
+
+### Dockerfile 特性
+
+- **多阶段构建**: 3阶段构建（deps → builder → runner），最终镜像仅~100MB
+- **Alpine Linux**: 基于 `node:22-alpine`，轻量且安全
+- **Standalone 模式**: 仅打包必要文件，无需完整 node_modules
+- **BuildKit 优化**: 使用 `--mount=type=cache` 加速 npm 安装
+- **非 root 用户**: 使用 uid 1001 的 nextjs 用户运行，增强安全性
+- **dumb-init**: 正确处理 PID 1 信号，优雅退出
+
+### 镜像对比
+
+| 类型 | 大小 | 说明 |
+|------|------|------|
+| 开发环境 | ~2GB | 包含 node_modules 和源码 |
+| 生产镜像 | ~100MB | Standalone + Alpine，仅运行时 |
+
+### 环境变量
+
+```bash
+NODE_ENV=production        # 生产模式
+NEXT_TELEMETRY_DISABLED=1  # 禁用 Next.js 遥测
+PORT=3000                  # 服务端口
+HOSTNAME=0.0.0.0           # 监听地址
 ```
 
 ## 代码风格规范
@@ -143,6 +182,9 @@ toast.info("敬请期待", {
 | `src/app/profile/page.tsx` | 个人资料页面（小红书风格） |
 | `src/components/ui/sonner.tsx` | Toast通知组件（基于sonner） |
 | `src/components/article-detail-modal.tsx` | 文章详情弹窗，支持多图片轮播（小红书风格） |
+| `Dockerfile` | Docker 多阶段构建配置 |
+| `docker-compose.yml` | Docker Compose 部署配置 |
+| `.dockerignore` | Docker 构建忽略文件 |
 
 ## 页面说明
 
@@ -197,7 +239,23 @@ src/
 4. 新依赖项
 5. 新代码模式或约定
 
-**最后更新**: 2026-01-31
+**最后更新**: 2026-02-01
+
+### Docker 容器化部署
+- **功能需求**: 为 Next.js 应用创建轻量、高性能的 Docker 部署方案
+- **实现方案**:
+  1. 使用多阶段构建（3 阶段）：deps → builder → runner
+  2. 基于 `node:22-alpine` 镜像，最终镜像仅约 100MB
+  3. 启用 Next.js Standalone 模式（`output: 'standalone'`）
+  4. 使用 BuildKit 缓存加速 npm 安装
+  5. 使用非 root 用户（uid 1001）运行，增强安全性
+  6. 使用 dumb-init 正确处理 PID 1 信号
+  7. 创建 `docker-compose.yml` 便于快速部署
+- **文件位置**: 
+  - Dockerfile
+  - docker-compose.yml
+  - .dockerignore
+  - next.config.ts（添加 standalone 配置）
 
 ### 图片上传组件升级（多图片、拖拽排序、进度条）
 - **功能需求**: 
@@ -316,3 +374,42 @@ src/
   1. 使用`client.getConfig()`获取当前配置并展开保留原有配置
   2. 添加客户端初始化逻辑，页面加载时自动从localStorage读取token并设置
 - **文件位置**: src/lib/api/config.ts
+
+### 2026-01-31 图片上传改为COS直传
+- **功能需求**:
+  1. 图片选择后不在组件内立即上传，而是发布时统一处理
+  2. 图片统一处理成JPEG格式，压缩到2MB内
+  3. 重命名为"atc-img-{md5前8位}.jpg"
+  4. 获取临时密钥后直传到腾讯云COS
+  5. 上传完成后调用createArticle创建文章
+- **实现方案**:
+  1. 创建 `src/lib/cos-upload.ts` 工具库，包含：
+     - `compressImage()`: 将图片转为JPEG，逐步降低质量直到文件大小<2MB
+     - `calculateMD5()`: 计算文件MD5（使用SHA-256取前8位）
+     - `getCosCredential()`: 获取COS临时密钥（带缓存，过期前5分钟自动刷新）
+     - `generateCosSignature()`: 生成COS请求签名（HMAC-SHA1）
+     - `uploadToCos()`: 使用XMLHttpRequest直传到COS，支持进度回调
+     - `processAndUploadImage()`: 组合上述功能的便捷函数
+  2. 修改 `src/components/cover-upload.tsx`:
+     - 移除原有的上传逻辑和状态管理
+     - 改为只收集File对象，通过onChange传递给父组件
+     - 保留拖拽排序、删除、预览功能
+  3. 修改 `src/app/publish/page.tsx`:
+     - formData.images改为`ImageItem[]`类型（包含file和preview）
+     - 发布流程改为：
+       a. 显示进度覆盖层，计算总进度 = 图片数 + 1（创建文章）
+       b. 遍历所有图片，逐个调用processAndUploadImage上传
+       c. 收集返回的文件名数组
+       d. 调用createArticle创建文章
+     - 使用Progress组件显示上传进度
+  4. 修改 `src/components/rich-text-editor.tsx`:
+     - 添加`disabled`属性支持，在发布时禁用编辑
+- **Bug修复**:
+  - **COS URL格式错误**: 缺少`-{appId}`后缀，已修正为`{bucket}-{appId}.cos.{region}.myqcloud.com`
+  - **上传路径错误**: 从`articles/{filename}`改为`user-{userId}/image/{filename}`
+- **文件位置**:
+  - src/lib/cos-upload.ts
+  - src/components/cover-upload.tsx
+  - src/app/publish/page.tsx
+  - src/components/rich-text-editor.tsx
+- **参考文档**: https://cloud.tencent.com/document/product/436/14048
