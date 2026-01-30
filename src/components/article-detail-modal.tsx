@@ -19,6 +19,7 @@ interface ArticleDetailModalProps {
 export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDetailModalProps) {
   const [article, setArticle] = useState<DetailedArticle | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
 
   useEffect(() => {
     if (isOpen && articleSlug) {
@@ -62,6 +63,7 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
   if (!isOpen) return null;
 
   return (
+    <>
     <Dialog.Root open={isOpen} onOpenChange={onClose}>
       <Dialog.Portal>
         <Dialog.Overlay 
@@ -71,7 +73,7 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
         <Dialog.Content
           className={cn(
             "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
-            "w-[95vw] max-w-[1100px] h-[90vh] max-h-[800px]",
+            "w-[95vw] md:w-auto md:min-w-[800px] md:max-w-[95vw] h-[90vh] max-h-[800px]",
             "bg-white dark:bg-[#1a1a1a] rounded-2xl overflow-hidden shadow-2xl",
             "flex flex-col md:flex-row",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -107,12 +109,15 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
           ) : (
             <>
               {/* Left Side - Image */}
-              <div className="relative w-full md:w-[55%] h-[40vh] md:h-full bg-gray-100 dark:bg-[#0a0a0a] flex items-center justify-center overflow-hidden">
+              <div 
+                className="relative w-full md:w-auto md:min-w-[45%] md:max-w-[60%] h-[40vh] md:h-full bg-gray-100 dark:bg-[#0a0a0a] flex items-center justify-center overflow-hidden cursor-pointer"
+                onClick={() => article.coverImage && setIsImagePreviewOpen(true)}
+              >
                 {article.coverImage ? (
                   <img
                     src={article.coverImage}
                     alt={article.title}
-                    className="w-full h-full object-cover"
+                    className="max-w-full max-h-full object-contain"
                   />
                 ) : (
                   <div className="flex items-center justify-center">
@@ -255,5 +260,47 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+
+      {/* Image Preview Modal */}
+      <Dialog.Root open={isImagePreviewOpen} onOpenChange={setIsImagePreviewOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay 
+            className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+            onClick={() => setIsImagePreviewOpen(false)}
+          />
+          <Dialog.Content
+            className={cn(
+              "fixed left-1/2 top-1/2 z-[60] -translate-x-1/2 -translate-y-1/2",
+              "w-[98vw] h-[98vh] flex items-center justify-center",
+              "data-[state=open]:animate-in data-[state=closed]:animate-out",
+              "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+              "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+              "duration-300 ease-out"
+            )}
+            onInteractOutside={() => setIsImagePreviewOpen(false)}
+          >
+            <Dialog.Title className="sr-only">
+              图片预览
+            </Dialog.Title>
+            
+            {article?.coverImage && (
+              <img
+                src={article.coverImage}
+                alt={article.title}
+                className="max-w-full max-h-full object-contain"
+              />
+            )}
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setIsImagePreviewOpen(false)}
+              className="absolute top-4 right-4 z-[70] flex w-10 h-10 rounded-full bg-black/50 items-center justify-center text-white hover:bg-black/70 transition-colors"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </>
   );
 }

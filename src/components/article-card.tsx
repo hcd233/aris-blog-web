@@ -1,19 +1,16 @@
+"use client";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { ListedArticle } from "@/lib/api/types.gen";
 import { cn } from "@/lib/utils";
+import { useState, useEffect } from "react";
 
 interface ArticleCardProps {
   article: ListedArticle;
   onClick?: () => void;
 }
 
-// 生成随机高度来模拟瀑布流效果
-const getRandomHeight = (id: number) => {
-  const heights = [280, 320, 360, 400, 440, 480];
-  return heights[id % heights.length];
-};
-
-// 生成渐变色封面
+// 渐变色封面
 const getGradient = (id: number) => {
   const gradients = [
     "from-purple-500/20 to-blue-500/20",
@@ -26,10 +23,69 @@ const getGradient = (id: number) => {
   return gradients[id % gradients.length];
 };
 
+// 获取图片实际尺寸
+const getImageDimensions = (url: string): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      resolve({ width: img.naturalWidth, height: img.naturalHeight });
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+};
+
+// 计算图片高度（基于容器宽度和原始宽高比）
+const calculateImageHeight = (
+  naturalWidth: number,
+  naturalHeight: number,
+  containerWidth: number,
+  minHeight: number = 200,
+  maxHeight: number = 600
+): number => {
+  const aspectRatio = naturalHeight / naturalWidth;
+  let height = containerWidth * aspectRatio;
+  
+  // 限制最小和最大高度
+  if (height < minHeight) height = minHeight;
+  if (height > maxHeight) height = maxHeight;
+  
+  return Math.round(height);
+};
+
 export function ArticleCard({ article, onClick }: ArticleCardProps) {
-  const imageHeight = getRandomHeight(article.id);
   const gradient = getGradient(article.id);
   const hasCoverImage = article.coverImage && article.coverImage.length > 0;
+  
+  const [imageHeight, setImageHeight] = useState<number>(280);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // 加载图片并计算高度
+  useEffect(() => {
+    if (!hasCoverImage) {
+      setImageHeight(280);
+      return;
+    }
+
+    const loadImage = async () => {
+      try {
+        const { width: naturalWidth, height: naturalHeight } = await getImageDimensions(article.coverImage!);
+        
+        // 获取容器宽度用于计算（瀑布流列宽约 200-280px）
+        // 使用固定参考宽度计算，实际渲染时会根据容器自适应
+        const containerWidth = 240;
+        const calculatedHeight = calculateImageHeight(naturalWidth, naturalHeight, containerWidth);
+        
+        setImageHeight(calculatedHeight);
+        setImageLoaded(true);
+      } catch (error) {
+        console.error("加载图片失败:", error);
+        setImageHeight(280);
+      }
+    };
+
+    loadImage();
+  }, [article.coverImage, hasCoverImage, article.id]);
 
   return (
     <div 
@@ -43,7 +99,9 @@ export function ArticleCard({ article, onClick }: ArticleCardProps) {
           "bg-gradient-to-br",
           gradient
         )}
-        style={{ height: `${imageHeight}px` }}
+        style={{ 
+          height: `${imageHeight}px`
+        }}
       >
         {/* Cover Image (if exists) */}
         {hasCoverImage ? (
