@@ -16,9 +16,9 @@ export default function AuthCallbackPage() {
   const [message, setMessage] = useState("正在处理登录...");
   const hasProcessed = useRef(false);
 
-  const provider = params.provider as "github" | "google";
-  const code = searchParams.get("code");
-  const state = searchParams.get("state");
+  const provider = params?.provider as "github" | "google";
+  const code = searchParams?.get("code");
+  const state = searchParams?.get("state");
 
   useEffect(() => {
     if (hasProcessed.current) return;

@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ChatData, ChatErrors, ChatResponses, CreateArticleData, CreateArticleErrors, CreateArticleResponses, CreateTodoItemsData, CreateTodoItemsErrors, CreateTodoItemsResponses, DeleteArticleData, DeleteArticleErrors, DeleteArticleResponses, DeleteTodoItemData, DeleteTodoItemErrors, DeleteTodoItemResponses, GetArticleData, GetArticleErrors, GetArticleResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, HealthCheckData, HealthCheckErrors, HealthCheckResponses, ListArticlesData, ListArticlesErrors, ListArticlesResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTodoItemsData, ListTodoItemsErrors, ListTodoItemsResponses, Oauth2CallbackData, Oauth2CallbackErrors, Oauth2CallbackResponses, Oauth2LoginData, Oauth2LoginErrors, Oauth2LoginResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, SseHealthCheckData, SseHealthCheckErrors, SseHealthCheckResponses, UpdateArticleData, UpdateArticleErrors, UpdateArticleResponses, UpdateTodoItemData, UpdateTodoItemErrors, UpdateTodoItemResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses } from './types.gen';
+import type { ChatData, ChatErrors, ChatResponses, CreateArticleData, CreateArticleErrors, CreateArticleResponses, CreateTodoItemsData, CreateTodoItemsErrors, CreateTodoItemsResponses, DeleteArticleData, DeleteArticleErrors, DeleteArticleResponses, DeleteTodoItemData, DeleteTodoItemErrors, DeleteTodoItemResponses, DoActionData, DoActionErrors, DoActionResponses, GetArticleData, GetArticleErrors, GetArticleResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, HealthCheckData, HealthCheckErrors, HealthCheckResponses, ListArticlesData, ListArticlesErrors, ListArticlesResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTodoItemsData, ListTodoItemsErrors, ListTodoItemsResponses, Oauth2CallbackData, Oauth2CallbackErrors, Oauth2CallbackResponses, Oauth2LoginData, Oauth2LoginErrors, Oauth2LoginResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, SseHealthCheckData, SseHealthCheckErrors, SseHealthCheckResponses, UndoActionData, UndoActionErrors, UndoActionResponses, UpdateArticleData, UpdateArticleErrors, UpdateArticleResponses, UpdateTodoItemData, UpdateTodoItemErrors, UpdateTodoItemResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -17,6 +17,36 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: Record<string, unknown>;
 };
+
+/**
+ * DoAction
+ *
+ * Perform an action on an entity (like/save article)
+ */
+export const doAction = <ThrowOnError extends boolean = false>(options?: Options<DoActionData, ThrowOnError>) => (options?.client ?? client).post<DoActionResponses, DoActionErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/action/do',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+    }
+});
+
+/**
+ * UndoAction
+ *
+ * Undo an action on an entity (undo like/undo save article)
+ */
+export const undoAction = <ThrowOnError extends boolean = false>(options?: Options<UndoActionData, ThrowOnError>) => (options?.client ?? client).post<UndoActionResponses, UndoActionErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/action/undo',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+    }
+});
 
 /**
  * Chat
@@ -95,6 +125,22 @@ export const listArticles = <ThrowOnError extends boolean = false>(options: Opti
     security: [{ name: 'Authorization', type: 'apiKey' }],
     url: '/api/v1/article/list',
     ...options
+});
+
+/**
+ * UploadImage
+ *
+ * Upload an image. Returns presigned URL of the uploaded image.
+ */
+export const uploadImage = <ThrowOnError extends boolean = false>(options?: Options<UploadImageData, ThrowOnError>) => (options?.client ?? client).post<UploadImageResponses, UploadImageErrors, ThrowOnError>({
+    ...formDataBodySerializer,
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/image/',
+    ...options,
+    headers: {
+        'Content-Type': null,
+        ...options?.headers
+    }
 });
 
 /**

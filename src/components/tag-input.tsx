@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { X, Hash, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 // Mock tags data - 实际项目中应该从 API 获取
 const MOCK_TAGS = [
@@ -105,7 +106,9 @@ export function TagInput({
       const trimmedTag = tagName.trim();
       if (!trimmedTag) return;
       if (tags.length >= maxTags) {
-        alert(`最多只能添加 ${maxTags} 个标签`);
+        toast.warning("标签数量限制", {
+          description: `最多只能添加 ${maxTags} 个标签`,
+        });
         return;
       }
       if (tags.includes(trimmedTag)) {

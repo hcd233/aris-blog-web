@@ -42,7 +42,7 @@ export function RichTextContent({ content, className }: RichTextContentProps) {
         "[&_a]:text-blue-600 [&_a]:dark:text-blue-400 [&_a]:underline",
         // Custom Tag Nodes
         "[&_span[data-type=\"tag\"]]:inline-flex [&_span[data-type=\"tag\"]]:items-center [&_span[data-type=\"tag\"]]:gap-0.5",
-        "[&_span[data-type=\"tag\"]]:text-[#576b95] [&_span[data-type=\"tag\"]]:dark:text-[#7b9bd1]",
+        "[&_span[data-type=\"tag\"]]:text-[rgb(87,107,149)] [&_span[data-type=\"tag\"]]:dark:text-[rgb(123,155,209)]",
         "[&_span[data-type=\"tag\"]]:font-medium [&_span[data-type=\"tag\"]]:cursor-pointer",
         "[&_span[data-type=\"tag\"]]:hover:opacity-80",
         className

@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { PenLine, Github, Loader2 } from "lucide-react";
 import { oauth2Login } from "@/lib/api/config";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,7 +24,9 @@ export default function LoginPage() {
 
       if (error || !data?.redirectURL) {
         console.error("登录失败:", error);
-        alert("登录失败，请重试");
+        toast.error("登录失败", {
+          description: "请检查网络连接后重试",
+        });
         return;
       }
 
@@ -31,7 +34,9 @@ export default function LoginPage() {
       window.location.href = data.redirectURL;
     } catch (err) {
       console.error("登录错误:", err);
-      alert("登录出错，请重试");
+      toast.error("登录出错", {
+        description: "请稍后重试",
+      });
     } finally {
       setIsLoading(null);
     }
@@ -168,7 +173,11 @@ export default function LoginPage() {
               
               <Button 
                 className="w-full h-11 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-medium"
-                onClick={() => alert("邮箱登录功能开发中")}
+                onClick={() =>
+                  toast.info("敬请期待", {
+                    description: "邮箱登录功能正在开发中",
+                  })
+                }
               >
                 Continue
                 <svg

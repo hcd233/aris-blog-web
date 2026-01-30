@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Heart, MessageCircle, Star, Share2, MoreHorizontal } from "lucide-react";
+import { X, Heart, MessageCircle, Star, Share2, MoreHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getArticle } from "@/lib/api/config";
+import { getArticle, doAction, undoAction } from "@/lib/api/config";
 import type { DetailedArticle, User } from "@/lib/api/types.gen";
 import { RichTextContent } from "@/components/rich-text-content";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 interface ArticleDetailModalProps {
   articleSlug: string;
@@ -20,12 +22,33 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
   const [article, setArticle] = useState<DetailedArticle | null>(null);
   const [loading, setLoading] = useState(false);
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [savesCount, setSavesCount] = useState(0);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
+  const [isSaveLoading, setIsSaveLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
+
+  // 图片轮播状态
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [translateX, setTranslateX] = useState(0);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number>(0);
 
   useEffect(() => {
     if (isOpen && articleSlug) {
       fetchArticleDetail();
     }
   }, [isOpen, articleSlug]);
+
+  // 重置图片索引当文章改变时
+  useEffect(() => {
+    setCurrentImageIndex(0);
+    setTranslateX(0);
+  }, [article?.id]);
 
   const fetchArticleDetail = async () => {
     setLoading(true);
@@ -35,6 +58,10 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
       });
       if (data?.article) {
         setArticle(data.article);
+        setIsLiked(data.article.liked);
+        setIsSaved(data.article.saved);
+        setLikesCount(data.article.likes);
+        setSavesCount(data.article.saves);
       }
     } catch (error) {
       console.error("获取文章详情失败:", error);
@@ -43,8 +70,170 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
     }
   };
 
-  const handleAction = (action: string) => {
-    alert(`敬请期待：${action}功能`);
+  // 获取图片列表
+  const getImages = useCallback(() => {
+    if (!article?.images) return [];
+    return article.images.filter((img): img is string => !!img);
+  }, [article?.images]);
+
+  const images = getImages();
+  const hasMultipleImages = images.length > 1;
+
+  // 图片轮播控制
+  const goToImage = useCallback((index: number) => {
+    if (index < 0 || index >= images.length) return;
+    setCurrentImageIndex(index);
+    setTranslateX(0);
+  }, [images.length]);
+
+  const goToPrev = useCallback(() => {
+    if (currentImageIndex > 0) {
+      setCurrentImageIndex(prev => prev - 1);
+      setTranslateX(0);
+    }
+  }, [currentImageIndex]);
+
+  const goToNext = useCallback(() => {
+    if (currentImageIndex < images.length - 1) {
+      setCurrentImageIndex(prev => prev + 1);
+      setTranslateX(0);
+    }
+  }, [currentImageIndex, images.length]);
+
+  // 触摸/鼠标滑动处理
+  const handleTouchStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (!hasMultipleImages) return;
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    touchStartX.current = clientX;
+    setStartX(clientX);
+  }, [hasMultipleImages]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    if (!isDragging || !hasMultipleImages) return;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const diff = clientX - touchStartX.current;
+    setTranslateX(diff);
+  }, [isDragging, hasMultipleImages]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isDragging || !hasMultipleImages) return;
+    setIsDragging(false);
+    
+    const threshold = 50; // 滑动阈值
+    if (translateX > threshold && currentImageIndex > 0) {
+      goToPrev();
+    } else if (translateX < -threshold && currentImageIndex < images.length - 1) {
+      goToNext();
+    } else {
+      setTranslateX(0);
+    }
+  }, [isDragging, hasMultipleImages, translateX, currentImageIndex, images.length, goToPrev, goToNext]);
+
+  const handleLikeClick = async () => {
+    if (!isAuthenticated) {
+      toast.error("请先登录", {
+        description: "登录后即可点赞",
+      });
+      return;
+    }
+
+    if (isLikeLoading || !article) return;
+
+    setIsLikeLoading(true);
+    
+    try {
+      if (isLiked) {
+        // Cancel like
+        const { error } = await undoAction({
+          body: {
+            actionType: "like",
+            entityID: article.id,
+            entityType: "article",
+          },
+        });
+        
+        if (!error) {
+          setIsLiked(false);
+          setLikesCount((prev) => Math.max(0, prev - 1));
+        } else {
+          console.error("取消点赞失败:", error);
+        }
+      } else {
+        // Do like
+        const { error } = await doAction({
+          body: {
+            actionType: "like",
+            entityID: article.id,
+            entityType: "article",
+          },
+        });
+        
+        if (!error) {
+          setIsLiked(true);
+          setLikesCount((prev) => prev + 1);
+        } else {
+          console.error("点赞失败:", error);
+        }
+      }
+    } catch (error) {
+      console.error("点赞操作失败:", error);
+    } finally {
+      setIsLikeLoading(false);
+    }
+  };
+
+  const handleSaveClick = async () => {
+    if (!isAuthenticated) {
+      toast.error("请先登录", {
+        description: "登录后即可收藏",
+      });
+      return;
+    }
+
+    if (isSaveLoading || !article) return;
+
+    setIsSaveLoading(true);
+    
+    try {
+      if (isSaved) {
+        // Cancel save
+        const { error } = await undoAction({
+          body: {
+            actionType: "save",
+            entityID: article.id,
+            entityType: "article",
+          },
+        });
+        
+        if (!error) {
+          setIsSaved(false);
+          setSavesCount((prev) => Math.max(0, prev - 1));
+        } else {
+          console.error("取消收藏失败:", error);
+        }
+      } else {
+        // Do save
+        const { error } = await doAction({
+          body: {
+            actionType: "save",
+            entityID: article.id,
+            entityType: "article",
+          },
+        });
+        
+        if (!error) {
+          setIsSaved(true);
+          setSavesCount((prev) => prev + 1);
+        } else {
+          console.error("收藏失败:", error);
+        }
+      }
+    } catch (error) {
+      console.error("收藏操作失败:", error);
+    } finally {
+      setIsSaveLoading(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -70,10 +259,10 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
           className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
           onClick={onClose}
         />
-        <Dialog.Content
+          <Dialog.Content
           className={cn(
             "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
-            "w-[95vw] md:w-auto md:min-w-[800px] md:max-w-[95vw] h-[90vh] max-h-[800px]",
+            "w-[95vw] md:w-[80vw] h-[90vh] md:h-[85vh]",
             "bg-white dark:bg-[#1a1a1a] rounded-2xl overflow-hidden shadow-2xl",
             "flex flex-col md:flex-row",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -85,13 +274,6 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
           )}
           onInteractOutside={onClose}
         >
-          {/* Close Button - Mobile Only */}
-          <button
-            onClick={onClose}
-            className="absolute top-3 left-3 z-50 md:hidden w-8 h-8 rounded-full bg-black/40 flex items-center justify-center text-white hover:bg-black/60 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
 
           {/* Hidden Dialog Title for accessibility */}
           <Dialog.Title className="sr-only">
@@ -108,19 +290,101 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
             </div>
           ) : (
             <>
-              {/* Left Side - Image */}
+              {/* Left Side - Image Carousel */}
               <div 
-                className="relative w-full md:w-auto md:min-w-[45%] md:max-w-[60%] h-[40vh] md:h-full bg-gray-100 dark:bg-[#0a0a0a] flex items-center justify-center overflow-hidden cursor-pointer"
-                onClick={() => article.coverImage && setIsImagePreviewOpen(true)}
+                className="relative w-full md:w-[55%] h-[40vh] md:h-full bg-gray-100 dark:bg-[#0a0a0a] overflow-hidden"
+                ref={carouselRef}
               >
-                {article.coverImage ? (
-                  <img
-                    src={article.coverImage}
-                    alt={article.title}
-                    className="max-w-full max-h-full object-contain"
-                  />
+                {images.length > 0 ? (
+                  <>
+                    {/* 图片轮播容器 */}
+                    <div
+                      className="flex h-full transition-transform duration-300 ease-out"
+                      style={{
+                        transform: `translateX(calc(-${currentImageIndex * 100}% + ${translateX}px))`,
+                        cursor: isDragging ? 'grabbing' : hasMultipleImages ? 'grab' : 'default'
+                      }}
+                      onMouseDown={handleTouchStart}
+                      onMouseMove={handleTouchMove}
+                      onMouseUp={handleTouchEnd}
+                      onMouseLeave={handleTouchEnd}
+                      onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                    >
+                      {images.map((image, index) => (
+                        <div
+                          key={index}
+                          className="w-full h-full flex-shrink-0 flex items-center justify-center"
+                          onClick={() => setIsImagePreviewOpen(true)}
+                        >
+                          <img
+                            src={image}
+                            alt={`${article.title} - ${index + 1}`}
+                            className="max-w-full max-h-full object-contain"
+                            loading="lazy"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 左右箭头 - 仅在有多张图片时显示 */}
+                    {hasMultipleImages && (
+                      <>
+                        {/* 左箭头 */}
+                        {currentImageIndex > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              goToPrev();
+                            }}
+                            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-all z-10"
+                          >
+                            <ChevronLeft className="w-6 h-6" />
+                          </button>
+                        )}
+
+                        {/* 右箭头 */}
+                        {currentImageIndex < images.length - 1 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              goToNext();
+                            }}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-all z-10"
+                          >
+                            <ChevronRight className="w-6 h-6" />
+                          </button>
+                        )}
+
+                        {/* 图片索引指示器 - 小红书风格 */}
+                        <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-black/40 backdrop-blur-sm text-white text-sm font-medium z-10">
+                          {currentImageIndex + 1}/{images.length}
+                        </div>
+
+                        {/* 底部指示点 */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                          {images.map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                goToImage(index);
+                              }}
+                              className={cn(
+                                "w-2 h-2 rounded-full transition-all duration-300",
+                                index === currentImageIndex
+                                  ? "bg-gray-800 dark:bg-white w-4"
+                                  : "bg-gray-400 dark:bg-white/50 hover:bg-gray-600 dark:hover:bg-white/70"
+                              )}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
                 ) : (
-                  <div className="flex items-center justify-center">
+                  <div className="flex items-center justify-center h-full">
                     <span className="text-8xl opacity-20 text-gray-900 dark:text-white">
                       {article.title.charAt(0) || "A"}
                     </span>
@@ -148,7 +412,11 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                   <Button
                     size="sm"
                     className="bg-[#ff2442] hover:bg-[#e01e3a] text-white rounded-full px-5 text-xs font-medium"
-                    onClick={() => handleAction("关注")}
+                    onClick={() =>
+                      toast.info("敬请期待", {
+                        description: "关注功能正在开发中",
+                      })
+                    }
                   >
                     关注
                   </Button>
@@ -174,7 +442,7 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                         {article.tags.map((tag, index) => (
                           <span
                             key={index}
-                            className="text-[#576b95] dark:text-[#7b9bd1] text-sm cursor-pointer hover:opacity-80"
+                            className="text-[rgb(87,107,149)] dark:text-[rgb(123,155,209)] text-sm cursor-pointer hover:opacity-80"
                           >
                             #{tag.name}
                           </span>
@@ -203,9 +471,13 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                 <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-[#1a1a1a]">
                   {/* Comment Input */}
                   <div className="flex-1 mr-4">
-                    <div 
+                    <div
                       className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-[#2a2a2a] cursor-pointer"
-                      onClick={() => handleAction("评论")}
+                      onClick={() =>
+                        toast.info("敬请期待", {
+                          description: "评论功能正在开发中",
+                        })
+                      }
                     >
                       <Avatar className="h-6 w-6">
                         <AvatarImage src={article.author.avatar} />
@@ -218,29 +490,59 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                   {/* Action Buttons */}
                   <div className="flex items-center gap-4">
                     <button 
-                      className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-400 hover:text-[#ff2442] transition-colors"
-                      onClick={() => handleAction("点赞")}
+                      className={cn(
+                        "flex flex-col items-center gap-0.5 transition-colors",
+                        isLiked 
+                          ? "text-[#ff2442]" 
+                          : "text-gray-600 dark:text-gray-400 hover:text-[#ff2442]"
+                      )}
+                      onClick={handleLikeClick}
+                      disabled={isLikeLoading}
                     >
-                      <Heart className="w-6 h-6" />
-                      <span className="text-[10px]">0</span>
+                      <Heart 
+                        className={cn(
+                          "w-6 h-6 transition-all",
+                          isLiked && "fill-current scale-110"
+                        )} 
+                      />
+                      <span className="text-[10px]">{likesCount}</span>
                     </button>
                     <button 
-                      className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-400 hover:text-yellow-500 transition-colors"
-                      onClick={() => handleAction("收藏")}
+                      className={cn(
+                        "flex flex-col items-center gap-0.5 transition-colors",
+                        isSaved 
+                          ? "text-yellow-500" 
+                          : "text-gray-600 dark:text-gray-400 hover:text-yellow-500"
+                      )}
+                      onClick={handleSaveClick}
+                      disabled={isSaveLoading}
                     >
-                      <Star className="w-6 h-6" />
-                      <span className="text-[10px]">0</span>
+                      <Star 
+                        className={cn(
+                          "w-6 h-6 transition-all",
+                          isSaved && "fill-current scale-110"
+                        )} 
+                      />
+                      <span className="text-[10px]">{savesCount}</span>
                     </button>
-                    <button 
+                    <button
                       className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-400 hover:text-blue-500 transition-colors"
-                      onClick={() => handleAction("评论")}
+                      onClick={() =>
+                        toast.info("敬请期待", {
+                          description: "评论功能正在开发中",
+                        })
+                      }
                     >
                       <MessageCircle className="w-6 h-6" />
                       <span className="text-[10px]">0</span>
                     </button>
-                    <button 
+                    <button
                       className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-400 hover:text-green-500 transition-colors"
-                      onClick={() => handleAction("分享")}
+                      onClick={() =>
+                        toast.info("敬请期待", {
+                          description: "分享功能正在开发中",
+                        })
+                      }
                     >
                       <Share2 className="w-6 h-6" />
                     </button>
@@ -248,13 +550,6 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                 </div>
               </div>
 
-              {/* Desktop Close Button */}
-              <button
-                onClick={onClose}
-                className="absolute top-4 right-4 z-50 hidden md:flex w-10 h-10 rounded-full bg-black/10 dark:bg-white/10 items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-black/20 dark:hover:bg-white/20 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </>
           )}
         </Dialog.Content>
@@ -283,18 +578,49 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
               图片预览
             </Dialog.Title>
             
-            {article?.coverImage && (
-              <img
-                src={article.coverImage}
-                alt={article.title}
-                className="max-w-full max-h-full object-contain"
-              />
+            {images.length > 0 && (
+              <>
+                {/* 图片预览轮播 */}
+                <div className="relative w-full h-full flex items-center justify-center">
+                  <img
+                    src={images[currentImageIndex]}
+                    alt={`${article?.title || '图片'} - ${currentImageIndex + 1}`}
+                    className="max-w-full max-h-full object-contain"
+                  />
+
+                  {/* 预览模式下的左右箭头 */}
+                  {hasMultipleImages && (
+                    <>
+                      {currentImageIndex > 0 && (
+                        <button
+                          onClick={() => goToPrev()}
+                          className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm flex items-center justify-center text-white transition-all"
+                        >
+                          <ChevronLeft className="w-8 h-8" />
+                        </button>
+                      )}
+                      {currentImageIndex < images.length - 1 && (
+                        <button
+                          onClick={() => goToNext()}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm flex items-center justify-center text-white transition-all"
+                        >
+                          <ChevronRight className="w-8 h-8" />
+                        </button>
+                      )}
+                      {/* 预览模式下的图片索引 */}
+                      <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-sm text-white text-sm font-medium">
+                        {currentImageIndex + 1} / {images.length}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </>
             )}
-            
+
             {/* Close Button */}
             <button
               onClick={() => setIsImagePreviewOpen(false)}
-              className="absolute top-4 right-4 z-[70] flex w-10 h-10 rounded-full bg-black/50 items-center justify-center text-white hover:bg-black/70 transition-colors"
+              className="absolute top-4 left-4 z-[70] flex w-10 h-10 rounded-full bg-black/50 items-center justify-center text-white hover:bg-black/70 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>

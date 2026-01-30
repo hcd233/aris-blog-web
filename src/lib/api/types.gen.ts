@@ -4,6 +4,21 @@ export type ClientOptions = {
     baseUrl: `${string}://openapi.yaml` | (string & {});
 };
 
+export type ActionReqBody = {
+    /**
+     * Action type to perform
+     */
+    actionType: 'like' | 'save';
+    /**
+     * Entity ID to interact with
+     */
+    entityID: number;
+    /**
+     * Entity type to interact with
+     */
+    entityType: 'article';
+};
+
 export type CallbackReqBody = {
     /**
      * Authorization code returned by the OAuth2 platform
@@ -40,9 +55,9 @@ export type CreateArticleReqBody = {
      */
     content: string;
     /**
-     * Cover image in base64 or Data URL format (max ~10MB), optional
+     * Images of the article
      */
-    coverImage: string;
+    images: Array<string> | null;
     /**
      * Title of the article
      */
@@ -101,10 +116,6 @@ export type DetailedArticle = {
      */
     content: string;
     /**
-     * Cover image URL of the article (presigned URL)
-     */
-    coverImage?: string;
-    /**
      * Created time of the article
      */
     createdAt: string;
@@ -113,6 +124,14 @@ export type DetailedArticle = {
      */
     id: number;
     /**
+     * Images of the article
+     */
+    images: Array<string> | null;
+    /**
+     * Whether the current user has liked the article
+     */
+    liked: boolean;
+    /**
      * Likes of the article
      */
     likes: number;
@@ -120,6 +139,10 @@ export type DetailedArticle = {
      * Published time of the article
      */
     publishedAt: string;
+    /**
+     * Whether the current user has saved the article
+     */
+    saved: boolean;
     /**
      * Saves of the article
      */
@@ -349,6 +372,10 @@ export type ListedArticle = {
      */
     id: number;
     /**
+     * Whether the current user has liked the article
+     */
+    liked: boolean;
+    /**
      * Likes of the article
      */
     likes: number;
@@ -445,13 +472,13 @@ export type UpdateArticleReqBody = {
      */
     content: string;
     /**
-     * Cover image in base64 or Data URL format (max ~10MB), optional
-     */
-    coverImage: string;
-    /**
      * ID of the article
      */
     id: number;
+    /**
+     * Images of the article
+     */
+    images: Array<string> | null;
     /**
      * Status of the article
      */
@@ -518,6 +545,17 @@ export type UpdatedUser = {
     name: string;
 };
 
+export type UploadImageRsp = {
+    /**
+     * Error body
+     */
+    error?: Error;
+    /**
+     * Name of the uploaded image
+     */
+    imageName: string;
+};
+
 export type User = {
     /**
      * URL or path to the user's avatar image
@@ -532,6 +570,62 @@ export type User = {
      */
     name: string;
 };
+
+export type DoActionData = {
+    /**
+     * Request body containing entity info
+     */
+    body?: ActionReqBody;
+    path?: never;
+    query?: never;
+    url: '/api/v1/action/do';
+};
+
+export type DoActionErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type DoActionError = DoActionErrors[keyof DoActionErrors];
+
+export type DoActionResponses = {
+    /**
+     * OK
+     */
+    200: EmptyRsp;
+};
+
+export type DoActionResponse = DoActionResponses[keyof DoActionResponses];
+
+export type UndoActionData = {
+    /**
+     * Request body containing entity info
+     */
+    body?: ActionReqBody;
+    path?: never;
+    query?: never;
+    url: '/api/v1/action/undo';
+};
+
+export type UndoActionErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type UndoActionError = UndoActionErrors[keyof UndoActionErrors];
+
+export type UndoActionResponses = {
+    /**
+     * OK
+     */
+    200: EmptyRsp;
+};
+
+export type UndoActionResponse = UndoActionResponses[keyof UndoActionResponses];
 
 export type ChatData = {
     body?: {
@@ -723,6 +817,33 @@ export type ListArticlesResponses = {
 };
 
 export type ListArticlesResponse = ListArticlesResponses[keyof ListArticlesResponses];
+
+export type UploadImageData = {
+    body?: {
+        image?: Blob | File;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/image/';
+};
+
+export type UploadImageErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type UploadImageError = UploadImageErrors[keyof UploadImageErrors];
+
+export type UploadImageResponses = {
+    /**
+     * OK
+     */
+    200: UploadImageRsp;
+};
+
+export type UploadImageResponse = UploadImageResponses[keyof UploadImageResponses];
 
 export type Oauth2CallbackData = {
     /**

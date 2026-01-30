@@ -53,7 +53,7 @@ const TagNode = Node.create({
       mergeAttributes(HTMLAttributes, {
         "data-type": "tag",
         class:
-          "inline-flex items-center gap-0.5 text-[#576b95] dark:text-[#7b9bd1] font-medium cursor-pointer hover:opacity-80",
+          "inline-flex items-center gap-0.5 text-[rgb(87,107,149)] dark:text-[rgb(123,155,209)] font-medium cursor-pointer hover:opacity-80",
       }),
       `#${HTMLAttributes.label}`,
     ];

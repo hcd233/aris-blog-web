@@ -4,10 +4,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { ListedArticle } from "@/lib/api/types.gen";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { Heart } from "lucide-react";
+import { doAction, undoAction } from "@/lib/api/config";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 interface ArticleCardProps {
   article: ListedArticle;
   onClick?: () => void;
+  onLikeChange?: (articleId: number, liked: boolean, likes: number) => void;
 }
 
 // 渐变色封面
@@ -53,12 +58,16 @@ const calculateImageHeight = (
   return Math.round(height);
 };
 
-export function ArticleCard({ article, onClick }: ArticleCardProps) {
+export function ArticleCard({ article, onClick, onLikeChange }: ArticleCardProps) {
   const gradient = getGradient(article.id);
   const hasCoverImage = article.coverImage && article.coverImage.length > 0;
   
   const [imageHeight, setImageHeight] = useState<number>(280);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isLiked, setIsLiked] = useState(article.liked);
+  const [likesCount, setLikesCount] = useState(article.likes);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   // 加载图片并计算高度
   useEffect(() => {
@@ -86,6 +95,73 @@ export function ArticleCard({ article, onClick }: ArticleCardProps) {
 
     loadImage();
   }, [article.coverImage, hasCoverImage, article.id]);
+
+  // Sync local state with props when article changes
+  useEffect(() => {
+    setIsLiked(article.liked);
+    setLikesCount(article.likes);
+  }, [article.liked, article.likes]);
+
+  const handleLikeClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      toast.error("请先登录", {
+        description: "登录后即可点赞",
+      });
+      return;
+    }
+
+    if (isLikeLoading) return;
+
+    setIsLikeLoading(true);
+    
+    try {
+      if (isLiked) {
+        // Cancel like
+        const { error } = await undoAction({
+          body: {
+            actionType: "like",
+            entityID: article.id,
+            entityType: "article",
+          },
+        });
+        
+        if (!error) {
+          const newLiked = false;
+          const newLikes = likesCount - 1;
+          setIsLiked(newLiked);
+          setLikesCount(newLikes);
+          onLikeChange?.(article.id, newLiked, newLikes);
+        } else {
+          console.error("取消点赞失败:", error);
+        }
+      } else {
+        // Do like
+        const { error } = await doAction({
+          body: {
+            actionType: "like",
+            entityID: article.id,
+            entityType: "article",
+          },
+        });
+        
+        if (!error) {
+          const newLiked = true;
+          const newLikes = likesCount + 1;
+          setIsLiked(newLiked);
+          setLikesCount(newLikes);
+          onLikeChange?.(article.id, newLiked, newLikes);
+        } else {
+          console.error("点赞失败:", error);
+        }
+      }
+    } catch (error) {
+      console.error("点赞操作失败:", error);
+    } finally {
+      setIsLikeLoading(false);
+    }
+  };
 
   return (
     <div 
@@ -132,15 +208,37 @@ export function ArticleCard({ article, onClick }: ArticleCardProps) {
         {article.title}
       </h3>
 
-      {/* Author */}
-      <div className="flex items-center gap-2">
-        <Avatar className="h-5 w-5">
-          <AvatarImage src={article.author.avatar} alt={article.author.name} />
-          <AvatarFallback className="text-[10px] bg-gradient-to-br from-purple-500 to-blue-500 text-white">
-            {article.author.name.charAt(0) || "U"}
-          </AvatarFallback>
-        </Avatar>
-        <span className="text-gray-500 dark:text-[#999] text-xs">{article.author.name}</span>
+      {/* Author and Like */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Avatar className="h-5 w-5">
+            <AvatarImage src={article.author.avatar} alt={article.author.name} />
+            <AvatarFallback className="text-[10px] bg-gradient-to-br from-purple-500 to-blue-500 text-white">
+              {article.author.name.charAt(0) || "U"}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-gray-500 dark:text-[#999] text-xs">{article.author.name}</span>
+        </div>
+        
+        {/* Like Button */}
+        <button
+          onClick={handleLikeClick}
+          disabled={isLikeLoading}
+          className={cn(
+            "flex items-center gap-1 px-2 py-1 rounded-full text-xs transition-colors",
+            isLiked
+              ? "text-[#ff2442] bg-red-50 dark:bg-red-900/20"
+              : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          )}
+        >
+          <Heart
+            className={cn(
+              "w-3.5 h-3.5 transition-all",
+              isLiked && "fill-current scale-110"
+            )}
+          />
+          <span>{likesCount}</span>
+        </button>
       </div>
     </div>
   );

@@ -1,0 +1,1515 @@
+components:
+  schemas:
+    ActionReqBody:
+      additionalProperties: false
+      properties:
+        actionType:
+          description: Action type to perform
+          enum:
+            - like
+            - save
+          type: string
+        entityID:
+          description: Entity ID to interact with
+          format: int64
+          minimum: 1
+          type: integer
+        entityType:
+          description: Entity type to interact with
+          enum:
+            - article
+          type: string
+      required:
+        - entityType
+        - entityID
+        - actionType
+      type: object
+    CallbackReqBody:
+      additionalProperties: false
+      properties:
+        code:
+          description: Authorization code returned by the OAuth2 platform
+          type: string
+        platform:
+          description: OAuth2 platform name (github or google)
+          enum:
+            - github
+            - google
+          type: string
+        state:
+          description: State parameter for CSRF protection, must match the initial state
+          type: string
+      required:
+        - platform
+        - code
+        - state
+      type: object
+    CallbackRsp:
+      additionalProperties: false
+      properties:
+        accessToken:
+          description: JWT access token for API authentication
+          type: string
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        refreshToken:
+          description: JWT refresh token for obtaining future access tokens
+          type: string
+      required:
+        - accessToken
+        - refreshToken
+      type: object
+    CreateArticleReqBody:
+      additionalProperties: false
+      properties:
+        content:
+          description: Content of the article
+          type: string
+        images:
+          description: Images of the article
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        title:
+          description: Title of the article
+          type: string
+      required:
+        - title
+        - content
+        - images
+      type: object
+    CreateTodoItemsReqBody:
+      additionalProperties: false
+      properties:
+        todoItems:
+          description: Items to create
+          items:
+            $ref: "#/components/schemas/TodoItem"
+          maxItems: 100
+          minItems: 1
+          type:
+            - array
+            - "null"
+      required:
+        - todoItems
+      type: object
+    DatailedTodoItem:
+      additionalProperties: false
+      properties:
+        content:
+          description: Content of the todo item
+          maxLength: 4096
+          type: string
+        createdAt:
+          description: Timestamp when the todo item was created
+          type: string
+        id:
+          description: Unique identifier for the todo item
+          format: int64
+          minimum: 0
+          type: integer
+        name:
+          description: Name of the todo item
+          type: string
+        priority:
+          description: Priority of the todo item
+          enum:
+            - low
+            - medium
+            - high
+            - urgent
+          type: string
+        status:
+          description: Status of the todo item
+          enum:
+            - pending
+            - completed
+            - cancelled
+            - timeout
+          type: string
+        summary:
+          description: Summary of the todo item
+          maxLength: 255
+          type: string
+        updatedAt:
+          description: Timestamp when the todo item was updated
+          type: string
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - status
+        - name
+        - summary
+        - content
+        - priority
+      type: object
+    DetailedArticle:
+      additionalProperties: false
+      properties:
+        author:
+          $ref: "#/components/schemas/User"
+          description: Author of the article
+        content:
+          description: Content of the article
+          type: string
+        createdAt:
+          description: Created time of the article
+          format: date-time
+          type: string
+        id:
+          description: ID of the article
+          format: int64
+          minimum: 0
+          type: integer
+        images:
+          description: Images of the article
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        liked:
+          description: Whether the current user has liked the article
+          type: boolean
+        likes:
+          description: Likes of the article
+          format: int64
+          minimum: 0
+          type: integer
+        publishedAt:
+          description: Published time of the article
+          format: date-time
+          type: string
+        saved:
+          description: Whether the current user has saved the article
+          type: boolean
+        saves:
+          description: Saves of the article
+          format: int64
+          minimum: 0
+          type: integer
+        slug:
+          description: Slug of the article
+          type: string
+        status:
+          description: Status of the article
+          type: string
+        tags:
+          description: Tags of the article
+          items:
+            $ref: "#/components/schemas/DetailedTag"
+          type:
+            - array
+            - "null"
+        title:
+          description: Title of the article
+          type: string
+        updatedAt:
+          description: Updated time of the article
+          format: date-time
+          type: string
+        views:
+          description: Views of the article
+          format: int64
+          minimum: 0
+          type: integer
+      required:
+        - id
+        - slug
+        - content
+        - images
+        - createdAt
+        - updatedAt
+        - publishedAt
+        - status
+        - tags
+        - likes
+        - saves
+        - views
+        - liked
+        - saved
+        - title
+        - author
+      type: object
+    DetailedTag:
+      additionalProperties: false
+      properties:
+        createdAt:
+          description: Timestamp when the tag was created
+          format: date-time
+          type: string
+        id:
+          description: Unique identifier for the tag
+          format: int64
+          minimum: 0
+          type: integer
+        name:
+          description: Name of the tag
+          type: string
+        slug:
+          description: Slug of the tag
+          type: string
+        updatedAt:
+          description: Timestamp when the tag was updated
+          format: date-time
+          type: string
+        views:
+          description: Views of the tag
+          format: int64
+          minimum: 0
+          type: integer
+      required:
+        - id
+        - slug
+        - views
+        - createdAt
+        - updatedAt
+        - name
+      type: object
+    DetailedUser:
+      additionalProperties: false
+      properties:
+        avatar:
+          description: URL or path to the user's avatar image
+          type: string
+        createdAt:
+          description: Timestamp when the user account was created
+          type: string
+        id:
+          description: Unique identifier for the user
+          format: int64
+          minimum: 0
+          type: integer
+        lastLogin:
+          description: Timestamp of the user's last login
+          type: string
+        name:
+          description: Display name of the user
+          type: string
+        permission:
+          description: Permission level of the user
+          type: string
+      required:
+        - createdAt
+        - lastLogin
+        - permission
+        - id
+        - name
+        - avatar
+      type: object
+    EmptyRsp:
+      additionalProperties: false
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+      type: object
+    Error:
+      additionalProperties: false
+      properties:
+        code:
+          description: Code
+          format: int64
+          type: integer
+        message:
+          description: Message
+          type: string
+      required:
+        - code
+        - message
+      type: object
+    ErrorDetail:
+      additionalProperties: false
+      properties:
+        location:
+          description: Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id'
+          type: string
+        message:
+          description: Error message text
+          type: string
+        value:
+          description: The value at the given location
+      type: object
+    ErrorModel:
+      additionalProperties: false
+      properties:
+        detail:
+          description: A human-readable explanation specific to this occurrence of the problem.
+          examples:
+            - Property foo is required but is missing.
+          type: string
+        errors:
+          description: Optional list of individual error details
+          items:
+            $ref: "#/components/schemas/ErrorDetail"
+          type:
+            - array
+            - "null"
+        instance:
+          description: A URI reference that identifies the specific occurrence of the problem.
+          examples:
+            - https://example.com/error-log/abc123
+          format: uri
+          type: string
+        status:
+          description: HTTP status code
+          examples:
+            - 400
+          format: int64
+          type: integer
+        title:
+          description: A short, human-readable summary of the problem type. This value should not change between occurrences of the error.
+          examples:
+            - Bad Request
+          type: string
+        type:
+          default: about:blank
+          description: A URI reference to human-readable documentation for the error.
+          examples:
+            - https://example.com/errors/example
+          format: uri
+          type: string
+      type: object
+    GetArticleRsp:
+      additionalProperties: false
+      properties:
+        article:
+          $ref: "#/components/schemas/DetailedArticle"
+          description: Detailed article information
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+      required:
+        - article
+      type: object
+    GetCurUserRsp:
+      additionalProperties: false
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        user:
+          $ref: "#/components/schemas/DetailedUser"
+          description: Complete user information including permissions
+      required:
+        - user
+      type: object
+    ListArticlesRsp:
+      additionalProperties: false
+      properties:
+        articles:
+          description: Articles to list
+          items:
+            $ref: "#/components/schemas/ListedArticle"
+          type:
+            - array
+            - "null"
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        pageInfo:
+          $ref: "#/components/schemas/PageInfo"
+          description: Page info
+      required:
+        - articles
+        - pageInfo
+      type: object
+    ListTagsRsp:
+      additionalProperties: false
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        pageInfo:
+          $ref: "#/components/schemas/PageInfo"
+          description: Page info
+        tags:
+          description: Tags to list
+          items:
+            $ref: "#/components/schemas/DetailedTag"
+          type:
+            - array
+            - "null"
+      required:
+        - tags
+        - pageInfo
+      type: object
+    ListTodoItemsRsp:
+      additionalProperties: false
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        pageInfo:
+          $ref: "#/components/schemas/PageInfo"
+          description: Page info
+        todoItems:
+          description: Items to list
+          items:
+            $ref: "#/components/schemas/DatailedTodoItem"
+          type:
+            - array
+            - "null"
+      required:
+        - todoItems
+        - pageInfo
+      type: object
+    ListedArticle:
+      additionalProperties: false
+      properties:
+        author:
+          $ref: "#/components/schemas/User"
+          description: Author of the article
+        coverImage:
+          description: Cover image URL of the article
+          type: string
+        createdAt:
+          description: Created time of the article
+          format: date-time
+          type: string
+        id:
+          description: ID of the article
+          format: int64
+          minimum: 0
+          type: integer
+        liked:
+          description: Whether the current user has liked the article
+          type: boolean
+        likes:
+          description: Likes of the article
+          format: int64
+          minimum: 0
+          type: integer
+        publishedAt:
+          description: Published time of the article
+          format: date-time
+          type: string
+        slug:
+          description: Slug of the article
+          type: string
+        title:
+          description: Title of the article
+          type: string
+        updatedAt:
+          description: Updated time of the article
+          format: date-time
+          type: string
+      required:
+        - id
+        - slug
+        - createdAt
+        - updatedAt
+        - publishedAt
+        - likes
+        - liked
+        - title
+        - author
+      type: object
+    LoginResp:
+      additionalProperties: false
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        redirectURL:
+          description: URL to redirect the user to for OAuth2 authorization
+          type: string
+      required:
+        - redirectURL
+      type: object
+    PageInfo:
+      additionalProperties: false
+      properties:
+        page:
+          format: int64
+          type: integer
+        pageSize:
+          format: int64
+          type: integer
+        total:
+          format: int64
+          type: integer
+      required:
+        - page
+        - pageSize
+        - total
+      type: object
+    PingResponse:
+      additionalProperties: false
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        status:
+          description: Status of the ping response
+          type: string
+      required:
+        - status
+      type: object
+    RefreshTokenReqBody:
+      additionalProperties: false
+      properties:
+        refreshToken:
+          description: JWT refresh token used to obtain a new access token
+          minLength: 1
+          type: string
+      required:
+        - refreshToken
+      type: object
+    RefreshTokenRsp:
+      additionalProperties: false
+      properties:
+        accessToken:
+          description: New JWT access token for API authentication
+          type: string
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        refreshToken:
+          description: New JWT refresh token for obtaining future access tokens
+          type: string
+      required:
+        - accessToken
+        - refreshToken
+      type: object
+    TodoItem:
+      additionalProperties: false
+      properties:
+        content:
+          description: Content of the todo item
+          maxLength: 4096
+          type: string
+        name:
+          description: Name of the todo item
+          type: string
+        priority:
+          description: Priority of the todo item
+          enum:
+            - low
+            - medium
+            - high
+            - urgent
+          type: string
+        summary:
+          description: Summary of the todo item
+          maxLength: 255
+          type: string
+      required:
+        - name
+        - summary
+        - content
+        - priority
+      type: object
+    UpdateArticleReqBody:
+      additionalProperties: false
+      properties:
+        content:
+          description: Content of the article
+          type: string
+        id:
+          description: ID of the article
+          format: int64
+          minimum: 0
+          type: integer
+        images:
+          description: Images of the article
+          items:
+            type: string
+          type:
+            - array
+            - "null"
+        status:
+          description: Status of the article
+          type: string
+        title:
+          description: Title of the article
+          type: string
+      required:
+        - id
+        - status
+        - title
+        - content
+        - images
+      type: object
+    UpdateTodoItemReqBody:
+      additionalProperties: false
+      properties:
+        todoItem:
+          $ref: "#/components/schemas/UpdatedTodoItem"
+          description: Todo item to update
+      required:
+        - todoItem
+      type: object
+    UpdateUserReqBody:
+      additionalProperties: false
+      properties:
+        user:
+          $ref: "#/components/schemas/UpdatedUser"
+          description: User information to update
+      required:
+        - user
+      type: object
+    UpdatedTodoItem:
+      additionalProperties: false
+      properties:
+        content:
+          description: Content of the todo item
+          maxLength: 4096
+          type: string
+        id:
+          description: Unique identifier for the todo item
+          format: int64
+          minimum: 1
+          type: integer
+        name:
+          description: Name of the todo item
+          type: string
+        priority:
+          description: Priority of the todo item
+          enum:
+            - low
+            - medium
+            - high
+            - urgent
+          type: string
+        status:
+          description: Status of the todo item
+          enum:
+            - pending
+            - completed
+            - cancelled
+            - timeout
+          type: string
+        summary:
+          description: Summary of the todo item
+          maxLength: 255
+          type: string
+      required:
+        - id
+        - status
+        - name
+        - summary
+        - content
+        - priority
+      type: object
+    UpdatedUser:
+      additionalProperties: false
+      properties:
+        avatar:
+          description: URL or path to the user's avatar image
+          type: string
+        email:
+          description: Email address of the user
+          type: string
+        name:
+          description: Display name of the user
+          type: string
+      required:
+        - name
+        - email
+        - avatar
+      type: object
+    UploadImageRsp:
+      additionalProperties: false
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        imageName:
+          description: Name of the uploaded image
+          type: string
+      required:
+        - imageName
+      type: object
+    User:
+      additionalProperties: false
+      properties:
+        avatar:
+          description: URL or path to the user's avatar image
+          type: string
+        id:
+          description: Unique identifier for the user
+          format: int64
+          minimum: 0
+          type: integer
+        name:
+          description: Display name of the user
+          type: string
+      required:
+        - id
+        - name
+        - avatar
+      type: object
+  securitySchemes:
+    jwtAuth:
+      description: JWT Authentication，Please pass the JWT token in the Authorization header.
+      in: header
+      name: Authorization
+      type: apiKey
+info:
+  contact:
+    email: lvlvko233@qq.com
+    name: hcd233
+    url: https://github.com/hcd233
+  description: Aris Mem API is a RESTful API for Aris Mem.
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  title: Aris Mem API
+  version: "1.0"
+openapi: 3.1.0
+paths:
+  /api/v1/action/do:
+    post:
+      description: Perform an action on an entity (like/save article)
+      operationId: doAction
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActionReqBody"
+              description: Request body containing entity info
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: DoAction
+      tags:
+        - Action
+  /api/v1/action/undo:
+    post:
+      description: Undo an action on an entity (undo like/undo save article)
+      operationId: undoAction
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActionReqBody"
+              description: Request body containing entity info
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: UndoAction
+      tags:
+        - Action
+  /api/v1/agent/chat:
+    post:
+      description: Chat with the agent
+      operationId: chat
+      requestBody:
+        content:
+          multipart/form-data:
+            encoding:
+              audio:
+                contentType: audio/wav
+              content:
+                contentType: text/plain
+              images:
+                contentType: image/png,image/jpeg
+            schema:
+              properties:
+                audio:
+                  contentEncoding: binary
+                  contentMediaType: application/octet-stream
+                  description: Audio file
+                  format: binary
+                  type: string
+                content:
+                  description: Content to chat
+                  type: string
+                images:
+                  items:
+                    contentEncoding: binary
+                    contentMediaType: application/octet-stream
+                    description: Images
+                    format: binary
+                    type: string
+                  type: array
+              type: object
+      responses:
+        "200":
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: Chat
+      tags:
+        - Agent
+  /api/v1/article/:
+    delete:
+      description: Delete article and its tag associations
+      operationId: deleteArticle
+      parameters:
+        - description: Unique identifier for the article
+          explode: false
+          in: query
+          name: id
+          required: true
+          schema:
+            description: Unique identifier for the article
+            format: int64
+            minimum: 1
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: DeleteArticle
+      tags:
+        - Article
+    get:
+      description: Get article details by slug. Non-owner can only view published articles, owner can view all.
+      operationId: getArticle
+      parameters:
+        - description: Unique slug of the article
+          explode: false
+          in: query
+          name: slug
+          required: true
+          schema:
+            description: Unique slug of the article
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetArticleRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: GetArticle
+      tags:
+        - Article
+    patch:
+      description: Update article fields
+      operationId: updateArticle
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateArticleReqBody"
+              description: Request body containing fields to update
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: UpdateArticle
+      tags:
+        - Article
+    post:
+      description: Create a new article with auto-generated slug and tag extraction
+      operationId: createArticle
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateArticleReqBody"
+              description: Request body containing fields to create
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: CreateArticle
+      tags:
+        - Article
+  /api/v1/article/list:
+    get:
+      description: List articles with pagination, fuzzy search, tag filter and published_at sorting
+      operationId: listArticles
+      parameters:
+        - explode: false
+          in: query
+          name: page
+          required: true
+          schema:
+            format: int64
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: pageSize
+          required: true
+          schema:
+            format: int64
+            maximum: 50
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: query
+          schema:
+            maxLength: 100
+            type: string
+        - explode: false
+          in: query
+          name: sort
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: Sort field
+          explode: false
+          in: query
+          name: sortField
+          schema:
+            description: Sort field
+            enum:
+              - id
+              - createdAt
+              - updatedAt
+              - title
+            type: string
+        - description: Filter by tag slug
+          explode: false
+          in: query
+          name: tagSlug
+          schema:
+            description: Filter by tag slug
+            type: string
+        - description: Filter by user ID
+          explode: false
+          in: query
+          name: userID
+          schema:
+            description: Filter by user ID
+            format: int64
+            minimum: 0
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListArticlesRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: ListArticles
+      tags:
+        - Article
+  /api/v1/image/:
+    post:
+      description: Upload an image. Returns presigned URL of the uploaded image.
+      operationId: uploadImage
+      requestBody:
+        content:
+          multipart/form-data:
+            encoding:
+              image:
+                contentType: image/gif,image/jpeg,image/png
+            schema:
+              properties:
+                image:
+                  contentEncoding: binary
+                  contentMediaType: application/octet-stream
+                  format: binary
+                  type: string
+              type: object
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadImageRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: UploadImage
+      tags:
+        - Image
+  /api/v1/oauth2/callback:
+    post:
+      description: Handle OAuth2 callback with authorization code and state
+      operationId: oauth2Callback
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CallbackReqBody"
+              description: Request body containing the authorization code and state
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CallbackRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: OAuth2Callback
+      tags:
+        - OAuth2
+  /api/v1/oauth2/login:
+    get:
+      description: Get OAuth2 authorization URL for the specified platform (github/google/qq)
+      operationId: oauth2Login
+      parameters:
+        - description: OAuth2 platform name (github or google)
+          explode: false
+          in: query
+          name: platform
+          required: true
+          schema:
+            description: OAuth2 platform name (github or google)
+            enum:
+              - github
+              - google
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: OAuth2Login
+      tags:
+        - OAuth2
+  /api/v1/tag/list:
+    get:
+      description: List tags with pagination and fuzzy search
+      operationId: listTags
+      parameters:
+        - explode: false
+          in: query
+          name: page
+          required: true
+          schema:
+            format: int64
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: pageSize
+          required: true
+          schema:
+            format: int64
+            maximum: 50
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: query
+          schema:
+            maxLength: 100
+            type: string
+        - explode: false
+          in: query
+          name: sort
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: Sort field
+          explode: false
+          in: query
+          name: sortField
+          schema:
+            description: Sort field
+            enum:
+              - id
+              - createdAt
+              - updatedAt
+              - name
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListTagsRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: ListTags
+      tags:
+        - Tag
+  /api/v1/todoItem/:
+    delete:
+      description: Delete todo item
+      operationId: deleteTodoItem
+      parameters:
+        - description: Unique identifier for the todo item
+          explode: false
+          in: query
+          name: id
+          required: true
+          schema:
+            description: Unique identifier for the todo item
+            format: int64
+            minimum: 1
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: DeleteTodoItem
+      tags:
+        - TodoItem
+    patch:
+      description: Patch update todo item fields
+      operationId: updateTodoItem
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTodoItemReqBody"
+              description: Request body containing fields to update
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: UpdateTodoItem
+      tags:
+        - TodoItem
+    post:
+      description: Create todo items
+      operationId: createTodoItems
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTodoItemsReqBody"
+              description: Request body containing fields to create
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: CreateTodoItems
+      tags:
+        - TodoItem
+  /api/v1/todoItem/list:
+    get:
+      description: List todo items
+      operationId: listTodoItems
+      parameters:
+        - explode: false
+          in: query
+          name: page
+          required: true
+          schema:
+            format: int64
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: pageSize
+          required: true
+          schema:
+            format: int64
+            maximum: 50
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: query
+          schema:
+            maxLength: 100
+            type: string
+        - explode: false
+          in: query
+          name: sort
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: Sort field
+          explode: false
+          in: query
+          name: sortField
+          schema:
+            description: Sort field
+            enum:
+              - id
+              - createdAt
+              - updatedAt
+            type: string
+        - description: Priority filter
+          explode: false
+          in: query
+          name: priority
+          schema:
+            description: Priority filter
+            enum:
+              - low
+              - medium
+              - high
+              - urgent
+            type: string
+        - description: Status filter
+          explode: false
+          in: query
+          name: status
+          schema:
+            description: Status filter
+            enum:
+              - pending
+              - completed
+              - cancelled
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListTodoItemsRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: ListTodoItems
+      tags:
+        - TodoItem
+  /api/v1/token/refresh:
+    post:
+      description: Refresh the access token using a refresh token
+      operationId: refreshToken
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenReqBody"
+              description: Request body containing the refresh token
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshTokenRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: RefreshToken
+      tags:
+        - Token
+  /api/v1/user/:
+    patch:
+      description: Update the current user's information, including the username and other fields
+      operationId: updateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserReqBody"
+              description: Request body containing fields to update
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: UpdateUser
+      tags:
+        - User
+  /api/v1/user/current:
+    get:
+      description: Get the current user's detailed information, including user ID, username, email, avatar, and permission information
+      operationId: getCurrentUser
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCurUserRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: GetCurrentUser
+      tags:
+        - User
+  /health:
+    get:
+      description: Check the server health
+      operationId: healthCheck
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PingResponse"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: HealthCheck
+      tags:
+        - Health
+  /ssehealth:
+    get:
+      description: Check the server health
+      operationId: sseHealthCheck
+      responses:
+        "200":
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      summary: SSEHealthCheck
+      tags:
+        - Health
