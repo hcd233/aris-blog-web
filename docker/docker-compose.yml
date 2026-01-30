@@ -1,5 +1,9 @@
 version: '3.8'
 
+networks:
+  1panel-network:
+    external: true
+
 services:
   web:
     image: ghcr.io/hcd233/aris-blog-web:master # aris-mem-api:latest
