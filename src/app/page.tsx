@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { ArticleCard } from "@/components/article-card";
 import { ArticleDetailModal } from "@/components/article-detail-modal";
@@ -10,12 +10,24 @@ import { listTags, listArticles } from "@/lib/api/config";
 import type { DetailedTag, ListedArticle } from "@/lib/api/types.gen";
 import { cn } from "@/lib/utils";
 
+// 预加载图片
+const preloadImage = (url: string): Promise<void> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => resolve(); // 即使失败也继续
+    img.src = url;
+  });
+};
+
 export default function Home() {
   const [categories, setCategories] = useState<string[]>(["全部"]);
   const [activeCategory, setActiveCategory] = useState("全部");
   const [searchQuery, setSearchQuery] = useState("");
   const [articles, setArticles] = useState<ListedArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imagesLoading, setImagesLoading] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   const [selectedArticleSlug, setSelectedArticleSlug] = useState<string | null>(null);
   const [tagMap, setTagMap] = useState<Map<string, string>>(new Map());
 
@@ -72,6 +84,22 @@ export default function Home() {
         const { data } = await listArticles(params);
         if (data?.articles) {
           setArticles(data.articles);
+          // 预加载所有图片
+          const imageUrls = data.articles
+            .filter((a) => a.coverImage)
+            .map((a) => a.coverImage!);
+          
+          if (imageUrls.length > 0) {
+            setImagesLoading(true);
+            setImagesLoaded(false);
+            // 并行加载所有图片
+            Promise.all(imageUrls.map(preloadImage)).then(() => {
+              setImagesLoaded(true);
+              setImagesLoading(false);
+            });
+          } else {
+            setImagesLoaded(true);
+          }
         }
       } catch (error) {
         console.error("获取文章失败:", error);
@@ -145,7 +173,7 @@ export default function Home() {
 
         {/* Content Grid - Waterfall Layout */}
         <div className="max-w-[1200px] mx-auto px-4 py-6">
-          {loading ? (
+          {loading || imagesLoading ? (
             <div className="flex items-center justify-center py-20">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
             </div>
@@ -154,16 +182,18 @@ export default function Home() {
               <p>暂无文章</p>
             </div>
           ) : (
-            <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
-              {articles.map((article) => (
-                <div key={article.id} className="break-inside-avoid">
-                  <ArticleCard 
-                    article={article} 
-                    onClick={() => handleArticleClick(article.slug)}
-                  />
-                </div>
-              ))}
-            </div>
+            imagesLoaded && (
+              <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
+                {articles.map((article) => (
+                  <div key={article.id} className="break-inside-avoid">
+                    <ArticleCard 
+                      article={article} 
+                      onClick={() => handleArticleClick(article.slug)}
+                    />
+                  </div>
+                ))}
+              </div>
+            )
           )}
         </div>
       </main>

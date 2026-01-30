@@ -5,12 +5,23 @@ import { useAuth } from "@/lib/auth";
 import { ArticleCard } from "@/components/article-card";
 import { ArticleDetailModal } from "@/components/article-detail-modal";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sidebar } from "@/components/sidebar";
 import { listArticles } from "@/lib/api/config";
 import type { ListedArticle } from "@/lib/api/types.gen";
 import { cn } from "@/lib/utils";
 import { FileText, Heart, Bookmark, MapPin, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+
+// 预加载图片
+const preloadImage = (url: string): Promise<void> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve();
+    img.onerror = () => resolve(); // 即使失败也继续
+    img.src = url;
+  });
+};
 
 type TabType = "notes";
 
@@ -20,6 +31,8 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>("notes");
   const [articles, setArticles] = useState<ListedArticle[]>([]);
   const [loading, setLoading] = useState(true);
+  const [imagesLoading, setImagesLoading] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   const [selectedArticleSlug, setSelectedArticleSlug] = useState<string | null>(null);
 
   // 如果未登录，重定向到登录页面
@@ -53,6 +66,22 @@ export default function ProfilePage() {
         
         if (data?.articles) {
           setArticles(data.articles);
+          // 预加载所有图片
+          const imageUrls = data.articles
+            .filter((a) => a.coverImage)
+            .map((a) => a.coverImage!);
+
+          if (imageUrls.length > 0) {
+            setImagesLoading(true);
+            setImagesLoaded(false);
+            // 并行加载所有图片
+            Promise.all(imageUrls.map(preloadImage)).then(() => {
+              setImagesLoaded(true);
+              setImagesLoading(false);
+            });
+          } else {
+            setImagesLoaded(true);
+          }
         }
       } catch (error) {
         console.error("请求失败:", error);
@@ -101,9 +130,14 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a]">
-      {/* Profile Header */}
-      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
+    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex">
+      {/* Sidebar - 复用主页的侧边栏 */}
+      <Sidebar />
+
+      {/* Main Content */}
+      <main className="flex-1 lg:ml-[220px]">
+        {/* Profile Header */}
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
         <div className="flex flex-col md:flex-row gap-6 md:gap-10">
           {/* Avatar */}
           <div className="flex justify-center md:justify-start">
@@ -192,7 +226,7 @@ export default function ProfilePage() {
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === "notes" && (
           <>
-            {loading ? (
+            {loading || imagesLoading ? (
               <div className="flex items-center justify-center py-20">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-white"></div>
               </div>
@@ -203,17 +237,19 @@ export default function ProfilePage() {
                 <p className="text-gray-400 dark:text-[#555] text-sm">快去创作属于你的第一篇笔记吧！</p>
               </div>
             ) : (
-              <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
-                {articles.map((article) => (
-                  <div key={article.id} className="break-inside-avoid">
-                    <ArticleCard 
-                      article={article} 
-                      onClick={() => handleArticleClick(article.slug)}
-                      onLikeChange={handleLikeChange}
-                    />
-                  </div>
-                ))}
-              </div>
+              imagesLoaded && (
+                <div className="columns-2 sm:columns-3 md:columns-4 lg:columns-5 gap-4 space-y-4">
+                  {articles.map((article) => (
+                    <div key={article.id} className="break-inside-avoid">
+                      <ArticleCard
+                        article={article}
+                        onClick={() => handleArticleClick(article.slug)}
+                        onLikeChange={handleLikeChange}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )
             )}
           </>
         )}
@@ -221,12 +257,13 @@ export default function ProfilePage() {
 
       </div>
 
-      {/* Article Detail Modal */}
-      <ArticleDetailModal
-        articleSlug={selectedArticleSlug || ""}
-        isOpen={!!selectedArticleSlug}
-        onClose={handleCloseModal}
-      />
+        {/* Article Detail Modal */}
+        <ArticleDetailModal
+          articleSlug={selectedArticleSlug || ""}
+          isOpen={!!selectedArticleSlug}
+          onClose={handleCloseModal}
+        />
+      </main>
     </div>
   );
 }

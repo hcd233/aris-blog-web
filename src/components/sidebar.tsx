@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -32,12 +33,13 @@ import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const sidebarItems = [
-  { icon: Compass, label: "发现", href: "/", active: true },
+  { icon: Compass, label: "发现", href: "/" },
   { icon: PlusSquare, label: "发布", href: "/publish" },
   { icon: Bell, label: "通知", href: "/notifications" },
 ];
 
 export function Sidebar() {
+  const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
@@ -52,6 +54,14 @@ export function Sidebar() {
     dark: "深色模式",
     system: "跟随系统",
   }[theme];
+
+  // 判断是否是当前路径
+  const isActive = (href: string) => {
+    if (href === "/") {
+      return pathname === "/";
+    }
+    return pathname.startsWith(href);
+  };
 
   return (
     <aside 
@@ -81,7 +91,7 @@ export function Sidebar() {
               href={item.href}
               className={cn(
                 "flex items-center gap-3 px-3 py-3 rounded-xl transition-all group",
-                item.active
+                isActive(item.href)
                   ? "bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
                   : "text-gray-600 dark:text-[#999] hover:bg-gray-100 dark:hover:bg-[#1a1a1a] hover:text-gray-900 dark:hover:text-white"
               )}
@@ -97,7 +107,9 @@ export function Sidebar() {
               href="/profile"
               className={cn(
                 "flex items-center gap-3 px-3 py-3 rounded-xl transition-all group",
-                "text-gray-600 dark:text-[#999] hover:bg-gray-100 dark:hover:bg-[#1a1a1a] hover:text-gray-900 dark:hover:text-white"
+                isActive("/profile")
+                  ? "bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
+                  : "text-gray-600 dark:text-[#999] hover:bg-gray-100 dark:hover:bg-[#1a1a1a] hover:text-gray-900 dark:hover:text-white"
               )}
             >
               <Avatar className="h-6 w-6 flex-shrink-0">
@@ -113,7 +125,9 @@ export function Sidebar() {
               href="/login"
               className={cn(
                 "flex items-center gap-3 px-3 py-3 rounded-xl transition-all group",
-                "text-gray-600 dark:text-[#999] hover:bg-gray-100 dark:hover:bg-[#1a1a1a] hover:text-gray-900 dark:hover:text-white"
+                isActive("/login")
+                  ? "bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white"
+                  : "text-gray-600 dark:text-[#999] hover:bg-gray-100 dark:hover:bg-[#1a1a1a] hover:text-gray-900 dark:hover:text-white"
               )}
             >
               <User className="w-6 h-6 flex-shrink-0" />
