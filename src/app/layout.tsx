@@ -15,9 +15,16 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteIconUrl = process.env.NEXT_PUBLIC_SITE_ICON_URL || "";
+
 export const metadata: Metadata = {
   title: "Aris - 发现美好生活",
   description: "分享生活，发现美好",
+  icons: siteIconUrl ? {
+    icon: siteIconUrl,
+    shortcut: siteIconUrl,
+    apple: siteIconUrl,
+  } : undefined,
 };
 
 export default function RootLayout({

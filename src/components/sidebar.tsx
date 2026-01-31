@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +23,6 @@ import {
   User,
   LogOut,
   Menu,
-  PenLine,
   Moon,
   Sun,
   Monitor,
@@ -75,9 +75,21 @@ export function Sidebar() {
       {/* Logo */}
       <div className="p-4 lg:p-6">
         <Link href="/" className="flex items-center justify-center lg:justify-start gap-2">
-          <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
-            <PenLine className="w-5 h-5 text-white" />
-          </div>
+          {process.env.NEXT_PUBLIC_SITE_ICON_URL ? (
+            <div className="w-10 h-10 relative flex-shrink-0 rounded-xl overflow-hidden">
+              <Image
+                src={process.env.NEXT_PUBLIC_SITE_ICON_URL}
+                alt="Aris"
+                fill
+                className="object-cover"
+                unoptimized
+              />
+            </div>
+          ) : (
+            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <span className="text-white font-bold text-lg">A</span>
+            </div>
+          )}
           <span className="hidden lg:block text-xl font-bold text-gray-900 dark:text-white">Aris</span>
         </Link>
       </div>

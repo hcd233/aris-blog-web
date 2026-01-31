@@ -61,6 +61,7 @@ NEXT_TELEMETRY_DISABLED=1  # 禁用 Next.js 遥测
 PORT=3000                  # 服务端口
 HOSTNAME=0.0.0.0           # 监听地址
 NEXT_PUBLIC_API_BASE_URL=https://api.mem.lvlvko.top  # API 基础地址（默认）
+NEXT_PUBLIC_SITE_ICON_URL=https://api.mem.lvlvko.top/static/web-icon.png  # 网站图标URL
 ```
 
 ### 自定义后端地址
