@@ -198,6 +198,7 @@ toast.info("敬请期待", {
 | `src/app/profile/page.tsx` | 个人资料页面（小红书风格） |
 | `src/components/ui/sonner.tsx` | Toast通知组件（基于sonner） |
 | `src/components/article-detail-modal.tsx` | 文章详情弹窗，支持多图片轮播（小红书风格） |
+| `src/components/login-dialog.tsx` | 登录弹窗组件（小红书风格） |
 | `Dockerfile` | Docker 多阶段构建配置 |
 | `docker-compose.yml` | Docker Compose 部署配置 |
 | `.dockerignore` | Docker 构建忽略文件 |
@@ -256,6 +257,42 @@ src/
 5. 新代码模式或约定
 
 **最后更新**: 2026-02-01
+
+### 登录页面重设计（小红书风格弹窗）- 样式优化
+- **功能需求**:
+  1. 删除 `/login` 独立页面路由
+  2. 使用小红书风格的登录卡片弹窗替代
+  3. 侧边栏添加登录按钮（未登录时显示）
+  4. 保持 GitHub 和 Google OAuth 登录功能
+- **实现方案**:
+  1. 使用 `npx shadcn@latest add dialog` 添加 Dialog 组件
+  2. 创建 `src/components/login-dialog.tsx`：
+     - **左右分栏布局**：左侧 OAuth 登录，右侧手机验证码（禁用）
+     - 左侧：顶部蓝色标签"登录后推荐更懂你的笔记"、Aris Logo、两行 OAuth 按钮（GitHub/Google）
+     - 右侧：手机号输入框（+86）、验证码输入框、获取验证码按钮、登录按钮（全部禁用）
+     - 底部协议复选框和用户协议链接
+  3. 更新 `src/components/sidebar.tsx`：
+     - 宽度增加：lg 模式从 220px 增加到 260px
+     - 按钮圆角改为 `rounded-full`（全圆角）
+     - 未登录时显示登录卡片（带边框的白色卡片）
+     - 登录卡片结构："我"标题 + 红色登录按钮 + "马上登录即可" + 好处列表
+     - 修复：未登录时隐藏导航列表中的"我"按钮，只在登录卡片内显示
+     - 修复：统一登录卡片与上方导航按钮的边距（mt-1 px-1）
+     - 红色登录按钮改为 `rounded-full` 样式
+  4. 删除 `src/app/login/page.tsx` 旧登录页面
+  5. 更新其他引用 `/login` 的文件：
+     - `src/app/publish/page.tsx`: 未登录时重定向到首页并提示
+     - `src/app/profile/page.tsx`: 同上
+     - `src/components/navigation.tsx`: 移除登录链接（侧边栏已包含）
+     - `src/app/auth/callback/[provider]/page.tsx`: 错误时返回首页
+- **文件位置**:
+  - src/components/login-dialog.tsx（新增）
+  - src/components/sidebar.tsx（更新）
+  - src/app/login/page.tsx（删除）
+  - src/app/publish/page.tsx（更新）
+  - src/app/profile/page.tsx（更新）
+  - src/components/navigation.tsx（更新）
+  - src/app/auth/callback/[provider]/page.tsx（更新）
 
 ### Docker 容器化部署
 - **功能需求**: 为 Next.js 应用创建轻量、高性能的 Docker 部署方案
@@ -431,3 +468,44 @@ src/
 - **参考文档**: 
   - https://cloud.tencent.com/document/product/436/14048
   - https://github.com/tencentyun/cos-js-sdk-v5
+
+### OAuth 回调页面改为主页弹窗
+- **功能需求**: OAuth 回调时不跳转新页面，而是在主页右上角显示处理弹窗
+- **实现方案**:
+  1. 创建 `OAuthCallbackHandler` 组件 (`src/components/oauth-callback-handler.tsx`):
+     - 固定定位右上角弹窗 (`fixed top-4 right-4`)
+     - 三种状态视觉反馈：
+       - **加载中**: 旋转图标 + "正在通过 XXX 登录"
+       - **成功**: 绿色勾选 + "登录成功！"
+       - **失败**: 红色错误 + "登录失败"
+     - 支持自定义完成回调
+  2. 更新回调路由 (`src/app/auth/callback/[provider]/page.tsx`):
+     - 直接重定向到首页，保留 code 和 state 参数
+  3. 更新主页 (`src/app/page.tsx`):
+     - 检测 URL 中的 OAuth 回调参数 (pathname 或 query string)
+     - 使用 `OAuthCallbackWrapper` 组件 + Suspense 包裹处理逻辑
+     - 自动显示右上角弹窗处理登录
+     - 处理完成后清除 URL 参数并关闭弹窗
+- **技术要点**:
+  - 使用 `useSearchParams()` 必须在 Suspense 边界内，避免构建错误
+  - 使用 `window.history.replaceState()` 清除 URL 参数，避免刷新重复处理
+  - 支持两种回调路径：
+    - `/auth/callback/github?code=xxx&state=xxx` (直接)
+    - `/?code=xxx&state=xxx` (重定向后)
+- **文件位置**:
+  - src/components/oauth-callback-handler.tsx
+  - src/app/auth/callback/[provider]/page.tsx
+  - src/app/page.tsx
+
+### 2026-02-01 OAuth 回调弹窗未显示
+- **现象**: OAuth 授权后跳转到首页，但没有显示回调处理弹窗
+- **原因**: 
+  1. 回调路由没有传递 `provider` 参数给首页
+  2. 主页检测逻辑过于复杂，没有正确识别回调参数
+- **解决方案**: 
+  1. 更新回调路由，在重定向 URL 中包含 `provider` 参数
+  2. 简化主页检测逻辑，直接使用 `window.location.search` 获取参数
+  3. 添加 console.log 便于调试
+- **文件位置**: 
+  - src/app/auth/callback/[provider]/page.tsx
+  - src/app/page.tsx

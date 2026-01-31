@@ -34,7 +34,10 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push("/login");
+      toast.error("请先登录", {
+        description: "请从侧边栏点击登录按钮",
+      });
+      router.push("/");
     }
   }, [isAuthenticated, authLoading, router]);
 

@@ -30,9 +30,9 @@ export default function PublishPage() {
   useEffect(() => {
     if (!isAuthenticated) {
       toast.error("请先登录", {
-        description: "登录后才能发布文章",
+        description: "请从侧边栏点击登录按钮",
       });
-      router.push("/login");
+      router.push("/");
     }
   }, [isAuthenticated, router]);
 
