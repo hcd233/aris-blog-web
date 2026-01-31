@@ -63,18 +63,10 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] p-0 gap-0 overflow-hidden border-0 bg-white dark:bg-[#111111]">
-        <div className="flex h-[520px]">
+      <DialogContent className="sm:max-w-[800px] p-0 gap-0 overflow-hidden border-0 bg-white dark:bg-[#111111] max-h-[90vh] overflow-y-auto">
+        <div className="flex flex-col md:flex-row md:h-[520px]">
           {/* 左侧 - OAuth 登录 */}
-          <div className="flex-1 flex flex-col items-center justify-center px-8 py-6 border-r border-gray-100 dark:border-[#2a2a2a]">
-            {/* Close Button */}
-            <button
-              onClick={() => onOpenChange(false)}
-              className="absolute right-4 top-4 z-10 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-[#2a2a2a] transition-colors lg:hidden"
-            >
-              <X className="w-5 h-5 text-gray-400" />
-            </button>
-
+          <div className="flex-1 flex flex-col items-center justify-center px-6 md:px-8 py-8 md:py-6 md:border-r border-gray-100 dark:border-[#2a2a2a]">
             {/* Header Tag */}
             <div className="mb-6">
               <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-500 text-sm">
@@ -159,8 +151,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
             </div>
           </div>
 
-          {/* 右侧 - 手机验证码登录（禁用） */}
-          <div className="flex-1 flex flex-col px-8 py-6 relative bg-gray-50/50 dark:bg-[#0a0a0a]/50">
+          {/* 右侧 - 手机验证码登录（禁用） - 桌面端显示 */}
+          <div className="hidden md:flex flex-1 flex-col px-8 py-6 relative bg-gray-50/50 dark:bg-[#0a0a0a]/50">
             {/* Close Button - 只在右侧显示 */}
             <button
               onClick={() => onOpenChange(false)}
@@ -170,9 +162,17 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
             </button>
 
             <div className="flex-1 flex flex-col justify-center">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-8 text-center">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 text-center">
                 手机号登录
               </h3>
+              
+              {/* 手机号登录提示 */}
+              <div className="mb-6 mx-auto max-w-[280px] text-center">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                  <span className="text-amber-600 dark:text-amber-400 text-xs">目前仅支持 GitHub 和 Google 登录</span>
+                </div>
+                <p className="text-xs text-gray-400 mt-2">手机号登录功能敬请期待</p>
+              </div>
 
               <div className="space-y-4 max-w-[280px] mx-auto w-full">
                 {/* 手机号输入 */}

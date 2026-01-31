@@ -76,7 +76,8 @@ export function Sidebar() {
         className={cn(
           "fixed left-0 top-0 h-full w-[72px] lg:w-[260px] flex flex-col z-50 transition-all duration-300",
           "bg-white dark:bg-[#0a0a0a]",
-          "border-r border-gray-200 dark:border-[#1a1a1a]"
+          "border-r border-gray-200 dark:border-[#1a1a1a]",
+          "hidden md:flex"
         )}
       >
         {/* Logo */}
@@ -86,7 +87,7 @@ export function Sidebar() {
               <div className="w-10 h-10 relative flex-shrink-0 rounded-full overflow-hidden">
                 <Image
                   src={process.env.NEXT_PUBLIC_SITE_ICON_URL}
-                  alt="Aris"
+                  alt="Aris Blog"
                   fill
                   className="object-cover"
                   unoptimized
@@ -97,7 +98,7 @@ export function Sidebar() {
                 <span className="text-white font-bold text-lg">A</span>
               </div>
             )}
-            <span className="hidden lg:block text-xl font-bold text-gray-900 dark:text-white">Aris</span>
+            <span className="hidden lg:block text-xl font-bold text-gray-900 dark:text-white">Aris Blog</span>
           </Link>
         </div>
 
@@ -145,7 +146,7 @@ export function Sidebar() {
 
           {/* 登录卡片 - 当用户未登录时显示 */}
           {!isAuthenticated && (
-            <div className="mt-1 px-1 space-y-1">
+            <div className="mt-1 px-1 space-y-4">
               {/* 登录按钮 */}
               <button
                 onClick={() => setLoginDialogOpen(true)}

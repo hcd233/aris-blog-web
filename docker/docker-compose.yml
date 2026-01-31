@@ -12,7 +12,7 @@ services:
     networks:
       - 1panel-network
     ports:
-      - "7777:3000"
+      - "3000:3000"
     env_file:
       - ../.env
     # 健康检查

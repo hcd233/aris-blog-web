@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 const siteIconUrl = process.env.NEXT_PUBLIC_SITE_ICON_URL || "";
 
 export const metadata: Metadata = {
-  title: "Aris - 发现美好生活",
-  description: "分享生活，发现美好",
+  title: "Aris Blog - AI驱动的内容社区",
+  description: "分享生活，发现美好，探索未知",
   icons: siteIconUrl ? {
     icon: siteIconUrl,
     shortcut: siteIconUrl,

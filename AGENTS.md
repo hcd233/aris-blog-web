@@ -198,7 +198,9 @@ toast.info("敬请期待", {
 | `src/app/profile/page.tsx` | 个人资料页面（小红书风格） |
 | `src/components/ui/sonner.tsx` | Toast通知组件（基于sonner） |
 | `src/components/article-detail-modal.tsx` | 文章详情弹窗，支持多图片轮播（小红书风格） |
-| `src/components/login-dialog.tsx` | 登录弹窗组件（小红书风格） |
+| `src/components/login-dialog.tsx` | 登录弹窗组件（小红书风格，响应式布局） |
+| `src/components/mobile-nav.tsx` | 移动端底部导航栏（主页/商城/发布/通知/我） |
+| `src/components/mobile-login-drawer.tsx` | 移动端底部登录抽屉（未登录时自动弹出） |
 | `Dockerfile` | Docker 多阶段构建配置 |
 | `docker-compose.yml` | Docker Compose 部署配置 |
 | `.dockerignore` | Docker 构建忽略文件 |
@@ -256,7 +258,43 @@ src/
 4. 新依赖项
 5. 新代码模式或约定
 
-**最后更新**: 2026-02-01
+**最后更新**: 2026-02-02
+
+### 移动端适配
+- **功能需求**:
+  1. 主页移动端隐藏侧边栏，显示底部导航栏
+  2. 底部导航栏：主页、商城(禁用)、发布(中间大按钮)、通知(禁用)、我
+  3. 登录弹窗移动端适配，改为单列布局
+  4. 未登录时自动从底部弹出登录抽屉（小红书风格）
+- **实现方案**:
+  1. 创建 `src/components/mobile-nav.tsx`:
+     - 底部固定导航栏，只在移动端显示 (`md:hidden`)
+     - 支持 iOS 安全区域 (`env(safe-area-inset-bottom)`)
+     - 中间发布按钮使用红色背景和大尺寸
+     - 禁用项点击显示 "敬请期待" Toast
+     - 未登录时点击"我"和"发布"提示登录
+  2. 更新 `src/app/page.tsx`:
+     - 主内容区域添加 `pb-16 md:pb-0` 避免被底部导航遮挡
+     - 导入并使用 `<MobileNav />` 组件
+  3. 更新 `src/components/sidebar.tsx`:
+     - 添加 `hidden md:flex` 类，移动端隐藏侧边栏
+  4. 更新 `src/components/login-dialog.tsx`:
+     - 使用响应式布局：`flex-col md:flex-row`
+     - 移动端只显示 OAuth 登录部分，隐藏手机号登录区域
+     - 桌面端保持左右分栏布局
+  5. 创建 `src/components/mobile-login-drawer.tsx`:
+     - 未登录时自动从底部弹出登录抽屉
+     - 小红书风格的深色底部面板
+     - 包含 Aris Logo、提示文字、GitHub/Google 登录按钮
+     - 支持手动关闭（右上角 X 按钮）
+     - 背景遮罩点击可关闭
+     - **特殊处理**: OAuth2 回调时（URL 包含 code 和 state 参数）不弹出抽屉，避免干扰登录流程
+- **文件位置**:
+  - src/components/mobile-nav.tsx（新增）
+  - src/components/mobile-login-drawer.tsx（新增）
+  - src/app/page.tsx（更新）
+  - src/components/sidebar.tsx（更新）
+  - src/components/login-dialog.tsx（更新）
 
 ### 登录页面重设计（小红书风格弹窗）- 样式优化
 - **功能需求**:

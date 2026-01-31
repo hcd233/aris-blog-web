@@ -14,6 +14,8 @@ import { listTags } from "@/lib/api/config";
 import { useArticles } from "@/hooks/use-articles";
 import type { DetailedTag } from "@/lib/api/types.gen";
 import { cn } from "@/lib/utils";
+import { MobileNav } from "@/components/mobile-nav";
+import { MobileLoginDrawer } from "@/components/mobile-login-drawer";
 
 // 包裹组件用于处理 OAuth 回调
 function OAuthCallbackWrapper({ onLoginSuccess }: { onLoginSuccess: () => void }) {
@@ -116,7 +118,7 @@ function MainContent({ refreshKey }: { refreshKey: number }) {
   const isLoading = loading || imagesLoading;
 
   return (
-    <main className="ml-[72px] lg:ml-[220px]">
+    <main className="md:ml-[72px] lg:ml-[220px] pb-16 md:pb-0">
       <header className={cn(
         "sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-[#0a0a0a]/80",
         "bg-white/95 dark:bg-[#0a0a0a]/95",
@@ -189,6 +191,8 @@ function MainContent({ refreshKey }: { refreshKey: number }) {
         isOpen={!!selectedArticleSlug}
         onClose={handleCloseModal}
       />
+
+      <MobileNav />
     </main>
   );
 }
@@ -211,6 +215,9 @@ export default function Home() {
       <Sidebar />
 
       <MainContent key={mainContentKey} refreshKey={mainContentKey} />
+
+      {/* 移动端底部登录抽屉 */}
+      <MobileLoginDrawer />
     </div>
   );
 }
