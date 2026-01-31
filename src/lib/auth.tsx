@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
+import { toast } from "sonner";
 import { getCurrentUser, setAuthToken } from "@/lib/api/config";
 import type { DetailedUser } from "@/lib/api/types.gen";
 
@@ -19,6 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<DetailedUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const initialized = useRef(false);
+  const permissionToastShown = useRef(false);
 
   // 初始化时检查登录状态
   useEffect(() => {
@@ -34,6 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const { data } = await getCurrentUser();
           if (data?.user) {
             setUser(data.user);
+            if (data.user.permission === "pending" && !permissionToastShown.current) {
+              permissionToastShown.current = true;
+              toast.warning("账号权限待审核", {
+                description: "您的账号权限处于待审核状态，请联系管理员开通权限",
+              });
+            }
           }
         } catch (error) {
           console.error("获取用户信息失败:", error);
@@ -70,6 +78,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data } = await getCurrentUser();
       if (data?.user) {
         setUser(data.user);
+        if (data.user.permission === "pending" && !permissionToastShown.current) {
+          permissionToastShown.current = true;
+          toast.warning("账号权限待审核", {
+            description: "您的账号权限处于待审核状态，请联系管理员开通权限",
+          });
+        }
       }
     } catch (error) {
       console.error("刷新用户信息失败:", error);

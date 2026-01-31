@@ -60,7 +60,7 @@ NODE_ENV=production        # 生产模式
 NEXT_TELEMETRY_DISABLED=1  # 禁用 Next.js 遥测
 PORT=3000                  # 服务端口
 HOSTNAME=0.0.0.0           # 监听地址
-NEXT_PUBLIC_API_BASE_URL=https://mem.lvlvko.top  # API 基础地址（默认）
+NEXT_PUBLIC_API_BASE_URL=https://api.mem.lvlvko.top  # API 基础地址（默认）
 ```
 
 ### 自定义后端地址
@@ -312,7 +312,7 @@ src/
 - **现象**: 文章详情页只支持展示单张封面图片，不支持多图片展示
 - **原因**: API旧版本使用coverImage字段存储单张图片，新版本改为images数组
 - **解决方案**: 
-  1. 使用openapi-ts从https://mem.lvlvko.top/openapi.yaml拉取最新API模型
+  1. 使用openapi-ts从https://api.mem.lvlvko.top/openapi.yaml拉取最新API模型
   2. 更新article-detail-modal组件，实现小红书风格的多图片轮播：
      - 左右滑动切换图片（支持鼠标和触摸）
      - 左右箭头按钮切换（小红书风格，边缘渐变背景）
@@ -360,7 +360,7 @@ src/
 ### 2026-01-31 API客户端配置 - baseUrl缺失
 - **现象**: API请求无法到达后端，请求404或失败
 - **原因**: 使用`openapi-ts`重新生成API模型后，手动创建的`config.ts`漏掉了`baseUrl`配置，导致客户端使用默认空字符串作为baseUrl
-- **解决方案**: 在`config.ts`中添加`baseUrl: "https://mem.lvlvko.top"`
+- **解决方案**: 在`config.ts`中添加`baseUrl: "https://api.mem.lvlvko.top"`
 - **文件位置**: src/lib/api/config.ts
 
 ### 2026-01-31 API客户端配置 - 初始化顺序错误

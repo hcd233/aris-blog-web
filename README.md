@@ -121,13 +121,12 @@ npx shadcn add [组件名]
 
 ```bash
 # 1. 更新 OpenAPI 规范
-curl -o openapi.yaml https://mem.lvlvko.top/openapi.yaml
 
 # 2. 重新生成客户端
 npx @hey-api/openapi-ts -i openapi.yaml -o src/lib/api -c @hey-api/client-fetch
 
-# 3. 重新生成类型（可选）
-npx openapi-typescript openapi.yaml -o src/types/api.d.ts
+# 3. 重新生成类型
+npx openapi-typescript https://xxx/openapi.yaml -o src/types/api.d.ts
 ```
 
 ## 特性
