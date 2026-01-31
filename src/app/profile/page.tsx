@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { FileText, Heart, Bookmark, MapPin, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { MobileNav } from "@/components/mobile-nav";
 
 type TabType = "notes";
 
@@ -77,7 +78,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-white dark:bg-[#0a0a0a] flex">
       <Sidebar />
 
-      <main className="flex-1 lg:ml-[220px]">
+      <main className="flex-1 lg:ml-[220px] pb-16 md:pb-0">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
           <div className="flex flex-col md:flex-row gap-6 md:gap-10">
             <div className="flex justify-center md:justify-start">
@@ -96,11 +97,6 @@ export default function ProfilePage() {
 
               <div className="flex items-center justify-center md:justify-start gap-2 text-sm text-gray-500 dark:text-[#999]">
                 <span>用户id: {user.id}</span>
-                <span className="text-gray-300 dark:text-[#444]">|</span>
-                <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5" />
-                  IP属地: 广东
-                </span>
               </div>
             </div>
           </div>
@@ -193,6 +189,9 @@ export default function ProfilePage() {
           isOpen={!!selectedArticleSlug}
           onClose={handleCloseModal}
         />
+
+        {/* 移动端底部导航 */}
+        <MobileNav />
       </main>
     </div>
   );

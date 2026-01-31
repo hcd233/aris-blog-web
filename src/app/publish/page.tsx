@@ -13,6 +13,7 @@ import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { MobileNav } from "@/components/mobile-nav";
 
 export default function PublishPage() {
   const router = useRouter();
@@ -174,7 +175,7 @@ export default function PublishPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20 md:pb-8">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Cover Upload */}
           <section>
@@ -265,6 +266,9 @@ export default function PublishPage() {
           </div>
         </div>
       )}
+
+      {/* 移动端底部导航 */}
+      <MobileNav />
     </div>
   );
 }

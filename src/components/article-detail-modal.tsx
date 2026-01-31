@@ -10,6 +10,7 @@ import type { DetailedArticle } from "@/lib/api/types.gen";
 import { RichTextContent } from "@/components/rich-text-content";
 import { cn, formatDate } from "@/lib/utils";
 import { useArticleActions } from "@/hooks/use-article-actions";
+import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 
 interface ArticleDetailModalProps {
@@ -28,6 +29,8 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
   const [translateX, setTranslateX] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number>(0);
+
+  const { user: currentUser } = useAuth();
 
   const {
     isLiked,
@@ -349,8 +352,10 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                         }
                       >
                         <Avatar className="h-6 w-6">
-                          <AvatarImage src={article.author.avatar} />
-                          <AvatarFallback className="text-[10px]">U</AvatarFallback>
+                          <AvatarImage src={currentUser?.avatar || undefined} />
+                          <AvatarFallback className="text-[10px]">
+                            {currentUser?.name?.charAt(0) || "U"}
+                          </AvatarFallback>
                         </Avatar>
                         <span className="text-gray-400 dark:text-gray-500 text-sm">说点什么...</span>
                       </div>
