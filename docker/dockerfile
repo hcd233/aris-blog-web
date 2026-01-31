@@ -1,63 +1,58 @@
-# syntax=docker/dockerfile:1.4
-# 多阶段构建，轻量级Next.js Docker镜像
-# 使用 BuildKit 特性优化构建速度和缓存
+# =====================================
+# Next.js 16 + TypeScript 5 + Tailwind CSS 4
+# 多阶段构建 Dockerfile (Alpine Linux)
+# =====================================
 
-####################
-# 第一阶段：依赖安装
-####################
-FROM node:22-alpine AS deps
+# 版本号
+ARG NODE_VERSION=22
 
-# 启用 pnpm（可选，如果需要更快速度）
-# RUN corepack enable && corepack prepare pnpm@latest --activate
+# =====================================
+# 阶段 1: 安装依赖 (Dependencies)
+# =====================================
+FROM node:${NODE_VERSION}-alpine AS deps
 
 # 设置工作目录
 WORKDIR /app
 
-# 安装构建依赖（Python和build-base用于原生模块编译）
+# 安装系统依赖 (用于编译原生模块)
 RUN apk add --no-cache libc6-compat python3 make g++
 
-# 复制包管理文件（利用缓存层）
+# 复制包管理文件（利用 Docker 缓存层）
 COPY package.json package-lock.json* ./
 
-# 安装生产环境依赖（使用缓存挂载）
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --only=production --legacy-peer-deps
-
-# 安装完整依赖（用于构建）
+# 使用 BuildKit 缓存安装依赖
+# 这会缓存 node_modules，除非 package.json 改变
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --legacy-peer-deps
 
-####################
-# 第二阶段：构建
-####################
-FROM node:22-alpine AS builder
+# =====================================
+# 阶段 2: 构建应用 (Builder)
+# =====================================
+FROM node:${NODE_VERSION}-alpine AS builder
 
 WORKDIR /app
+
+# 安装系统依赖
+RUN apk add --no-cache libc6-compat
 
 # 从 deps 阶段复制 node_modules
 COPY --from=deps /app/node_modules ./node_modules
 
-# 复制源代码
+# 复制所有源代码
 COPY . .
 
-# 设置环境变量（构建时）
+# 设置环境变量
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# 构建应用
-RUN npm run build
+# 使用 BuildKit 缓存进行构建
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
 
-####################
-# 第三阶段：运行（最终镜像）
-####################
-FROM node:22-alpine AS runner
-
-# 安装 dumb-init 用于正确处理信号（PID 1）
-RUN apk add --no-cache dumb-init
-
-# 创建非 root 用户（安全最佳实践）
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+# =====================================
+# 阶段 3: 运行应用 (Runner)
+# =====================================
+FROM node:${NODE_VERSION}-alpine AS runner
 
 WORKDIR /app
 
@@ -65,10 +60,20 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
+ENV HOSTNAME=0.0.0.0
 
-# 从 builder 阶段复制 standalone 输出
-# Standalone 模式只包含运行所需的文件
+# 创建非 root 用户 (增强安全性)
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+# 安装 dumb-init 用于正确处理 PID 1 信号
+RUN apk add --no-cache dumb-init
+
+# 设置正确的文件权限
+RUN mkdir .next && chown nextjs:nodejs .next
+
+# 从 builder 阶段复制必要文件
+# 注意：Standalone 模式下，输出在 .next/standalone 目录
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
@@ -81,8 +86,7 @@ USER nextjs
 # 暴露端口
 EXPOSE 3000
 
-# 使用 dumb-init 作为 entrypoint 处理信号
+# 使用 dumb-init 启动应用
+# 这确保信号能正确传递给 Node.js 进程
 ENTRYPOINT ["dumb-init", "--"]
-
-# 启动 Next.js
 CMD ["node", "server.js"]
