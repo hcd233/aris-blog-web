@@ -327,7 +327,7 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                       )}
 
                       <div className="mt-4 text-xs text-gray-400 dark:text-gray-500">
-                        编辑于 {formatDate(article.updatedAt || article.createdAt)}
+                        编辑于 {formatDate(article.publishedAt || article.updatedAt)}
                       </div>
                     </div>
 
