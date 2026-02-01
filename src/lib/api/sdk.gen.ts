@@ -71,7 +71,7 @@ export const chat = <ThrowOnError extends boolean = false>(options?: Options<Cha
  */
 export const deleteArticle = <ThrowOnError extends boolean = false>(options: Options<DeleteArticleData, ThrowOnError>) => (options.client ?? client).delete<DeleteArticleResponses, DeleteArticleErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/v1/article/',
+    url: '/api/v1/article',
     ...options
 });
 
@@ -82,7 +82,7 @@ export const deleteArticle = <ThrowOnError extends boolean = false>(options: Opt
  */
 export const getArticle = <ThrowOnError extends boolean = false>(options: Options<GetArticleData, ThrowOnError>) => (options.client ?? client).get<GetArticleResponses, GetArticleErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/v1/article/',
+    url: '/api/v1/article',
     ...options
 });
 
@@ -93,7 +93,7 @@ export const getArticle = <ThrowOnError extends boolean = false>(options: Option
  */
 export const updateArticle = <ThrowOnError extends boolean = false>(options?: Options<UpdateArticleData, ThrowOnError>) => (options?.client ?? client).patch<UpdateArticleResponses, UpdateArticleErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/v1/article/',
+    url: '/api/v1/article',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -108,7 +108,7 @@ export const updateArticle = <ThrowOnError extends boolean = false>(options?: Op
  */
 export const createArticle = <ThrowOnError extends boolean = false>(options?: Options<CreateArticleData, ThrowOnError>) => (options?.client ?? client).post<CreateArticleResponses, CreateArticleErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/v1/article/',
+    url: '/api/v1/article',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ export const listArticles = <ThrowOnError extends boolean = false>(options: Opti
 export const uploadImage = <ThrowOnError extends boolean = false>(options?: Options<UploadImageData, ThrowOnError>) => (options?.client ?? client).post<UploadImageResponses, UploadImageErrors, ThrowOnError>({
     ...formDataBodySerializer,
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/v1/image/',
+    url: '/api/v1/image',
     ...options,
     headers: {
         'Content-Type': null,
@@ -182,7 +182,7 @@ export const oauth2Login = <ThrowOnError extends boolean = false>(options: Optio
  */
 export const deleteTag = <ThrowOnError extends boolean = false>(options: Options<DeleteTagData, ThrowOnError>) => (options.client ?? client).delete<DeleteTagResponses, DeleteTagErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/v1/tag/',
+    url: '/api/v1/tag',
     ...options
 });
 
@@ -204,7 +204,7 @@ export const listTags = <ThrowOnError extends boolean = false>(options: Options<
  */
 export const deleteTodoItem = <ThrowOnError extends boolean = false>(options: Options<DeleteTodoItemData, ThrowOnError>) => (options.client ?? client).delete<DeleteTodoItemResponses, DeleteTodoItemErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/v1/todoItem/',
+    url: '/api/v1/todoItem',
     ...options
 });
 
@@ -215,7 +215,7 @@ export const deleteTodoItem = <ThrowOnError extends boolean = false>(options: Op
  */
 export const updateTodoItem = <ThrowOnError extends boolean = false>(options?: Options<UpdateTodoItemData, ThrowOnError>) => (options?.client ?? client).patch<UpdateTodoItemResponses, UpdateTodoItemErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/v1/todoItem/',
+    url: '/api/v1/todoItem',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -230,7 +230,7 @@ export const updateTodoItem = <ThrowOnError extends boolean = false>(options?: O
  */
 export const createTodoItems = <ThrowOnError extends boolean = false>(options?: Options<CreateTodoItemsData, ThrowOnError>) => (options?.client ?? client).post<CreateTodoItemsResponses, CreateTodoItemsErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/v1/todoItem/',
+    url: '/api/v1/todoItem',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -270,7 +270,7 @@ export const refreshToken = <ThrowOnError extends boolean = false>(options?: Opt
  */
 export const updateUser = <ThrowOnError extends boolean = false>(options?: Options<UpdateUserData, ThrowOnError>) => (options?.client ?? client).patch<UpdateUserResponses, UpdateUserErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
-    url: '/api/v1/user/',
+    url: '/api/v1/user',
     ...options,
     headers: {
         'Content-Type': 'application/json',

@@ -723,7 +723,7 @@ export type DeleteArticleData = {
          */
         id: number;
     };
-    url: '/api/v1/article/';
+    url: '/api/v1/article';
 };
 
 export type DeleteArticleErrors = {
@@ -753,7 +753,7 @@ export type GetArticleData = {
          */
         slug: string;
     };
-    url: '/api/v1/article/';
+    url: '/api/v1/article';
 };
 
 export type GetArticleErrors = {
@@ -781,7 +781,7 @@ export type UpdateArticleData = {
     body?: UpdateArticleReqBody;
     path?: never;
     query?: never;
-    url: '/api/v1/article/';
+    url: '/api/v1/article';
 };
 
 export type UpdateArticleErrors = {
@@ -809,7 +809,7 @@ export type CreateArticleData = {
     body?: CreateArticleReqBody;
     path?: never;
     query?: never;
-    url: '/api/v1/article/';
+    url: '/api/v1/article';
 };
 
 export type CreateArticleErrors = {
@@ -878,7 +878,7 @@ export type UploadImageData = {
     };
     path?: never;
     query?: never;
-    url: '/api/v1/image/';
+    url: '/api/v1/image';
 };
 
 export type UploadImageErrors = {
@@ -991,7 +991,7 @@ export type DeleteTagData = {
          */
         id: number;
     };
-    url: '/api/v1/tag/';
+    url: '/api/v1/tag';
 };
 
 export type DeleteTagErrors = {
@@ -1055,7 +1055,7 @@ export type DeleteTodoItemData = {
          */
         id: number;
     };
-    url: '/api/v1/todoItem/';
+    url: '/api/v1/todoItem';
 };
 
 export type DeleteTodoItemErrors = {
@@ -1083,7 +1083,7 @@ export type UpdateTodoItemData = {
     body?: UpdateTodoItemReqBody;
     path?: never;
     query?: never;
-    url: '/api/v1/todoItem/';
+    url: '/api/v1/todoItem';
 };
 
 export type UpdateTodoItemErrors = {
@@ -1111,7 +1111,7 @@ export type CreateTodoItemsData = {
     body?: CreateTodoItemsReqBody;
     path?: never;
     query?: never;
-    url: '/api/v1/todoItem/';
+    url: '/api/v1/todoItem';
 };
 
 export type CreateTodoItemsErrors = {
@@ -1209,7 +1209,7 @@ export type UpdateUserData = {
     body?: UpdateUserReqBody;
     path?: never;
     query?: never;
-    url: '/api/v1/user/';
+    url: '/api/v1/user';
 };
 
 export type UpdateUserErrors = {
