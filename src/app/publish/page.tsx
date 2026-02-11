@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CoverUpload, type ImageItem } from "@/components/cover-upload";
 import { RichTextEditor } from "@/components/rich-text-editor";
-import { createArticle } from "@/lib/api/config";
+import { createArticle } from "@/lib/api-config";
 import { processAndUploadImage } from "@/lib/cos-upload";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";

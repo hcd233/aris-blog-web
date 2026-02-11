@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { doAction, undoAction } from "@/lib/api/config";
+import { doAction, undoAction } from "@/lib/api-config";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 

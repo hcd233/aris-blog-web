@@ -1,6 +1,6 @@
 "use client";
 
-import { getCredential } from "@/lib/api/config";
+import { getCredential } from "@/lib/api-config";
 
 // 动态导入 COS SDK（只在客户端使用）
 let COS: typeof import("cos-js-sdk-v5") | null = null;

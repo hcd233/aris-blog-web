@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Loading } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Search } from "lucide-react";
-import { listTags } from "@/lib/api/config";
+import { listTags } from "@/lib/api-config";
 import { useArticles } from "@/hooks/use-articles";
 import type { DetailedTag } from "@/lib/api/types.gen";
 import { cn } from "@/lib/utils";

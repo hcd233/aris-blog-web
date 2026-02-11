@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { oauth2Callback } from "@/lib/api/config";
+import { oauth2Callback } from "@/lib/api-config";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";

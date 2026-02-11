@@ -8,7 +8,7 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
-import { oauth2Login } from "@/lib/api/config";
+import { oauth2Login } from "@/lib/api-config";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -63,7 +63,7 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] p-0 gap-0 overflow-hidden border-0 bg-white dark:bg-[#111111] max-h-[90vh] overflow-y-auto">
+      <DialogContent showCloseButton={false} className="sm:max-w-[800px] p-0 gap-0 overflow-hidden border-0 bg-white dark:bg-[#111111] max-h-[90vh] overflow-y-auto">
         <div className="flex flex-col md:flex-row md:h-[520px]">
           {/* 左侧 - OAuth 登录 */}
           <div className="flex-1 flex flex-col items-center justify-center px-6 md:px-8 py-8 md:py-6 md:border-r border-gray-100 dark:border-[#2a2a2a]">

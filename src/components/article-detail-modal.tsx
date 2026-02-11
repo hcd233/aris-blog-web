@@ -5,9 +5,10 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { X, Heart, MessageCircle, Star, Share2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getArticle } from "@/lib/api/config";
+import { getArticle } from "@/lib/api-config";
 import type { DetailedArticle } from "@/lib/api/types.gen";
 import { RichTextContent } from "@/components/rich-text-content";
+import { CommentSection } from "@/components/comment-section";
 import { cn, formatDate } from "@/lib/utils";
 import { useArticleActions } from "@/hooks/use-article-actions";
 import { useAuth } from "@/lib/auth";
@@ -31,6 +32,7 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
   const touchStartX = useRef<number>(0);
 
   const { user: currentUser } = useAuth();
+  const [commentTotal, setCommentTotal] = useState(0);
 
   const {
     isLiked,
@@ -307,7 +309,7 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                       <h1 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 leading-snug">
                         {article.title}
                       </h1>
-                      
+
                       <RichTextContent
                         content={article.content}
                         className="text-gray-700 dark:text-gray-300 text-sm"
@@ -331,95 +333,69 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                       </div>
                     </div>
 
-                    <div className="px-5 py-4 border-t border-gray-100 dark:border-gray-800">
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                        共 0 条评论
-                      </div>
-                      <div className="text-center py-8 text-gray-400 dark:text-gray-500 text-sm">
-                        暂无评论，来抢沙发吧～
-                      </div>
-                    </div>
+                    {article.id && (
+                      <CommentSection
+                        articleId={article.id}
+                        articleAuthorId={article.author.id}
+                        onTotalChange={setCommentTotal}
+                      />
+                    )}
                   </div>
 
-                  <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-[#1a1a1a]">
-                    <div className="flex-1 mr-4">
-                      <div
-                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-[#2a2a2a] cursor-pointer"
-                        onClick={() =>
-                          toast.info("敬请期待", {
-                            description: "评论功能正在开发中",
-                          })
-                        }
-                      >
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={currentUser?.avatar || undefined} />
-                          <AvatarFallback className="text-[10px]">
-                            {currentUser?.name?.charAt(0) || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-gray-400 dark:text-gray-500 text-sm">说点什么...</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      <button 
+                  {/* 底部操作栏 */}
+                  <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-end gap-4 bg-white dark:bg-[#1a1a1a]">
+                    <button
+                      className={cn(
+                        "flex flex-col items-center gap-0.5 transition-colors",
+                        isLiked
+                          ? "text-[#ff2442]"
+                          : "text-gray-600 dark:text-gray-400 hover:text-[#ff2442]"
+                      )}
+                      onClick={handleLikeClick}
+                      disabled={isLikeLoading}
+                    >
+                      <Heart
                         className={cn(
-                          "flex flex-col items-center gap-0.5 transition-colors",
-                          isLiked 
-                            ? "text-[#ff2442]" 
-                            : "text-gray-600 dark:text-gray-400 hover:text-[#ff2442]"
+                          "w-6 h-6 transition-all",
+                          isLiked && "fill-current scale-110"
                         )}
-                        onClick={handleLikeClick}
-                        disabled={isLikeLoading}
-                      >
-                        <Heart 
-                          className={cn(
-                            "w-6 h-6 transition-all",
-                            isLiked && "fill-current scale-110"
-                          )} 
-                        />
-                        <span className="text-[10px]">{likesCount}</span>
-                      </button>
-                      <button 
+                      />
+                      <span className="text-[10px]">{likesCount}</span>
+                    </button>
+                    <button
+                      className={cn(
+                        "flex flex-col items-center gap-0.5 transition-colors",
+                        isSaved
+                          ? "text-yellow-500"
+                          : "text-gray-600 dark:text-gray-400 hover:text-yellow-500"
+                      )}
+                      onClick={handleSaveClick}
+                      disabled={isSaveLoading}
+                    >
+                      <Star
                         className={cn(
-                          "flex flex-col items-center gap-0.5 transition-colors",
-                          isSaved 
-                            ? "text-yellow-500" 
-                            : "text-gray-600 dark:text-gray-400 hover:text-yellow-500"
+                          "w-6 h-6 transition-all",
+                          isSaved && "fill-current scale-110"
                         )}
-                        onClick={handleSaveClick}
-                        disabled={isSaveLoading}
-                      >
-                        <Star 
-                          className={cn(
-                            "w-6 h-6 transition-all",
-                            isSaved && "fill-current scale-110"
-                          )} 
-                        />
-                        <span className="text-[10px]">{savesCount}</span>
-                      </button>
-                      <button
-                        className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-400 hover:text-blue-500 transition-colors"
-                        onClick={() =>
-                          toast.info("敬请期待", {
-                            description: "评论功能正在开发中",
-                          })
-                        }
-                      >
-                        <MessageCircle className="w-6 h-6" />
-                        <span className="text-[10px]">0</span>
-                      </button>
-                      <button
-                        className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-400 hover:text-green-500 transition-colors"
-                        onClick={() =>
-                          toast.info("敬请期待", {
-                            description: "分享功能正在开发中",
-                          })
-                        }
-                      >
-                        <Share2 className="w-6 h-6" />
-                      </button>
-                    </div>
+                      />
+                      <span className="text-[10px]">{savesCount}</span>
+                    </button>
+                    <button
+                      className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-400 hover:text-blue-500 transition-colors"
+                    >
+                      <MessageCircle className="w-6 h-6" />
+                      <span className="text-[10px]">{commentTotal}</span>
+                    </button>
+                    <button
+                      className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-400 hover:text-green-500 transition-colors"
+                      onClick={() =>
+                        toast.info("敬请期待", {
+                          description: "分享功能正在开发中",
+                        })
+                      }
+                    >
+                      <Share2 className="w-6 h-6" />
+                    </button>
                   </div>
                 </div>
               </>

@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Menu, PenLine, Search, User, LogOut, Settings } from "lucide-react";
-import { getCurrentUser } from "@/lib/api/config";
+import { getCurrentUser } from "@/lib/api-config";
 import type { DetailedUser } from "@/lib/api/types.gen";
 
 const navItems = [

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { listArticles } from "@/lib/api/config";
+import { listArticles } from "@/lib/api-config";
 import type { ListedArticle } from "@/lib/api/types.gen";
 import { toast } from "sonner";
 import { preloadImage } from "@/lib/utils";

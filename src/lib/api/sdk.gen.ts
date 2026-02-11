@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ChatData, ChatErrors, ChatResponses, CreateArticleData, CreateArticleErrors, CreateArticleResponses, CreateTodoItemsData, CreateTodoItemsErrors, CreateTodoItemsResponses, DeleteArticleData, DeleteArticleErrors, DeleteArticleResponses, DeleteTagData, DeleteTagErrors, DeleteTagResponses, DeleteTodoItemData, DeleteTodoItemErrors, DeleteTodoItemResponses, DoActionData, DoActionErrors, DoActionResponses, GetArticleData, GetArticleErrors, GetArticleResponses, GetCredentialData, GetCredentialErrors, GetCredentialResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, HealthCheckData, HealthCheckErrors, HealthCheckResponses, ListArticlesData, ListArticlesErrors, ListArticlesResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTodoItemsData, ListTodoItemsErrors, ListTodoItemsResponses, Oauth2CallbackData, Oauth2CallbackErrors, Oauth2CallbackResponses, Oauth2LoginData, Oauth2LoginErrors, Oauth2LoginResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, SseHealthCheckData, SseHealthCheckErrors, SseHealthCheckResponses, UndoActionData, UndoActionErrors, UndoActionResponses, UpdateArticleData, UpdateArticleErrors, UpdateArticleResponses, UpdateTodoItemData, UpdateTodoItemErrors, UpdateTodoItemResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
+import type { AckNotificationData, AckNotificationErrors, AckNotificationResponses, ApproveUserData, ApproveUserErrors, ApproveUserResponses, ChatData, ChatErrors, ChatResponses, CreateArticleData, CreateArticleErrors, CreateArticleResponses, CreateCommentData, CreateCommentErrors, CreateCommentResponses, CreateTodoItemsData, CreateTodoItemsErrors, CreateTodoItemsResponses, DeleteArticleData, DeleteArticleErrors, DeleteArticleResponses, DeleteCommentData, DeleteCommentErrors, DeleteCommentResponses, DeleteTagData, DeleteTagErrors, DeleteTagResponses, DeleteTodoItemData, DeleteTodoItemErrors, DeleteTodoItemResponses, DoActionData, DoActionErrors, DoActionResponses, GetArticleData, GetArticleErrors, GetArticleResponses, GetCredentialData, GetCredentialErrors, GetCredentialResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, HealthCheckData, HealthCheckErrors, HealthCheckResponses, ListArticlesData, ListArticlesErrors, ListArticlesResponses, ListCommentsData, ListCommentsErrors, ListCommentsResponses, ListNotificationsData, ListNotificationsErrors, ListNotificationsResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTodoItemsData, ListTodoItemsErrors, ListTodoItemsResponses, ListUsersData, ListUsersErrors, ListUsersResponses, Oauth2CallbackData, Oauth2CallbackErrors, Oauth2CallbackResponses, Oauth2LoginData, Oauth2LoginErrors, Oauth2LoginResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, SseHealthCheckData, SseHealthCheckErrors, SseHealthCheckResponses, UndoActionData, UndoActionErrors, UndoActionResponses, UpdateArticleData, UpdateArticleErrors, UpdateArticleResponses, UpdateTodoItemData, UpdateTodoItemErrors, UpdateTodoItemResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -128,6 +128,43 @@ export const listArticles = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
+ * DeleteComment
+ *
+ * Delete a comment (only the owner can delete)
+ */
+export const deleteComment = <ThrowOnError extends boolean = false>(options: Options<DeleteCommentData, ThrowOnError>) => (options.client ?? client).delete<DeleteCommentResponses, DeleteCommentErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/comment',
+    ...options
+});
+
+/**
+ * CreateComment
+ *
+ * Create a new comment on an article
+ */
+export const createComment = <ThrowOnError extends boolean = false>(options?: Options<CreateCommentData, ThrowOnError>) => (options?.client ?? client).post<CreateCommentResponses, CreateCommentErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/comment',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+    }
+});
+
+/**
+ * ListComments
+ *
+ * List comments with pagination and filtering by article ID or parent comment ID
+ */
+export const listComments = <ThrowOnError extends boolean = false>(options: Options<ListCommentsData, ThrowOnError>) => (options.client ?? client).get<ListCommentsResponses, ListCommentsErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/comment/list',
+    ...options
+});
+
+/**
  * UploadImage
  *
  * Upload an image. Returns presigned URL of the uploaded image.
@@ -151,6 +188,28 @@ export const uploadImage = <ThrowOnError extends boolean = false>(options?: Opti
 export const getCredential = <ThrowOnError extends boolean = false>(options?: Options<GetCredentialData, ThrowOnError>) => (options?.client ?? client).get<GetCredentialResponses, GetCredentialErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
     url: '/api/v1/image/credential',
+    ...options
+});
+
+/**
+ * AckNotification
+ *
+ * Acknowledge notification by marking it as read
+ */
+export const ackNotification = <ThrowOnError extends boolean = false>(options: Options<AckNotificationData, ThrowOnError>) => (options.client ?? client).patch<AckNotificationResponses, AckNotificationErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/notification/ack',
+    ...options
+});
+
+/**
+ * ListNotifications
+ *
+ * List user notifications with pagination and status filter
+ */
+export const listNotifications = <ThrowOnError extends boolean = false>(options: Options<ListNotificationsData, ThrowOnError>) => (options.client ?? client).get<ListNotificationsResponses, ListNotificationsErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/notification/list',
     ...options
 });
 
@@ -279,6 +338,21 @@ export const updateUser = <ThrowOnError extends boolean = false>(options?: Optio
 });
 
 /**
+ * ApproveUser
+ *
+ * Approve a pending user and promote them to user permission
+ */
+export const approveUser = <ThrowOnError extends boolean = false>(options?: Options<ApproveUserData, ThrowOnError>) => (options?.client ?? client).post<ApproveUserResponses, ApproveUserErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/user/approve',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers
+    }
+});
+
+/**
  * GetCurrentUser
  *
  * Get the current user's detailed information, including user ID, username, email, avatar, and permission information
@@ -286,6 +360,17 @@ export const updateUser = <ThrowOnError extends boolean = false>(options?: Optio
 export const getCurrentUser = <ThrowOnError extends boolean = false>(options?: Options<GetCurrentUserData, ThrowOnError>) => (options?.client ?? client).get<GetCurrentUserResponses, GetCurrentUserErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],
     url: '/api/v1/user/current',
+    ...options
+});
+
+/**
+ * ListUsers
+ *
+ * List users with pagination
+ */
+export const listUsers = <ThrowOnError extends boolean = false>(options: Options<ListUsersData, ThrowOnError>) => (options.client ?? client).get<ListUsersResponses, ListUsersErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/user/list',
     ...options
 });
 

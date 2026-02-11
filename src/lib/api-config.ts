@@ -1,9 +1,13 @@
-import { client } from "./client.gen";
+import { client } from "./api/client.gen";
 import {
+  ackNotification,
+  approveUser,
   chat,
   createArticle,
+  createComment,
   createTodoItems,
   deleteArticle,
+  deleteComment,
   deleteTag,
   deleteTodoItem,
   doAction,
@@ -12,8 +16,11 @@ import {
   getCurrentUser,
   healthCheck,
   listArticles,
+  listComments,
+  listNotifications,
   listTags,
   listTodoItems,
+  listUsers,
   oauth2Callback,
   oauth2Login,
   refreshToken,
@@ -23,7 +30,7 @@ import {
   updateTodoItem,
   updateUser,
   uploadImage,
-} from "./sdk.gen";
+} from "./api/sdk.gen";
 
 // 设置认证token
 export const setAuthToken = (token: string | null) => {
@@ -70,10 +77,14 @@ export { client };
 
 // 导出API函数
 export {
+  ackNotification,
+  approveUser,
   chat,
   createArticle,
+  createComment,
   createTodoItems,
   deleteArticle,
+  deleteComment,
   deleteTag,
   deleteTodoItem,
   doAction,
@@ -82,8 +93,11 @@ export {
   getCurrentUser,
   healthCheck,
   listArticles,
+  listComments,
+  listNotifications,
   listTags,
   listTodoItems,
+  listUsers,
   oauth2Callback,
   oauth2Login,
   refreshToken,

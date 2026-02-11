@@ -18,11 +18,23 @@ components:
           description: Entity type to interact with
           enum:
             - article
+            - comment
           type: string
       required:
         - entityType
         - entityID
         - actionType
+      type: object
+    ApproveUserReqBody:
+      additionalProperties: false
+      properties:
+        userId:
+          description: User ID to approve
+          format: int64
+          minimum: 0
+          type: integer
+      required:
+        - userId
       type: object
     CallbackReqBody:
       additionalProperties: false
@@ -60,16 +72,65 @@ components:
         - accessToken
         - refreshToken
       type: object
+    CosTempCredential:
+      additionalProperties: false
+      properties:
+        appId:
+          description: 应用ID
+          type: string
+        bucketName:
+          description: Bucket名称
+          type: string
+        expiration:
+          description: ISO8601格式的过期时间
+          type: string
+        expiredTime:
+          description: 临时密钥过期时间戳(秒)
+          format: int64
+          type: integer
+        region:
+          description: 地域
+          type: string
+        requestId:
+          description: 请求ID
+          type: string
+        secretId:
+          description: 临时密钥 SecretId
+          type: string
+        secretKey:
+          description: 临时密钥 SecretKey
+          type: string
+        sessionToken:
+          description: 临时密钥 SessionToken
+          type: string
+        startTime:
+          description: 临时密钥开始时间戳(秒)
+          format: int64
+          type: integer
+      required:
+        - secretId
+        - secretKey
+        - sessionToken
+        - appId
+        - expiredTime
+        - expiration
+        - startTime
+        - requestId
+        - bucketName
+        - region
+      type: object
     CreateArticleReqBody:
       additionalProperties: false
       properties:
         content:
           description: Content of the article
+          maxLength: 16384
           type: string
         images:
           description: Images of the article
           items:
             type: string
+          maxItems: 16
           type:
             - array
             - "null"
@@ -77,7 +138,38 @@ components:
           description: Title of the article
           type: string
       required:
+        - content
+        - images
         - title
+      type: object
+    CreateCommentReqBody:
+      additionalProperties: false
+      properties:
+        articleID:
+          description: Article ID of the comment
+          format: int64
+          minimum: 1
+          type: integer
+        content:
+          description: Content of the comment
+          maxLength: 4096
+          type: string
+        images:
+          description: Images of the comment
+          items:
+            type: string
+          maxItems: 9
+          type:
+            - array
+            - "null"
+        parentID:
+          description: Parent comment ID
+          format: int64
+          minimum: 0
+          type: integer
+      required:
+        - articleID
+        - parentID
         - content
         - images
       type: object
@@ -220,6 +312,7 @@ components:
       required:
         - id
         - slug
+        - author
         - content
         - images
         - createdAt
@@ -233,7 +326,6 @@ components:
         - liked
         - saved
         - title
-        - author
       type: object
     DetailedTag:
       additionalProperties: false
@@ -386,7 +478,19 @@ components:
       required:
         - article
       type: object
-    GetCurUserRsp:
+    GetCosTempCredentialRsp:
+      additionalProperties: false
+      properties:
+        cosTempCredential:
+          $ref: "#/components/schemas/CosTempCredential"
+          description: COS临时密钥信息
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+      required:
+        - cosTempCredential
+      type: object
+    GetCurrentUserRsp:
       additionalProperties: false
       properties:
         error:
@@ -416,6 +520,46 @@ components:
           description: Page info
       required:
         - articles
+        - pageInfo
+      type: object
+    ListCommentsRsp:
+      additionalProperties: false
+      properties:
+        comments:
+          description: Comments to list
+          items:
+            $ref: "#/components/schemas/ListedComment"
+          type:
+            - array
+            - "null"
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        pageInfo:
+          $ref: "#/components/schemas/PageInfo"
+          description: Page info
+      required:
+        - comments
+        - pageInfo
+      type: object
+    ListNotificationsRsp:
+      additionalProperties: false
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        notifications:
+          description: Notifications to list
+          items:
+            $ref: "#/components/schemas/ListedNotification"
+          type:
+            - array
+            - "null"
+        pageInfo:
+          $ref: "#/components/schemas/PageInfo"
+          description: Page info
+      required:
+        - notifications
         - pageInfo
       type: object
     ListTagsRsp:
@@ -456,6 +600,26 @@ components:
             - "null"
       required:
         - todoItems
+        - pageInfo
+      type: object
+    ListUsersRsp:
+      additionalProperties: false
+      properties:
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+        pageInfo:
+          $ref: "#/components/schemas/PageInfo"
+          description: Page info
+        users:
+          description: Users to list
+          items:
+            $ref: "#/components/schemas/DetailedUser"
+          type:
+            - array
+            - "null"
+      required:
+        - users
         - pageInfo
       type: object
     ListedArticle:
@@ -501,13 +665,113 @@ components:
       required:
         - id
         - slug
+        - author
+        - coverImage
         - createdAt
         - updatedAt
         - publishedAt
         - likes
         - liked
         - title
+      type: object
+    ListedComment:
+      additionalProperties: false
+      properties:
+        articleID:
+          description: Article ID of the comment
+          format: int64
+          minimum: 0
+          type: integer
+        author:
+          $ref: "#/components/schemas/User"
+          description: Author of the comment
+        content:
+          description: Content of the comment
+          type: string
+        createdAt:
+          description: Created time of the comment
+          format: date-time
+          type: string
+        id:
+          description: ID of the comment
+          format: int64
+          minimum: 0
+          type: integer
+        liked:
+          description: Whether the current user has liked the comment
+          type: boolean
+        likes:
+          description: Likes of the comment
+          format: int64
+          minimum: 0
+          type: integer
+        parentID:
+          description: Parent comment ID
+          format: int64
+          minimum: 0
+          type: integer
+        saved:
+          description: Whether the current user has saved the comment
+          type: boolean
+        saves:
+          description: Saves of the comment
+          format: int64
+          minimum: 0
+          type: integer
+        updatedAt:
+          description: Updated time of the comment
+          format: date-time
+          type: string
+      required:
+        - articleID
+        - parentID
+        - createdAt
+        - updatedAt
+        - likes
+        - saves
+        - liked
+        - saved
         - author
+        - id
+        - content
+      type: object
+    ListedNotification:
+      additionalProperties: false
+      properties:
+        article:
+          $ref: "#/components/schemas/NotifiedArticle"
+          description: Article of the notification
+        comment:
+          $ref: "#/components/schemas/NotifiedComment"
+          description: Comment of the notification
+        content:
+          description: Content of the notification
+          type: string
+        createdAt:
+          description: Created time of the notification
+          format: date-time
+          type: string
+        id:
+          description: ID of the notification
+          format: int64
+          minimum: 0
+          type: integer
+        sender:
+          $ref: "#/components/schemas/User"
+          description: Sender of the notification
+        status:
+          description: Status of the notification
+          type: string
+        type:
+          description: Type of the notification
+          type: string
+      required:
+        - id
+        - content
+        - sender
+        - status
+        - type
+        - createdAt
       type: object
     LoginResp:
       additionalProperties: false
@@ -520,6 +784,48 @@ components:
           type: string
       required:
         - redirectURL
+      type: object
+    NotifiedArticle:
+      additionalProperties: false
+      properties:
+        coverImage:
+          description: Cover image URL of the article
+          type: string
+        id:
+          description: ID of the article
+          format: int64
+          minimum: 0
+          type: integer
+        slug:
+          description: Slug of the article
+          type: string
+        title:
+          description: Title of the article
+          type: string
+      required:
+        - id
+        - slug
+        - coverImage
+        - title
+      type: object
+    NotifiedComment:
+      additionalProperties: false
+      properties:
+        content:
+          description: Content of the comment
+          type: string
+        coverImage:
+          description: Cover image URL of the comment
+          type: string
+        id:
+          description: ID of the comment
+          format: int64
+          minimum: 0
+          type: integer
+      required:
+        - coverImage
+        - id
+        - content
       type: object
     PageInfo:
       additionalProperties: false
@@ -867,7 +1173,7 @@ paths:
       summary: Chat
       tags:
         - Agent
-  /api/v1/article/:
+  /api/v1/article:
     delete:
       description: Delete article and its tag associations
       operationId: deleteArticle
@@ -1066,7 +1372,151 @@ paths:
       summary: ListArticles
       tags:
         - Article
-  /api/v1/image/:
+  /api/v1/comment:
+    delete:
+      description: Delete a comment (only the owner can delete)
+      operationId: deleteComment
+      parameters:
+        - description: Unique identifier for the comment
+          explode: false
+          in: query
+          name: id
+          required: true
+          schema:
+            description: Unique identifier for the comment
+            format: int64
+            minimum: 1
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: DeleteComment
+      tags:
+        - Comment
+    post:
+      description: Create a new comment on an article
+      operationId: createComment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentReqBody"
+              description: Request body containing fields to create
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: CreateComment
+      tags:
+        - Comment
+  /api/v1/comment/list:
+    get:
+      description: List comments with pagination and filtering by article ID or parent comment ID
+      operationId: listComments
+      parameters:
+        - explode: false
+          in: query
+          name: page
+          required: true
+          schema:
+            format: int64
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: pageSize
+          required: true
+          schema:
+            format: int64
+            maximum: 50
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: query
+          schema:
+            maxLength: 100
+            type: string
+        - explode: false
+          in: query
+          name: sort
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: Sort field
+          explode: false
+          in: query
+          name: sortField
+          schema:
+            description: Sort field
+            enum:
+              - id
+              - createdAt
+              - updatedAt
+            type: string
+        - description: Article ID to filter
+          explode: false
+          in: query
+          name: articleID
+          required: true
+          schema:
+            description: Article ID to filter
+            format: int64
+            minimum: 1
+            type: integer
+        - description: Parent comment ID to filter
+          explode: false
+          in: query
+          name: parentID
+          schema:
+            description: Parent comment ID to filter
+            format: int64
+            minimum: 0
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListCommentsRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: ListComments
+      tags:
+        - Comment
+  /api/v1/image:
     post:
       description: Upload an image. Returns presigned URL of the uploaded image.
       operationId: uploadImage
@@ -1102,6 +1552,135 @@ paths:
       summary: UploadImage
       tags:
         - Image
+  /api/v1/image/credential:
+    get:
+      description: Get COS temporary credential for direct upload from frontend. Returns temporary SecretId, SecretKey and SessionToken.
+      operationId: GetCredential
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetCosTempCredentialRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: GetCredential
+      tags:
+        - Image
+  /api/v1/notification/ack:
+    patch:
+      description: Acknowledge notification by marking it as read
+      operationId: ackNotification
+      parameters:
+        - description: ID of the notification to acknowledge
+          explode: false
+          in: query
+          name: id
+          required: true
+          schema:
+            description: ID of the notification to acknowledge
+            format: int64
+            minimum: 1
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: AckNotification
+      tags:
+        - Notification
+  /api/v1/notification/list:
+    get:
+      description: List user notifications with pagination and status filter
+      operationId: listNotifications
+      parameters:
+        - explode: false
+          in: query
+          name: page
+          required: true
+          schema:
+            format: int64
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: pageSize
+          required: true
+          schema:
+            format: int64
+            maximum: 50
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: query
+          schema:
+            maxLength: 100
+            type: string
+        - explode: false
+          in: query
+          name: sort
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: Sort field
+          explode: false
+          in: query
+          name: sortField
+          schema:
+            description: Sort field
+            enum:
+              - id
+              - createdAt
+            type: string
+        - description: Filter by status (unread/read), empty for all
+          explode: false
+          in: query
+          name: status
+          schema:
+            description: Filter by status (unread/read), empty for all
+            enum:
+              - unread
+              - read
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListNotificationsRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: ListNotifications
+      tags:
+        - Notification
   /api/v1/oauth2/callback:
     post:
       description: Handle OAuth2 callback with authorization code and state
@@ -1160,6 +1739,39 @@ paths:
       summary: OAuth2Login
       tags:
         - OAuth2
+  /api/v1/tag:
+    delete:
+      description: Delete tag and its article associations
+      operationId: deleteTag
+      parameters:
+        - description: Unique identifier for the tag
+          explode: false
+          in: query
+          name: id
+          required: true
+          schema:
+            description: Unique identifier for the tag
+            format: int64
+            minimum: 1
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: DeleteTag
+      tags:
+        - Tag
   /api/v1/tag/list:
     get:
       description: List tags with pagination and fuzzy search
@@ -1226,7 +1838,7 @@ paths:
       summary: ListTags
       tags:
         - Tag
-  /api/v1/todoItem/:
+  /api/v1/todoItem:
     delete:
       description: Delete todo item
       operationId: deleteTodoItem
@@ -1427,7 +2039,7 @@ paths:
       summary: RefreshToken
       tags:
         - Token
-  /api/v1/user/:
+  /api/v1/user:
     patch:
       description: Update the current user's information, including the username and other fields
       operationId: updateUser
@@ -1455,6 +2067,34 @@ paths:
       summary: UpdateUser
       tags:
         - User
+  /api/v1/user/approve:
+    post:
+      description: Approve a pending user and promote them to user permission
+      operationId: approveUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveUserReqBody"
+              description: Request body containing user ID to approve
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmptyRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: ApproveUser
+      tags:
+        - User
   /api/v1/user/current:
     get:
       description: Get the current user's detailed information, including user ID, username, email, avatar, and permission information
@@ -1464,7 +2104,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/GetCurUserRsp"
+                $ref: "#/components/schemas/GetCurrentUserRsp"
           description: OK
         default:
           content:
@@ -1475,6 +2115,73 @@ paths:
       security:
         - jwtAuth: []
       summary: GetCurrentUser
+      tags:
+        - User
+  /api/v1/user/list:
+    get:
+      description: List users with pagination
+      operationId: listUsers
+      parameters:
+        - explode: false
+          in: query
+          name: page
+          required: true
+          schema:
+            format: int64
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: pageSize
+          required: true
+          schema:
+            format: int64
+            maximum: 50
+            minimum: 1
+            type: integer
+        - explode: false
+          in: query
+          name: query
+          schema:
+            maxLength: 100
+            type: string
+        - explode: false
+          in: query
+          name: sort
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - description: Sort field
+          explode: false
+          in: query
+          name: sortField
+          schema:
+            description: Sort field
+            enum:
+              - id
+              - createdAt
+              - lastLogin
+              - name
+              - email
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ListUsersRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: ListUsers
       tags:
         - User
   /health:

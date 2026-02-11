@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import { toast } from "sonner";
-import { getCurrentUser, setAuthToken } from "@/lib/api/config";
+import { getCurrentUser, setAuthToken } from "@/lib/api-config";
 import type { DetailedUser } from "@/lib/api/types.gen";
 
 interface AuthContextType {

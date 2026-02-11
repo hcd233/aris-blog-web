@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Github, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { oauth2Login } from "@/lib/api/config";
+import { oauth2Login } from "@/lib/api-config";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";

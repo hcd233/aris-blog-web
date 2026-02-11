@@ -16,7 +16,14 @@ export type ActionReqBody = {
     /**
      * Entity type to interact with
      */
-    entityType: 'article';
+    entityType: 'article' | 'comment';
+};
+
+export type ApproveUserReqBody = {
+    /**
+     * User ID to approve
+     */
+    userId: number;
 };
 
 export type CallbackReqBody = {
@@ -73,7 +80,7 @@ export type CosTempCredential = {
     /**
      * 请求ID
      */
-    requestId?: string;
+    requestId: string;
     /**
      * 临时密钥 SecretId
      */
@@ -105,6 +112,25 @@ export type CreateArticleReqBody = {
      * Title of the article
      */
     title: string;
+};
+
+export type CreateCommentReqBody = {
+    /**
+     * Article ID of the comment
+     */
+    articleID: number;
+    /**
+     * Content of the comment
+     */
+    content: string;
+    /**
+     * Images of the comment
+     */
+    images: Array<string> | null;
+    /**
+     * Parent comment ID
+     */
+    parentID: number;
 };
 
 export type CreateTodoItemsReqBody = {
@@ -345,14 +371,14 @@ export type GetCosTempCredentialRsp = {
     /**
      * COS临时密钥信息
      */
-    cosTempCredential?: CosTempCredential;
+    cosTempCredential: CosTempCredential;
     /**
      * Error body
      */
     error?: Error;
 };
 
-export type GetCurUserRsp = {
+export type GetCurrentUserRsp = {
     /**
      * Error body
      */
@@ -372,6 +398,36 @@ export type ListArticlesRsp = {
      * Error body
      */
     error?: Error;
+    /**
+     * Page info
+     */
+    pageInfo: PageInfo;
+};
+
+export type ListCommentsRsp = {
+    /**
+     * Comments to list
+     */
+    comments: Array<ListedComment> | null;
+    /**
+     * Error body
+     */
+    error?: Error;
+    /**
+     * Page info
+     */
+    pageInfo: PageInfo;
+};
+
+export type ListNotificationsRsp = {
+    /**
+     * Error body
+     */
+    error?: Error;
+    /**
+     * Notifications to list
+     */
+    notifications: Array<ListedNotification> | null;
     /**
      * Page info
      */
@@ -406,6 +462,21 @@ export type ListTodoItemsRsp = {
      * Items to list
      */
     todoItems: Array<DatailedTodoItem> | null;
+};
+
+export type ListUsersRsp = {
+    /**
+     * Error body
+     */
+    error?: Error;
+    /**
+     * Page info
+     */
+    pageInfo: PageInfo;
+    /**
+     * Users to list
+     */
+    users: Array<DetailedUser> | null;
 };
 
 export type ListedArticle = {
@@ -451,6 +522,88 @@ export type ListedArticle = {
     updatedAt: string;
 };
 
+export type ListedComment = {
+    /**
+     * Article ID of the comment
+     */
+    articleID: number;
+    /**
+     * Author of the comment
+     */
+    author: User;
+    /**
+     * Content of the comment
+     */
+    content: string;
+    /**
+     * Created time of the comment
+     */
+    createdAt: string;
+    /**
+     * ID of the comment
+     */
+    id: number;
+    /**
+     * Whether the current user has liked the comment
+     */
+    liked: boolean;
+    /**
+     * Likes of the comment
+     */
+    likes: number;
+    /**
+     * Parent comment ID
+     */
+    parentID: number;
+    /**
+     * Whether the current user has saved the comment
+     */
+    saved: boolean;
+    /**
+     * Saves of the comment
+     */
+    saves: number;
+    /**
+     * Updated time of the comment
+     */
+    updatedAt: string;
+};
+
+export type ListedNotification = {
+    /**
+     * Article of the notification
+     */
+    article?: NotifiedArticle;
+    /**
+     * Comment of the notification
+     */
+    comment?: NotifiedComment;
+    /**
+     * Content of the notification
+     */
+    content: string;
+    /**
+     * Created time of the notification
+     */
+    createdAt: string;
+    /**
+     * ID of the notification
+     */
+    id: number;
+    /**
+     * Sender of the notification
+     */
+    sender: User;
+    /**
+     * Status of the notification
+     */
+    status: string;
+    /**
+     * Type of the notification
+     */
+    type: string;
+};
+
 export type LoginResp = {
     /**
      * Error body
@@ -460,6 +613,40 @@ export type LoginResp = {
      * URL to redirect the user to for OAuth2 authorization
      */
     redirectURL: string;
+};
+
+export type NotifiedArticle = {
+    /**
+     * Cover image URL of the article
+     */
+    coverImage: string;
+    /**
+     * ID of the article
+     */
+    id: number;
+    /**
+     * Slug of the article
+     */
+    slug: string;
+    /**
+     * Title of the article
+     */
+    title: string;
+};
+
+export type NotifiedComment = {
+    /**
+     * Content of the comment
+     */
+    content: string;
+    /**
+     * Cover image URL of the comment
+     */
+    coverImage: string;
+    /**
+     * ID of the comment
+     */
+    id: number;
 };
 
 export type PageInfo = {
@@ -872,6 +1059,106 @@ export type ListArticlesResponses = {
 
 export type ListArticlesResponse = ListArticlesResponses[keyof ListArticlesResponses];
 
+export type DeleteCommentData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Unique identifier for the comment
+         */
+        id: number;
+    };
+    url: '/api/v1/comment';
+};
+
+export type DeleteCommentErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type DeleteCommentError = DeleteCommentErrors[keyof DeleteCommentErrors];
+
+export type DeleteCommentResponses = {
+    /**
+     * OK
+     */
+    200: EmptyRsp;
+};
+
+export type DeleteCommentResponse = DeleteCommentResponses[keyof DeleteCommentResponses];
+
+export type CreateCommentData = {
+    /**
+     * Request body containing fields to create
+     */
+    body?: CreateCommentReqBody;
+    path?: never;
+    query?: never;
+    url: '/api/v1/comment';
+};
+
+export type CreateCommentErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type CreateCommentError = CreateCommentErrors[keyof CreateCommentErrors];
+
+export type CreateCommentResponses = {
+    /**
+     * OK
+     */
+    200: EmptyRsp;
+};
+
+export type CreateCommentResponse = CreateCommentResponses[keyof CreateCommentResponses];
+
+export type ListCommentsData = {
+    body?: never;
+    path?: never;
+    query: {
+        page: number;
+        pageSize: number;
+        query?: string;
+        sort?: 'asc' | 'desc';
+        /**
+         * Sort field
+         */
+        sortField?: 'id' | 'createdAt' | 'updatedAt';
+        /**
+         * Article ID to filter
+         */
+        articleID: number;
+        /**
+         * Parent comment ID to filter
+         */
+        parentID?: number;
+    };
+    url: '/api/v1/comment/list';
+};
+
+export type ListCommentsErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type ListCommentsError = ListCommentsErrors[keyof ListCommentsErrors];
+
+export type ListCommentsResponses = {
+    /**
+     * OK
+     */
+    200: ListCommentsRsp;
+};
+
+export type ListCommentsResponse = ListCommentsResponses[keyof ListCommentsResponses];
+
 export type UploadImageData = {
     body?: {
         image?: Blob | File;
@@ -923,6 +1210,74 @@ export type GetCredentialResponses = {
 };
 
 export type GetCredentialResponse = GetCredentialResponses[keyof GetCredentialResponses];
+
+export type AckNotificationData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * ID of the notification to acknowledge
+         */
+        id: number;
+    };
+    url: '/api/v1/notification/ack';
+};
+
+export type AckNotificationErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type AckNotificationError = AckNotificationErrors[keyof AckNotificationErrors];
+
+export type AckNotificationResponses = {
+    /**
+     * OK
+     */
+    200: EmptyRsp;
+};
+
+export type AckNotificationResponse = AckNotificationResponses[keyof AckNotificationResponses];
+
+export type ListNotificationsData = {
+    body?: never;
+    path?: never;
+    query: {
+        page: number;
+        pageSize: number;
+        query?: string;
+        sort?: 'asc' | 'desc';
+        /**
+         * Sort field
+         */
+        sortField?: 'id' | 'createdAt';
+        /**
+         * Filter by status (unread/read), empty for all
+         */
+        status?: 'unread' | 'read';
+    };
+    url: '/api/v1/notification/list';
+};
+
+export type ListNotificationsErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type ListNotificationsError = ListNotificationsErrors[keyof ListNotificationsErrors];
+
+export type ListNotificationsResponses = {
+    /**
+     * OK
+     */
+    200: ListNotificationsRsp;
+};
+
+export type ListNotificationsResponse = ListNotificationsResponses[keyof ListNotificationsResponses];
 
 export type Oauth2CallbackData = {
     /**
@@ -1230,6 +1585,34 @@ export type UpdateUserResponses = {
 
 export type UpdateUserResponse = UpdateUserResponses[keyof UpdateUserResponses];
 
+export type ApproveUserData = {
+    /**
+     * Request body containing user ID to approve
+     */
+    body?: ApproveUserReqBody;
+    path?: never;
+    query?: never;
+    url: '/api/v1/user/approve';
+};
+
+export type ApproveUserErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type ApproveUserError = ApproveUserErrors[keyof ApproveUserErrors];
+
+export type ApproveUserResponses = {
+    /**
+     * OK
+     */
+    200: EmptyRsp;
+};
+
+export type ApproveUserResponse = ApproveUserResponses[keyof ApproveUserResponses];
+
 export type GetCurrentUserData = {
     body?: never;
     path?: never;
@@ -1250,10 +1633,44 @@ export type GetCurrentUserResponses = {
     /**
      * OK
      */
-    200: GetCurUserRsp;
+    200: GetCurrentUserRsp;
 };
 
 export type GetCurrentUserResponse = GetCurrentUserResponses[keyof GetCurrentUserResponses];
+
+export type ListUsersData = {
+    body?: never;
+    path?: never;
+    query: {
+        page: number;
+        pageSize: number;
+        query?: string;
+        sort?: 'asc' | 'desc';
+        /**
+         * Sort field
+         */
+        sortField?: 'id' | 'createdAt' | 'lastLogin' | 'name' | 'email';
+    };
+    url: '/api/v1/user/list';
+};
+
+export type ListUsersErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type ListUsersError = ListUsersErrors[keyof ListUsersErrors];
+
+export type ListUsersResponses = {
+    /**
+     * OK
+     */
+    200: ListUsersRsp;
+};
+
+export type ListUsersResponse = ListUsersResponses[keyof ListUsersResponses];
 
 export type HealthCheckData = {
     body?: never;
