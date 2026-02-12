@@ -99,6 +99,17 @@ export type CosTempCredential = {
     startTime: number;
 };
 
+export type CountCommentsRsp = {
+    /**
+     * Total count of comments for the article
+     */
+    count: number;
+    /**
+     * Error body
+     */
+    error?: Error;
+};
+
 export type CreateArticleReqBody = {
     /**
      * Content of the article
@@ -1116,6 +1127,36 @@ export type CreateCommentResponses = {
 };
 
 export type CreateCommentResponse = CreateCommentResponses[keyof CreateCommentResponses];
+
+export type CountCommentsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Article ID to count comments for
+         */
+        articleID: number;
+    };
+    url: '/api/v1/comment/count';
+};
+
+export type CountCommentsErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type CountCommentsError = CountCommentsErrors[keyof CountCommentsErrors];
+
+export type CountCommentsResponses = {
+    /**
+     * OK
+     */
+    200: CountCommentsRsp;
+};
+
+export type CountCommentsResponse = CountCommentsResponses[keyof CountCommentsResponses];
 
 export type ListCommentsData = {
     body?: never;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { listComments, createComment, deleteComment, doAction, undoAction } from "@/lib/api-config";
+import { listComments, createComment, deleteComment, doAction, undoAction, countComments } from "@/lib/api-config";
 import type { ListedComment } from "@/lib/api/types.gen";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -98,26 +98,40 @@ export function useComments(articleId: number) {
     if (loading) return;
     setLoading(true);
     try {
-      const { data, error } = await listComments({
-        query: {
-          articleID: articleId,
-          parentID: 0,
-          page: pageNum,
-          pageSize: PAGE_SIZE,
-          sort: "desc",
-          sortField: "createdAt",
-        },
-      });
-      if (error) {
+      // 同时获取评论列表和评论总数
+      const [listResult, countResult] = await Promise.all([
+        listComments({
+          query: {
+            articleID: articleId,
+            parentID: 0,
+            page: pageNum,
+            pageSize: PAGE_SIZE,
+            sort: "desc",
+            sortField: "createdAt",
+          },
+        }),
+        countComments({
+          query: {
+            articleID: articleId,
+          },
+        }),
+      ]);
+
+      if (listResult.error) {
         toast.error("获取评论失败");
         return;
       }
-      if (data) {
-        const newComments = data.comments ?? [];
+
+      if (listResult.data) {
+        const newComments = listResult.data.comments ?? [];
         setComments(prev => append ? [...prev, ...newComments] : newComments);
-        setTotal(data.pageInfo.total);
+        
+        // 使用 countComments 接口获取的评论总数
+        const totalCount = countResult.data?.count ?? listResult.data.pageInfo.total;
+        setTotal(totalCount);
+        
         setPage(pageNum);
-        setHasMore(pageNum * PAGE_SIZE < data.pageInfo.total);
+        setHasMore(pageNum * PAGE_SIZE < totalCount);
         setInitialLoaded(true);
 
         // 自动获取每条一级评论的子评论预览

@@ -119,6 +119,19 @@ components:
         - bucketName
         - region
       type: object
+    CountCommentsRsp:
+      additionalProperties: false
+      properties:
+        count:
+          description: Total count of comments for the article
+          format: int64
+          type: integer
+        error:
+          $ref: "#/components/schemas/Error"
+          description: Error body
+      required:
+        - count
+      type: object
     CreateArticleReqBody:
       additionalProperties: false
       properties:
@@ -1430,6 +1443,39 @@ paths:
       security:
         - jwtAuth: []
       summary: CreateComment
+      tags:
+        - Comment
+  /api/v1/comment/count:
+    get:
+      description: Count comments for an article
+      operationId: countComments
+      parameters:
+        - description: Article ID to count comments for
+          explode: false
+          in: query
+          name: articleID
+          required: true
+          schema:
+            description: Article ID to count comments for
+            format: int64
+            minimum: 1
+            type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountCommentsRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: CountComments
       tags:
         - Comment
   /api/v1/comment/list:

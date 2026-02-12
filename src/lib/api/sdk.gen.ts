@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AckNotificationData, AckNotificationErrors, AckNotificationResponses, ApproveUserData, ApproveUserErrors, ApproveUserResponses, ChatData, ChatErrors, ChatResponses, CreateArticleData, CreateArticleErrors, CreateArticleResponses, CreateCommentData, CreateCommentErrors, CreateCommentResponses, CreateTodoItemsData, CreateTodoItemsErrors, CreateTodoItemsResponses, DeleteArticleData, DeleteArticleErrors, DeleteArticleResponses, DeleteCommentData, DeleteCommentErrors, DeleteCommentResponses, DeleteTagData, DeleteTagErrors, DeleteTagResponses, DeleteTodoItemData, DeleteTodoItemErrors, DeleteTodoItemResponses, DoActionData, DoActionErrors, DoActionResponses, GetArticleData, GetArticleErrors, GetArticleResponses, GetCredentialData, GetCredentialErrors, GetCredentialResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, HealthCheckData, HealthCheckErrors, HealthCheckResponses, ListArticlesData, ListArticlesErrors, ListArticlesResponses, ListCommentsData, ListCommentsErrors, ListCommentsResponses, ListNotificationsData, ListNotificationsErrors, ListNotificationsResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTodoItemsData, ListTodoItemsErrors, ListTodoItemsResponses, ListUsersData, ListUsersErrors, ListUsersResponses, Oauth2CallbackData, Oauth2CallbackErrors, Oauth2CallbackResponses, Oauth2LoginData, Oauth2LoginErrors, Oauth2LoginResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, SseHealthCheckData, SseHealthCheckErrors, SseHealthCheckResponses, UndoActionData, UndoActionErrors, UndoActionResponses, UpdateArticleData, UpdateArticleErrors, UpdateArticleResponses, UpdateTodoItemData, UpdateTodoItemErrors, UpdateTodoItemResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
+import type { AckNotificationData, AckNotificationErrors, AckNotificationResponses, ApproveUserData, ApproveUserErrors, ApproveUserResponses, ChatData, ChatErrors, ChatResponses, CountCommentsData, CountCommentsErrors, CountCommentsResponses, CreateArticleData, CreateArticleErrors, CreateArticleResponses, CreateCommentData, CreateCommentErrors, CreateCommentResponses, CreateTodoItemsData, CreateTodoItemsErrors, CreateTodoItemsResponses, DeleteArticleData, DeleteArticleErrors, DeleteArticleResponses, DeleteCommentData, DeleteCommentErrors, DeleteCommentResponses, DeleteTagData, DeleteTagErrors, DeleteTagResponses, DeleteTodoItemData, DeleteTodoItemErrors, DeleteTodoItemResponses, DoActionData, DoActionErrors, DoActionResponses, GetArticleData, GetArticleErrors, GetArticleResponses, GetCredentialData, GetCredentialErrors, GetCredentialResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, HealthCheckData, HealthCheckErrors, HealthCheckResponses, ListArticlesData, ListArticlesErrors, ListArticlesResponses, ListCommentsData, ListCommentsErrors, ListCommentsResponses, ListNotificationsData, ListNotificationsErrors, ListNotificationsResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTodoItemsData, ListTodoItemsErrors, ListTodoItemsResponses, ListUsersData, ListUsersErrors, ListUsersResponses, Oauth2CallbackData, Oauth2CallbackErrors, Oauth2CallbackResponses, Oauth2LoginData, Oauth2LoginErrors, Oauth2LoginResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, SseHealthCheckData, SseHealthCheckErrors, SseHealthCheckResponses, UndoActionData, UndoActionErrors, UndoActionResponses, UpdateArticleData, UpdateArticleErrors, UpdateArticleResponses, UpdateTodoItemData, UpdateTodoItemErrors, UpdateTodoItemResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -151,6 +151,17 @@ export const createComment = <ThrowOnError extends boolean = false>(options?: Op
         'Content-Type': 'application/json',
         ...options?.headers
     }
+});
+
+/**
+ * CountComments
+ *
+ * Count comments for an article
+ */
+export const countComments = <ThrowOnError extends boolean = false>(options: Options<CountCommentsData, ThrowOnError>) => (options.client ?? client).get<CountCommentsResponses, CountCommentsErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/comment/count',
+    ...options
 });
 
 /**
