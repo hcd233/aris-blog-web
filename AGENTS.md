@@ -258,7 +258,7 @@ src/
 4. 新依赖项
 5. 新代码模式或约定
 
-**最后更新**: 2026-02-02
+**最后更新**: 2026-02-12
 
 ### 移动端适配
 - **功能需求**:
@@ -535,6 +535,18 @@ src/
   - src/app/auth/callback/[provider]/page.tsx
   - src/app/page.tsx
 
+### 2026-02-12 评论发送后页面不刷新
+- **现象**: 发送评论成功后，评论列表没有自动刷新，需要手动刷新页面才能看到新评论
+- **原因**: `refreshComments` 函数只更新了 `commentTotal` 状态，但评论列表数据是在 `CommentSection` 组件内部通过 `useComments` hook 管理的，没有触发重新获取
+- **解决方案**: 
+  1. 在 `article-detail-modal.tsx` 中添加 `refreshKey` state
+  2. 修改 `refreshComments` 函数为递增 `refreshKey`
+  3. 在 `CommentSection` 组件中添加 `refreshKey` prop
+  4. 在 `CommentSection` 中使用 `useEffect` 监听 `refreshKey` 变化，触发重新获取评论
+- **文件位置**: 
+  - src/components/article-detail-modal.tsx
+  - src/components/comment-section.tsx
+
 ### 2026-02-01 OAuth 回调弹窗未显示
 - **现象**: OAuth 授权后跳转到首页，但没有显示回调处理弹窗
 - **原因**: 
@@ -547,3 +559,29 @@ src/
 - **文件位置**: 
   - src/app/auth/callback/[provider]/page.tsx
   - src/app/page.tsx
+
+### 文章详情底部评论输入框（小红书风格）- 完整功能版
+- **功能需求**: 参照小红书评论输入框交互效果
+  1. 默认状态：底部显示窄输入框 + 点赞、收藏、评论、分享按钮（水平排列）
+  2. 点击输入框：展开为宽输入框，显示用户头像，隐藏原有按钮
+  3. 展开时显示工具栏（@、表情、图片按钮）和发送/取消按钮
+  4. 点击发送调用后端API，成功后刷新评论列表，Toast只提示成功不显示内容
+  5. 回复功能：点击评论回复按钮展开输入框，显示回复目标用户名和内容预览
+- **实现方案**:
+  1. 更新 `src/components/article-detail-modal.tsx`:
+     - 添加状态管理：`isInputExpanded`、`commentText`、`replyTarget`（回复目标）、`submitting`
+     - 添加 `refreshComments` 函数用于刷新评论列表
+     - 添加 `handleSubmitComment` 函数调用 `createComment` API
+     - 导入 `createComment` 和 `listComments` API
+     - 底部操作栏添加回复目标显示区域（在输入框上方显示"回复 xxx"和内容预览）
+     - 输入框 placeholder 根据回复目标动态变化
+     - 发送按钮添加 loading 状态显示
+     - 取消按钮同时清除 `replyTarget`
+     - 使用 `cn()` 配合过渡动画类名实现平滑切换
+  2. 更新 `src/components/comment-section.tsx`:
+     - 删除底部输入框（与 article-detail-modal 的输入框重复）
+     - 只保留评论列表展示功能
+     - 添加 `onReply` prop 支持回复回调
+- **文件位置**: 
+  - src/components/article-detail-modal.tsx
+  - src/components/comment-section.tsx

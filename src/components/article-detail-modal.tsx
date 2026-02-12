@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
-import { X, Heart, MessageCircle, Star, Share2, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Heart, MessageCircle, Star, Share2, ChevronLeft, ChevronRight, Send, Smile, AtSign, Image, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { getArticle } from "@/lib/api-config";
-import type { DetailedArticle } from "@/lib/api/types.gen";
+import { getArticle, createComment, listComments } from "@/lib/api-config";
+import type { DetailedArticle, ListedComment } from "@/lib/api/types.gen";
 import { RichTextContent } from "@/components/rich-text-content";
 import { CommentSection } from "@/components/comment-section";
 import { cn, formatDate } from "@/lib/utils";
@@ -32,8 +32,19 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
   const carouselRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number>(0);
 
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, isAuthenticated } = useAuth();
   const [commentTotal, setCommentTotal] = useState(0);
+  const [isInputExpanded, setIsInputExpanded] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [replyTarget, setReplyTarget] = useState<ListedComment | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // 刷新评论列表
+  const refreshComments = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
+  }, []);
 
   const {
     isLiked,
@@ -140,6 +151,70 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
   const handleSaveClick = async () => {
     if (article) {
       await handleSave(article.id);
+    }
+  };
+
+  // 处理键盘事件
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isInputExpanded) {
+        setIsInputExpanded(false);
+        setCommentText("");
+        setReplyTarget(null);
+      }
+    };
+
+    if (isInputExpanded) {
+      window.addEventListener("keydown", handleKeyDown);
+      // 聚焦输入框
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isInputExpanded]);
+
+  // 发送评论
+  const handleSubmitComment = async () => {
+    if (!isAuthenticated) {
+      toast.error("请先登录", { description: "登录后即可评论" });
+      return;
+    }
+    if (!commentText.trim() || !article?.id) return;
+
+    setSubmitting(true);
+    try {
+      // 计算 parentID：如果是回复评论，parentID为一级评论ID
+      const parentID = replyTarget
+        ? (replyTarget.parentID === 0 ? replyTarget.id : replyTarget.parentID)
+        : 0;
+
+      const { error } = await createComment({
+        body: {
+          articleID: article.id,
+          parentID,
+          content: commentText.trim(),
+          images: null,
+        },
+      });
+
+      if (error) {
+        toast.error("发送评论失败");
+        return;
+      }
+
+      toast.success("评论成功");
+      setCommentText("");
+      setIsInputExpanded(false);
+      setReplyTarget(null);
+      
+      // 刷新评论列表
+      await refreshComments();
+    } catch {
+      toast.error("发送评论失败");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -341,64 +416,197 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                         articleId={article.id}
                         articleAuthorId={article.author.id}
                         onTotalChange={setCommentTotal}
+                        refreshKey={refreshKey}
+                        onReply={(comment) => {
+                          setReplyTarget(comment);
+                          setIsInputExpanded(true);
+                          setTimeout(() => inputRef.current?.focus(), 100);
+                        }}
                       />
                     )}
                   </div>
 
                   {/* 底部操作栏 */}
-                  <div className="px-5 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-end gap-4 bg-white dark:bg-[#1a1a1a]">
-                    <button
-                      className={cn(
-                        "flex flex-col items-center gap-0.5 transition-colors",
-                        isLiked
-                          ? "text-[#ff2442]"
-                          : "text-gray-600 dark:text-gray-400 hover:text-[#ff2442]"
-                      )}
-                      onClick={handleLikeClick}
-                      disabled={isLikeLoading}
-                    >
-                      <Heart
-                        className={cn(
-                          "w-6 h-6 transition-all",
-                          isLiked && "fill-current scale-110"
-                        )}
-                      />
-                      <span className="text-[10px]">{likesCount}</span>
-                    </button>
-                    <button
-                      className={cn(
-                        "flex flex-col items-center gap-0.5 transition-colors",
-                        isSaved
-                          ? "text-yellow-500"
-                          : "text-gray-600 dark:text-gray-400 hover:text-yellow-500"
-                      )}
-                      onClick={handleSaveClick}
-                      disabled={isSaveLoading}
-                    >
-                      <Star
-                        className={cn(
-                          "w-6 h-6 transition-all",
-                          isSaved && "fill-current scale-110"
-                        )}
-                      />
-                      <span className="text-[10px]">{savesCount}</span>
-                    </button>
-                    <button
-                      className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-400 hover:text-blue-500 transition-colors"
-                    >
-                      <MessageCircle className="w-6 h-6" />
-                      <span className="text-[10px]">{commentTotal}</span>
-                    </button>
-                    <button
-                      className="flex flex-col items-center gap-0.5 text-gray-600 dark:text-gray-400 hover:text-green-500 transition-colors"
-                      onClick={() =>
-                        toast.info("敬请期待", {
-                          description: "分享功能正在开发中",
-                        })
-                      }
-                    >
-                      <Share2 className="w-6 h-6" />
-                    </button>
+                  <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-[#1a1a1a]">
+                    {/* 回复目标提示 */}
+                    {isInputExpanded && replyTarget && (
+                      <div className="mb-2 text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">回复 </span>
+                        <span className="text-gray-900 dark:text-white font-medium">{replyTarget.author.name}</span>
+                        <p className="text-gray-400 dark:text-gray-500 text-xs mt-1 line-clamp-1">
+                          {replyTarget.content}
+                        </p>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-3">
+                      {/* 用户头像（始终显示） */}
+                      <Avatar className="h-8 w-8 shrink-0">
+                        <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
+                        <AvatarFallback className="text-xs bg-gradient-to-br from-purple-500 to-blue-500 text-white">
+                          {currentUser?.name?.charAt(0) || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      {/* 输入框区域 */}
+                      <div className="flex-1 flex flex-col">
+                        <div
+                          className={cn(
+                            "relative transition-all duration-300 ease-out",
+                            isInputExpanded && "flex-1"
+                          )}
+                        >
+                          <textarea
+                            ref={inputRef}
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            onFocus={() => setIsInputExpanded(true)}
+                            placeholder={replyTarget ? `回复 ${replyTarget.author.name}...` : "说点什么..."}
+                            rows={1}
+                            className={cn(
+                              "w-full resize-none outline-none transition-all duration-300",
+                              "bg-gray-100 dark:bg-[#2a2a2a] text-gray-900 dark:text-white",
+                              "placeholder:text-gray-400 dark:placeholder:text-gray-500",
+                              isInputExpanded
+                                ? "px-4 py-3 rounded-2xl min-h-[80px] max-h-[120px] text-sm"
+                                : "px-4 py-2.5 rounded-full h-10 text-sm overflow-hidden"
+                            )}
+                          />
+                        </div>
+                        
+                        {/* 展开时的工具栏 */}
+                        <div
+                          className={cn(
+                            "flex items-center justify-between mt-2 transition-all duration-300 overflow-hidden",
+                            isInputExpanded ? "h-6 opacity-100" : "h-0 opacity-0"
+                          )}
+                        >
+                          <div className="flex items-center gap-3">
+                            <button
+                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                              onClick={() => toast.info("敬请期待", { description: "@功能正在开发中" })}
+                            >
+                              <AtSign className="w-5 h-5" />
+                            </button>
+                            <button
+                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                              onClick={() => toast.info("敬请期待", { description: "表情功能正在开发中" })}
+                            >
+                              <Smile className="w-5 h-5" />
+                            </button>
+                            <button
+                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                              onClick={() => toast.info("敬请期待", { description: "图片功能正在开发中" })}
+                            >
+                              <Image className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 操作按钮区域 */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        {/* 默认状态：点赞、收藏、评论、分享（水平排列，图标+数字） */}
+                        <div
+                          className={cn(
+                            "flex items-center gap-4 transition-all duration-300",
+                            isInputExpanded ? "hidden" : "flex"
+                          )}
+                        >
+                          <button
+                            className={cn(
+                              "flex items-center gap-1 transition-colors",
+                              isLiked
+                                ? "text-[#ff2442]"
+                                : "text-gray-600 dark:text-gray-400 hover:text-[#ff2442]"
+                            )}
+                            onClick={handleLikeClick}
+                            disabled={isLikeLoading}
+                          >
+                            <Heart
+                              className={cn(
+                                "w-5 h-5 transition-all",
+                                isLiked && "fill-current"
+                              )}
+                            />
+                            <span className="text-sm">{likesCount}</span>
+                          </button>
+                          <button
+                            className={cn(
+                              "flex items-center gap-1 transition-colors",
+                              isSaved
+                                ? "text-yellow-500"
+                                : "text-gray-600 dark:text-gray-400 hover:text-yellow-500"
+                            )}
+                            onClick={handleSaveClick}
+                            disabled={isSaveLoading}
+                          >
+                            <Star
+                              className={cn(
+                                "w-5 h-5 transition-all",
+                                isSaved && "fill-current"
+                              )}
+                            />
+                            <span className="text-sm">{savesCount}</span>
+                          </button>
+                          <button
+                            className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-blue-500 transition-colors"
+                          >
+                            <MessageCircle className="w-5 h-5" />
+                            <span className="text-sm">{commentTotal}</span>
+                          </button>
+                          <button
+                            className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-green-500 transition-colors"
+                            onClick={() =>
+                              toast.info("敬请期待", {
+                                description: "分享功能正在开发中",
+                              })
+                            }
+                          >
+                            <Share2 className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        {/* 展开状态：取消和发送 */}
+                        <div
+                          className={cn(
+                            "flex items-center gap-2 transition-all duration-300",
+                            isInputExpanded ? "flex" : "hidden"
+                          )}
+                        >
+                          <button
+                            onClick={() => {
+                              setIsInputExpanded(false);
+                              setCommentText("");
+                              setReplyTarget(null);
+                            }}
+                            disabled={submitting}
+                            className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors whitespace-nowrap disabled:opacity-50"
+                          >
+                            取消
+                          </button>
+                          <button
+                            onClick={handleSubmitComment}
+                            disabled={!commentText.trim() || submitting}
+                            className={cn(
+                              "px-5 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex items-center gap-1",
+                              commentText.trim() && !submitting
+                                ? "bg-[#ff2442] text-white hover:bg-[#e01e3a]"
+                                : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                            )}
+                          >
+                            {submitting ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                发送中
+                              </>
+                            ) : (
+                              "发送"
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </>
