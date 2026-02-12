@@ -13,6 +13,7 @@ import { cn, formatDate } from "@/lib/utils";
 import { useArticleActions } from "@/hooks/use-article-actions";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface ArticleDetailModalProps {
   articleSlug: string;
@@ -279,17 +280,19 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                 <div className="flex-1 flex flex-col h-[50vh] md:h-full">
                   <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={article.author.avatar} alt={article.author.name} />
-                        <AvatarFallback className="text-sm bg-gradient-to-br from-purple-500 to-blue-500 text-white">
-                          {article.author.name.charAt(0) || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white text-sm">
-                          {article.author.name}
-                        </p>
-                      </div>
+                      <Link href={currentUser?.id === article.author.id ? "/profile" : `/user/${article.author.id}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={article.author.avatar} alt={article.author.name} />
+                          <AvatarFallback className="text-sm bg-gradient-to-br from-purple-500 to-blue-500 text-white">
+                            {article.author.name.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white text-sm">
+                            {article.author.name}
+                          </p>
+                        </div>
+                      </Link>
                     </div>
                     <Button
                       size="sm"

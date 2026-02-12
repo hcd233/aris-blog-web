@@ -1,19 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { Heart, MessageCircle, Trash2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { ListedComment } from "@/lib/api/types.gen";
+import type { RepliesState } from "@/hooks/use-comments";
 import { cn, formatDate } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-
-type RepliesState = {
-  comments: ListedComment[];
-  total: number;
-  page: number;
-  hasMore: boolean;
-  loading: boolean;
-};
+import Link from "next/link";
 
 type CommentItemProps = {
   comment: ListedComment;
@@ -21,7 +14,7 @@ type CommentItemProps = {
   articleAuthorId?: number;
   // 回复相关
   repliesState?: RepliesState;
-  onExpandReplies?: (parentId: number) => void;
+  onExpandAllReplies?: (parentId: number) => void;
   onLoadMoreReplies?: (parentId: number) => void;
   // 操作
   onReply?: (comment: ListedComment) => void;
@@ -37,7 +30,7 @@ export function CommentItem({
   comment,
   articleAuthorId,
   repliesState,
-  onExpandReplies,
+  onExpandAllReplies,
   onLoadMoreReplies,
   onReply,
   onDelete,
@@ -46,44 +39,49 @@ export function CommentItem({
   replyToName,
 }: CommentItemProps) {
   const { user: currentUser } = useAuth();
-  const [repliesExpanded, setRepliesExpanded] = useState(false);
 
   const isArticleAuthor = articleAuthorId !== undefined && comment.author.id === articleAuthorId;
   const isOwner = currentUser?.id === comment.author.id;
 
-  const handleExpandReplies = () => {
-    if (!repliesExpanded && onExpandReplies) {
-      onExpandReplies(comment.id);
-    }
-    setRepliesExpanded(!repliesExpanded);
-  };
+  // 子评论数据
+  const replies = repliesState?.comments ?? [];
+  const replyTotal = repliesState?.total ?? 0;
+  const repliesLoading = repliesState?.loading ?? false;
+  // 当前显示的回复数少于总数，说明处于预览模式
+  const hasMoreReplies = repliesState ? repliesState.hasMore : false;
+  const remainingCount = replyTotal - replies.length;
 
-  const replyCount = repliesState?.total ?? 0;
+  // 用户主页链接
+  const userHref = currentUser?.id === comment.author.id ? "/profile" : `/user/${comment.author.id}`;
 
   return (
     <div className={cn("group", isReply ? "ml-12 mt-3" : "")}>
       <div className="flex gap-3">
         {/* 头像 */}
-        <Avatar className={cn("flex-shrink-0", isReply ? "h-7 w-7" : "h-9 w-9")}>
-          <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
-          <AvatarFallback className={cn(
-            "bg-gradient-to-br from-purple-500 to-blue-500 text-white",
-            isReply ? "text-[10px]" : "text-xs"
-          )}>
-            {comment.author.name.charAt(0) || "U"}
-          </AvatarFallback>
-        </Avatar>
+        <Link href={userHref} className="flex-shrink-0">
+          <Avatar className={cn("flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity", isReply ? "h-7 w-7" : "h-9 w-9")}>
+            <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
+            <AvatarFallback className={cn(
+              "bg-gradient-to-br from-purple-500 to-blue-500 text-white",
+              isReply ? "text-[10px]" : "text-xs"
+            )}>
+              {comment.author.name.charAt(0) || "U"}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
 
         {/* 内容区域 */}
         <div className="flex-1 min-w-0">
           {/* 昵称行 */}
           <div className="flex items-center gap-2">
-            <span className={cn(
-              "font-medium text-gray-900 dark:text-white truncate",
-              isReply ? "text-xs" : "text-sm"
-            )}>
-              {comment.author.name}
-            </span>
+            <Link href={userHref} className="hover:opacity-80 transition-opacity">
+              <span className={cn(
+                "font-medium text-gray-900 dark:text-white truncate",
+                isReply ? "text-xs" : "text-sm"
+              )}>
+                {comment.author.name}
+              </span>
+            </Link>
             {isArticleAuthor && (
               <span className="px-1.5 py-0.5 text-[10px] leading-none rounded bg-[#ff2442]/10 text-[#ff2442] font-medium">
                 作者
@@ -137,63 +135,60 @@ export function CommentItem({
             )}
           </div>
 
-          {/* 展开回复（仅一级评论） */}
-          {!isReply && replyCount > 0 && (
-            <button
-              className="mt-2 flex items-center gap-1 text-xs text-[#576b95] dark:text-[#7b9bd1] hover:opacity-80 transition-opacity"
-              onClick={handleExpandReplies}
-            >
-              {repliesExpanded ? (
-                <>
-                  <ChevronUp className="w-3.5 h-3.5" />
-                  收起回复
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-3.5 h-3.5" />
-                  展开 {replyCount} 条回复
-                </>
+          {/* 子评论列表（仅一级评论，默认展示） */}
+          {!isReply && replies.length > 0 && (
+            <div className="mt-1">
+              {replies.map((reply) => (
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  articleAuthorId={articleAuthorId}
+                  isReply
+                  replyToName={reply.parentID === comment.id ? comment.author.name : undefined}
+                  onReply={onReply}
+                  onDelete={onDelete}
+                  onToggleLike={onToggleLike}
+                />
+              ))}
+
+              {/* 展开更多回复 */}
+              {hasMoreReplies && remainingCount > 0 && (
+                <button
+                  className="ml-12 mt-2 flex items-center gap-1 text-xs text-[#576b95] dark:text-[#7b9bd1] hover:opacity-80 transition-opacity"
+                  onClick={() => onExpandAllReplies?.(comment.id)}
+                  disabled={repliesLoading}
+                >
+                  {repliesLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
+                  展开更多回复
+                </button>
               )}
-            </button>
+
+              {/* 已全部展开且还有分页 */}
+              {hasMoreReplies && remainingCount <= 0 && (
+                <button
+                  className="ml-12 mt-2 flex items-center gap-1 text-xs text-[#576b95] dark:text-[#7b9bd1] hover:opacity-80 transition-opacity"
+                  onClick={() => onLoadMoreReplies?.(comment.id)}
+                  disabled={repliesLoading}
+                >
+                  {repliesLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
+                  查看更多回复
+                </button>
+              )}
+            </div>
           )}
 
-          {/* 回复列表 */}
-          {!isReply && repliesExpanded && repliesState && (
-            <div className="mt-1">
-              {repliesState.loading && repliesState.comments.length === 0 ? (
-                <div className="flex items-center justify-center py-3">
-                  <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-                </div>
-              ) : (
-                <>
-                  {repliesState.comments.map((reply) => (
-                    <CommentItem
-                      key={reply.id}
-                      comment={reply}
-                      articleAuthorId={articleAuthorId}
-                      isReply
-                      replyToName={reply.parentID === comment.id ? comment.author.name : undefined}
-                      onReply={onReply}
-                      onDelete={onDelete}
-                      onToggleLike={onToggleLike}
-                    />
-                  ))}
-                  {repliesState.hasMore && (
-                    <button
-                      className="ml-12 mt-2 flex items-center gap-1 text-xs text-[#576b95] dark:text-[#7b9bd1] hover:opacity-80 transition-opacity"
-                      onClick={() => onLoadMoreReplies?.(comment.id)}
-                      disabled={repliesState.loading}
-                    >
-                      {repliesState.loading ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <ChevronDown className="w-3.5 h-3.5" />
-                      )}
-                      查看更多回复
-                    </button>
-                  )}
-                </>
-              )}
+          {/* 子评论加载中（首次加载无数据时） */}
+          {!isReply && repliesLoading && replies.length === 0 && replyTotal > 0 && (
+            <div className="ml-12 mt-2 flex items-center py-2">
+              <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
             </div>
           )}
         </div>

@@ -6,6 +6,8 @@ import type { ListedArticle } from "@/lib/api/types.gen";
 import { cn, getGradient, getImageDimensions, calculateImageHeight } from "@/lib/utils";
 import { Heart } from "lucide-react";
 import { useArticleActions } from "@/hooks/use-article-actions";
+import { useAuth } from "@/lib/auth";
+import Link from "next/link";
 
 interface ArticleCardProps {
   article: ListedArticle;
@@ -14,6 +16,7 @@ interface ArticleCardProps {
 }
 
 export function ArticleCard({ article, onClick, onLikeChange }: ArticleCardProps) {
+  const { user: currentUser } = useAuth();
   const gradient = getGradient(article.id);
   const hasCoverImage = article.coverImage && article.coverImage.length > 0;
   
@@ -105,7 +108,11 @@ export function ArticleCard({ article, onClick, onLikeChange }: ArticleCardProps
       </h3>
 
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <Link
+          href={currentUser?.id === article.author.id ? "/profile" : `/user/${article.author.id}`}
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Avatar className="h-5 w-5">
             <AvatarImage src={article.author.avatar} alt={article.author.name} />
             <AvatarFallback className="text-[10px] bg-gradient-to-br from-purple-500 to-blue-500 text-white">
@@ -113,7 +120,7 @@ export function ArticleCard({ article, onClick, onLikeChange }: ArticleCardProps
             </AvatarFallback>
           </Avatar>
           <span className="text-gray-500 dark:text-[#999] text-xs">{article.author.name}</span>
-        </div>
+        </Link>
         
         <button
           onClick={handleLikeClick}

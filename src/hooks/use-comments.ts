@@ -7,9 +7,10 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 
 const PAGE_SIZE = 20;
+// 子评论默认展示条数
+const DEFAULT_REPLIES_PREVIEW = 4;
 
-// 一级评论的回复数缓存（parentID -> 回复总数）
-type RepliesState = {
+export type RepliesState = {
   comments: ListedComment[];
   total: number;
   page: number;
@@ -33,6 +34,64 @@ export function useComments(articleId: number) {
 
   // 提交中状态
   const [submitting, setSubmitting] = useState(false);
+
+  // 获取某条评论的二级回复（预览模式只拿前几条）
+  const fetchReplies = useCallback(async (parentId: number, pageNum: number = 1, append: boolean = false, pageSize: number = PAGE_SIZE) => {
+    setRepliesMap(prev => ({
+      ...prev,
+      [parentId]: {
+        ...prev[parentId],
+        comments: prev[parentId]?.comments ?? [],
+        total: prev[parentId]?.total ?? 0,
+        page: prev[parentId]?.page ?? 1,
+        hasMore: prev[parentId]?.hasMore ?? true,
+        loading: true,
+      },
+    }));
+
+    try {
+      const { data, error } = await listComments({
+        query: {
+          articleID: articleId,
+          parentID: parentId,
+          page: pageNum,
+          pageSize,
+          sort: "asc",
+          sortField: "createdAt",
+        },
+      });
+      if (error) {
+        toast.error("获取回复失败");
+        return;
+      }
+      if (data) {
+        const newReplies = data.comments ?? [];
+        setRepliesMap(prev => ({
+          ...prev,
+          [parentId]: {
+            comments: append ? [...(prev[parentId]?.comments ?? []), ...newReplies] : newReplies,
+            total: data.pageInfo.total,
+            page: pageNum,
+            hasMore: pageNum * pageSize < data.pageInfo.total,
+            loading: false,
+          },
+        }));
+      }
+    } catch {
+      toast.error("获取回复失败");
+      setRepliesMap(prev => ({
+        ...prev,
+        [parentId]: {
+          ...prev[parentId],
+          comments: prev[parentId]?.comments ?? [],
+          total: prev[parentId]?.total ?? 0,
+          page: prev[parentId]?.page ?? 1,
+          hasMore: prev[parentId]?.hasMore ?? true,
+          loading: false,
+        },
+      }));
+    }
+  }, [articleId]);
 
   // 获取一级评论（parentID=0）
   const fetchComments = useCallback(async (pageNum: number = 1, append: boolean = false) => {
@@ -60,13 +119,19 @@ export function useComments(articleId: number) {
         setPage(pageNum);
         setHasMore(pageNum * PAGE_SIZE < data.pageInfo.total);
         setInitialLoaded(true);
+
+        // 自动获取每条一级评论的子评论预览
+        const parentIds = newComments.map(c => c.id);
+        if (parentIds.length > 0) {
+          parentIds.forEach(id => fetchReplies(id, 1, false, DEFAULT_REPLIES_PREVIEW));
+        }
       }
     } catch {
       toast.error("获取评论失败");
     } finally {
       setLoading(false);
     }
-  }, [articleId, loading]);
+  }, [articleId, loading, fetchReplies]);
 
   // 加载更多一级评论
   const loadMore = useCallback(() => {
@@ -75,71 +140,18 @@ export function useComments(articleId: number) {
     }
   }, [fetchComments, hasMore, loading, page]);
 
-  // 获取某条评论的二级回复
-  const fetchReplies = useCallback(async (parentId: number, pageNum: number = 1, append: boolean = false) => {
-    setRepliesMap(prev => ({
-      ...prev,
-      [parentId]: {
-        ...prev[parentId],
-        comments: prev[parentId]?.comments ?? [],
-        total: prev[parentId]?.total ?? 0,
-        page: prev[parentId]?.page ?? 1,
-        hasMore: prev[parentId]?.hasMore ?? true,
-        loading: true,
-      },
-    }));
-
-    try {
-      const { data, error } = await listComments({
-        query: {
-          articleID: articleId,
-          parentID: parentId,
-          page: pageNum,
-          pageSize: PAGE_SIZE,
-          sort: "asc",
-          sortField: "createdAt",
-        },
-      });
-      if (error) {
-        toast.error("获取回复失败");
-        return;
-      }
-      if (data) {
-        const newReplies = data.comments ?? [];
-        setRepliesMap(prev => ({
-          ...prev,
-          [parentId]: {
-            comments: append ? [...(prev[parentId]?.comments ?? []), ...newReplies] : newReplies,
-            total: data.pageInfo.total,
-            page: pageNum,
-            hasMore: pageNum * PAGE_SIZE < data.pageInfo.total,
-            loading: false,
-          },
-        }));
-      }
-    } catch {
-      toast.error("获取回复失败");
-      setRepliesMap(prev => ({
-        ...prev,
-        [parentId]: {
-          ...prev[parentId],
-          comments: prev[parentId]?.comments ?? [],
-          total: prev[parentId]?.total ?? 0,
-          page: prev[parentId]?.page ?? 1,
-          hasMore: prev[parentId]?.hasMore ?? true,
-          loading: false,
-        },
-      }));
-    }
-  }, [articleId]);
-
-  // 加载更多回复
+  // 加载更多回复（展开全部时使用完整分页）
   const loadMoreReplies = useCallback((parentId: number) => {
     const state = repliesMap[parentId];
     if (state && state.hasMore && !state.loading) {
-      fetchReplies(parentId, state.page + 1, true);
+      fetchReplies(parentId, state.page + 1, true, PAGE_SIZE);
     }
   }, [repliesMap, fetchReplies]);
+
+  // 展开全部回复（首次从预览切换到完整列表）
+  const expandAllReplies = useCallback((parentId: number) => {
+    fetchReplies(parentId, 1, false, PAGE_SIZE);
+  }, [fetchReplies]);
 
   // 发布评论
   const submitComment = useCallback(async (content: string, parentID: number = 0) => {
@@ -281,6 +293,7 @@ export function useComments(articleId: number) {
     loadMore,
     fetchReplies,
     loadMoreReplies,
+    expandAllReplies,
     submitComment,
     removeComment,
     toggleCommentLike,

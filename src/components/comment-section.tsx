@@ -35,6 +35,7 @@ export function CommentSection({
     loadMore,
     fetchReplies,
     loadMoreReplies,
+    expandAllReplies,
     submitComment,
     removeComment,
     toggleCommentLike,
@@ -103,13 +104,6 @@ export function CommentSection({
     }
   }, [inputValue, replyTarget, submitComment]);
 
-  // 展开二级回复
-  const handleExpandReplies = useCallback((parentId: number) => {
-    if (!repliesMap[parentId]) {
-      fetchReplies(parentId, 1, false);
-    }
-  }, [repliesMap, fetchReplies]);
-
   // textarea 自动调高
   const handleTextareaInput = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
@@ -150,7 +144,7 @@ export function CommentSection({
                 comment={comment}
                 articleAuthorId={articleAuthorId}
                 repliesState={repliesMap[comment.id]}
-                onExpandReplies={handleExpandReplies}
+                onExpandAllReplies={expandAllReplies}
                 onLoadMoreReplies={loadMoreReplies}
                 onReply={handleReply}
                 onDelete={removeComment}
