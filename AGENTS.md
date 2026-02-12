@@ -60,8 +60,8 @@ NODE_ENV=production        # 生产模式
 NEXT_TELEMETRY_DISABLED=1  # 禁用 Next.js 遥测
 PORT=3000                  # 服务端口
 HOSTNAME=0.0.0.0           # 监听地址
-NEXT_PUBLIC_API_BASE_URL=https://api.mem.lvlvko.top  # API 基础地址（默认）
-NEXT_PUBLIC_SITE_ICON_URL=https://api.mem.lvlvko.top/static/web-icon.png  # 网站图标URL
+NEXT_PUBLIC_API_BASE_URL=https://api-dev.blog.lvlvko.top  # API 基础地址（默认）
+NEXT_PUBLIC_SITE_ICON_URL=https://api-dev.blog.lvlvko.top/static/web-icon.png  # 网站图标URL
 ```
 
 ### 自定义后端地址
@@ -194,8 +194,11 @@ toast.info("敬请期待", {
 | `src/lib/api/config.ts` | API客户端配置 |
 | `src/lib/auth.tsx` | 认证上下文/Provider |
 | `src/lib/theme.tsx` | 暗黑/亮色模式Provider |
+| `src/lib/notification-context.tsx` | 通知上下文，管理未读通知数 |
+| `src/hooks/use-unread-notifications.ts` | 未读通知数hook |
 | `src/app/globals.css` | Tailwind CSS v4 配置 |
 | `src/app/profile/page.tsx` | 个人资料页面（小红书风格） |
+| `src/app/notifications/page.tsx` | 通知页面（小红书风格，支持Tab切换） |
 | `src/components/ui/sonner.tsx` | Toast通知组件（基于sonner） |
 | `src/components/article-detail-modal.tsx` | 文章详情弹窗，支持多图片轮播（小红书风格） |
 | `src/components/login-dialog.tsx` | 登录弹窗组件（小红书风格，响应式布局） |
@@ -259,6 +262,77 @@ src/
 5. 新代码模式或约定
 
 **最后更新**: 2026-02-12
+
+### 通知功能增强 - Tab分类筛选与未读数显示（API更新版）
+- **API更新**: 从 api-dev.blog.lvlvko.top 拉取最新OpenAPI规范
+  - 新增 `countNotifications` 端点 - 统计通知总数
+  - `listNotifications` 新增 `category` 参数 - 支持服务端分类筛选
+  - category可选值：`like_and_save`（赞和收藏）、`comment_and_at`（评论和@）
+- **功能需求**:
+  1. 支持在Tab导航选取分类：全部、评论和@、赞和关注
+  2. 在主页通知图标显示未读消息数
+  3. 通过定期拉取countNotifications接口实现
+- **实现方案**:
+  1. **重新生成API客户端**:
+     - 使用 `npx openapi-ts` 从新的OpenAPI规范重新生成
+     - 导出新的 `countNotifications` 函数
+  2. **更新 `src/lib/notification-context.tsx`**:
+     - 使用 `countNotifications` 获取总通知数
+     - 使用 `listNotifications` 获取未读通知数（status=unread, pageSize=1）
+     - 优先使用countNotifications，失败时回退到listNotifications
+  3. **更新 `src/app/notifications/page.tsx`**:
+     - 使用 `category` 参数进行服务端分类筛选
+     - Tab映射：comment_and_at（评论和@）、like_and_save（赞和收藏）
+     - "新增关注"仍使用前端过滤（API暂无此category）
+  4. 其他文件保持不变（sidebar、mobile-nav、layout）
+- **技术要点**:
+  - 服务端分类筛选减少数据传输，提升性能
+  - `countNotifications` 目前无查询参数，返回总通知数
+  - 未读数仍通过 `listNotifications` + `status=unread` + `pageSize=1` 获取
+- **使用的 API**:
+  - `countNotifications`: 获取通知总数（新增）
+  - `listNotifications`: 获取通知列表（支持category参数）
+  - `ackNotification`: 标记单个通知为已读
+- **文件位置**:
+  - src/lib/api/（重新生成）
+  - src/lib/api-config.ts（更新导出）
+  - src/lib/notification-context.tsx（更新使用新API）
+  - src/app/notifications/page.tsx（更新使用category参数）
+
+### 小红书风格通知页面
+- **功能需求**:
+  1. 参照小红书样式实现通知功能
+  2. 支持 Tab 切换：评论和@、赞和收藏、新增关注
+  3. 显示通知列表，包括用户头像、操作类型、时间、相关内容
+  4. 点击通知标记为已读并跳转到对应文章
+  5. 未读通知显示红点标记
+- **实现方案**:
+  1. 创建 `src/app/notifications/page.tsx`:
+     - 小红书风格的通知列表页面
+     - 顶部 Tab 导航：全部、评论和@、赞和收藏、新增关注
+     - 通知项包含：用户头像、用户名、操作类型（赞了/评论了/关注了）、时间
+     - 评论/回复通知显示评论内容预览
+     - 右侧显示文章封面图
+     - 未读通知背景高亮显示，并有红点标记
+     - 点击通知调用 `ackNotification` 标记为已读
+     - 点击后跳转到首页并带上 `?article=slug` 参数打开文章详情
+  2. 更新 `src/app/page.tsx`:
+     - 添加 `ArticleSlugHandler` 组件监听 URL 参数
+     - 从 `?article=slug` 参数获取文章 slug 并自动打开详情弹窗
+     - 关闭弹窗时清除 URL 参数
+  3. 更新 `src/components/mobile-nav.tsx`:
+     - 启用通知按钮（移除 disabled）
+     - 添加未登录检查，未登录时点击提示登录
+  4. 更新 `src/components/ui/empty-state.tsx`:
+     - 添加 "bell" 图标支持，用于通知页面空状态
+- **使用的 API**:
+  - `listNotifications`: 获取通知列表（支持分页和状态过滤）
+  - `ackNotification`: 标记通知为已读
+- **文件位置**:
+  - src/app/notifications/page.tsx（新增）
+  - src/app/page.tsx（更新）
+  - src/components/mobile-nav.tsx（更新）
+  - src/components/ui/empty-state.tsx（更新）
 
 ### 移动端适配
 - **功能需求**:
@@ -388,7 +462,7 @@ src/
 - **现象**: 文章详情页只支持展示单张封面图片，不支持多图片展示
 - **原因**: API旧版本使用coverImage字段存储单张图片，新版本改为images数组
 - **解决方案**: 
-  1. 使用openapi-ts从https://api.mem.lvlvko.top/openapi.yaml拉取最新API模型
+  1. 使用openapi-ts从https://api-dev.blog.lvlvko.top/openapi.yaml拉取最新API模型
   2. 更新article-detail-modal组件，实现小红书风格的多图片轮播：
      - 左右滑动切换图片（支持鼠标和触摸）
      - 左右箭头按钮切换（小红书风格，边缘渐变背景）
@@ -436,7 +510,7 @@ src/
 ### 2026-01-31 API客户端配置 - baseUrl缺失
 - **现象**: API请求无法到达后端，请求404或失败
 - **原因**: 使用`openapi-ts`重新生成API模型后，手动创建的`config.ts`漏掉了`baseUrl`配置，导致客户端使用默认空字符串作为baseUrl
-- **解决方案**: 在`config.ts`中添加`baseUrl: "https://api.mem.lvlvko.top"`
+- **解决方案**: 在`config.ts`中添加`baseUrl: "https://api-dev.blog.lvlvko.top"`
 - **文件位置**: src/lib/api/config.ts
 
 ### 2026-01-31 API客户端配置 - 初始化顺序错误

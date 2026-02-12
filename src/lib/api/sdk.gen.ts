@@ -2,7 +2,7 @@
 
 import { type Client, formDataBodySerializer, type Options as Options2, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AckNotificationData, AckNotificationErrors, AckNotificationResponses, ApproveUserData, ApproveUserErrors, ApproveUserResponses, ChatData, ChatErrors, ChatResponses, CountCommentsData, CountCommentsErrors, CountCommentsResponses, CreateArticleData, CreateArticleErrors, CreateArticleResponses, CreateCommentData, CreateCommentErrors, CreateCommentResponses, CreateTodoItemsData, CreateTodoItemsErrors, CreateTodoItemsResponses, DeleteArticleData, DeleteArticleErrors, DeleteArticleResponses, DeleteCommentData, DeleteCommentErrors, DeleteCommentResponses, DeleteTagData, DeleteTagErrors, DeleteTagResponses, DeleteTodoItemData, DeleteTodoItemErrors, DeleteTodoItemResponses, DoActionData, DoActionErrors, DoActionResponses, GetArticleData, GetArticleErrors, GetArticleResponses, GetCredentialData, GetCredentialErrors, GetCredentialResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, HealthCheckData, HealthCheckErrors, HealthCheckResponses, ListArticlesData, ListArticlesErrors, ListArticlesResponses, ListCommentsData, ListCommentsErrors, ListCommentsResponses, ListNotificationsData, ListNotificationsErrors, ListNotificationsResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTodoItemsData, ListTodoItemsErrors, ListTodoItemsResponses, ListUsersData, ListUsersErrors, ListUsersResponses, Oauth2CallbackData, Oauth2CallbackErrors, Oauth2CallbackResponses, Oauth2LoginData, Oauth2LoginErrors, Oauth2LoginResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, SseHealthCheckData, SseHealthCheckErrors, SseHealthCheckResponses, UndoActionData, UndoActionErrors, UndoActionResponses, UpdateArticleData, UpdateArticleErrors, UpdateArticleResponses, UpdateTodoItemData, UpdateTodoItemErrors, UpdateTodoItemResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
+import type { AckNotificationData, AckNotificationErrors, AckNotificationResponses, ApproveUserData, ApproveUserErrors, ApproveUserResponses, ChatData, ChatErrors, ChatResponses, CountCommentsData, CountCommentsErrors, CountCommentsResponses, CountNotificationsData, CountNotificationsErrors, CountNotificationsResponses, CreateArticleData, CreateArticleErrors, CreateArticleResponses, CreateCommentData, CreateCommentErrors, CreateCommentResponses, CreateTodoItemsData, CreateTodoItemsErrors, CreateTodoItemsResponses, DeleteArticleData, DeleteArticleErrors, DeleteArticleResponses, DeleteCommentData, DeleteCommentErrors, DeleteCommentResponses, DeleteTagData, DeleteTagErrors, DeleteTagResponses, DeleteTodoItemData, DeleteTodoItemErrors, DeleteTodoItemResponses, DoActionData, DoActionErrors, DoActionResponses, GetArticleData, GetArticleErrors, GetArticleResponses, GetCredentialData, GetCredentialErrors, GetCredentialResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, HealthCheckData, HealthCheckErrors, HealthCheckResponses, ListArticlesData, ListArticlesErrors, ListArticlesResponses, ListCommentsData, ListCommentsErrors, ListCommentsResponses, ListNotificationsData, ListNotificationsErrors, ListNotificationsResponses, ListTagsData, ListTagsErrors, ListTagsResponses, ListTodoItemsData, ListTodoItemsErrors, ListTodoItemsResponses, ListUsersData, ListUsersErrors, ListUsersResponses, Oauth2CallbackData, Oauth2CallbackErrors, Oauth2CallbackResponses, Oauth2LoginData, Oauth2LoginErrors, Oauth2LoginResponses, RefreshTokenData, RefreshTokenErrors, RefreshTokenResponses, SseHealthCheckData, SseHealthCheckErrors, SseHealthCheckResponses, UndoActionData, UndoActionErrors, UndoActionResponses, UpdateArticleData, UpdateArticleErrors, UpdateArticleResponses, UpdateTodoItemData, UpdateTodoItemErrors, UpdateTodoItemResponses, UpdateUserData, UpdateUserErrors, UpdateUserResponses, UploadImageData, UploadImageErrors, UploadImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -214,9 +214,20 @@ export const ackNotification = <ThrowOnError extends boolean = false>(options: O
 });
 
 /**
+ * CountNotifications
+ *
+ * Count user notifications with optional status and type filters
+ */
+export const countNotifications = <ThrowOnError extends boolean = false>(options?: Options<CountNotificationsData, ThrowOnError>) => (options?.client ?? client).get<CountNotificationsResponses, CountNotificationsErrors, ThrowOnError>({
+    security: [{ name: 'Authorization', type: 'apiKey' }],
+    url: '/api/v1/notification/count',
+    ...options
+});
+
+/**
  * ListNotifications
  *
- * List user notifications with pagination and status filter
+ * List user notifications with pagination, status filter, and type filter (comment/like/save)
  */
 export const listNotifications = <ThrowOnError extends boolean = false>(options: Options<ListNotificationsData, ThrowOnError>) => (options.client ?? client).get<ListNotificationsResponses, ListNotificationsErrors, ThrowOnError>({
     security: [{ name: 'Authorization', type: 'apiKey' }],

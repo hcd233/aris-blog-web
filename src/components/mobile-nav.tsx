@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, ShoppingBag, Bell, User, Plus } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +12,7 @@ const navItems = [
   { icon: Home, label: "主页", href: "/" },
   { icon: ShoppingBag, label: "商城", href: "/shop", disabled: true },
   { icon: null, label: "发布", href: "/publish", isCenter: true },
-  { icon: Bell, label: "通知", href: "/notifications", disabled: true },
+  { icon: Bell, label: "通知", href: "/notifications" },
   { icon: User, label: "我", href: "/profile" },
 ];
 
@@ -19,6 +20,7 @@ export function MobileNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+  const { unreadCount } = useUnreadNotifications();
 
   const handleClick = (item: typeof navItems[0]) => {
     if (item.disabled) {
@@ -38,6 +40,13 @@ export function MobileNav() {
     if (item.href === "/publish" && !isAuthenticated) {
       toast.error("请先登录", {
         description: "登录后即可发布内容",
+      });
+      return;
+    }
+
+    if (item.href === "/notifications" && !isAuthenticated) {
+      toast.error("请先登录", {
+        description: "登录后即可查看通知",
       });
       return;
     }
@@ -84,7 +93,7 @@ export function MobileNav() {
               key={item.label}
               onClick={() => handleClick(item)}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 h-full",
+                "flex flex-col items-center justify-center flex-1 h-full relative",
                 "active:scale-95 transition-transform",
                 active
                   ? "text-red-500"

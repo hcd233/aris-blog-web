@@ -36,17 +36,19 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
+import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 
 const sidebarItems = [
   { icon: Compass, label: "发现", href: "/" },
   { icon: PlusSquare, label: "发布", href: "/publish" },
-  { icon: Bell, label: "通知", href: "/notifications" },
+  { icon: Bell, label: "通知", href: "/notifications", showBadge: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { unreadCount } = useUnreadNotifications();
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
@@ -111,7 +113,7 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-3 rounded-full transition-all group",
+                  "flex items-center gap-3 px-3 py-3 rounded-full transition-all group relative",
                   isActive(item.href)
                     ? "bg-gray-100 dark:bg-[#1a1a1a] text-gray-900 dark:text-white font-medium"
                     : "text-gray-600 dark:text-[#999] hover:bg-gray-100 dark:hover:bg-[#1a1a1a] hover:text-gray-900 dark:hover:text-white"
@@ -119,6 +121,12 @@ export function Sidebar() {
               >
                 <item.icon className="w-6 h-6 flex-shrink-0" />
                 <span className="hidden lg:block font-medium">{item.label}</span>
+                {/* 桌面端未读数显示 */}
+                {item.showBadge && unreadCount > 0 && (
+                  <span className="hidden lg:flex ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </Link>
             ))}
 

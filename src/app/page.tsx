@@ -63,13 +63,34 @@ function OAuthCallbackWrapper({ onLoginSuccess }: { onLoginSuccess: () => void }
   );
 }
 
+// 用于处理 URL 参数的包裹组件
+function ArticleSlugHandler({ onArticleSlug }: { onArticleSlug: (slug: string | null) => void }) {
+  const searchParams = useSearchParams();
+  
+  useEffect(() => {
+    const articleSlug = searchParams.get("article");
+    onArticleSlug(articleSlug);
+  }, [searchParams, onArticleSlug]);
+  
+  return null;
+}
+
 // 主页内容组件
 function MainContent({ refreshKey }: { refreshKey: number }) {
+  const searchParams = useSearchParams();
   const [categories, setCategories] = useState<string[]>(["全部"]);
   const [activeCategory, setActiveCategory] = useState("全部");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedArticleSlug, setSelectedArticleSlug] = useState<string | null>(null);
   const [tagMap, setTagMap] = useState<Map<string, string>>(new Map());
+
+  // 从 URL 参数读取搜索词
+  useEffect(() => {
+    const queryFromUrl = searchParams.get("q");
+    if (queryFromUrl) {
+      setSearchQuery(queryFromUrl);
+    }
+  }, [searchParams]);
 
   const tagSlug = activeCategory !== "全部" ? tagMap.get(activeCategory) : undefined;
   
@@ -113,12 +134,25 @@ function MainContent({ refreshKey }: { refreshKey: number }) {
 
   const handleCloseModal = useCallback(() => {
     setSelectedArticleSlug(null);
+    // 清除 URL 参数
+    if (window.location.search.includes("article=")) {
+      window.history.replaceState({}, document.title, "/");
+    }
   }, []);
 
   const isLoading = loading || imagesLoading;
 
+  const handleArticleSlugChange = useCallback((slug: string | null) => {
+    if (slug) {
+      setSelectedArticleSlug(slug);
+    }
+  }, []);
+
   return (
     <main className="md:ml-[72px] lg:ml-[220px] pb-16 md:pb-0">
+      <Suspense fallback={null}>
+        <ArticleSlugHandler onArticleSlug={handleArticleSlugChange} />
+      </Suspense>
       <header className={cn(
         "sticky top-0 z-40 backdrop-blur supports-[backdrop-filter]:bg-white/80 dark:supports-[backdrop-filter]:bg-[#0a0a0a]/80",
         "bg-white/95 dark:bg-[#0a0a0a]/95",

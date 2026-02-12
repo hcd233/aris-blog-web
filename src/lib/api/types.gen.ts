@@ -99,9 +99,9 @@ export type CosTempCredential = {
     startTime: number;
 };
 
-export type CountCommentsRsp = {
+export type CountRsp = {
     /**
-     * Total count of comments for the article
+     * Total count
      */
     count: number;
     /**
@@ -1153,7 +1153,7 @@ export type CountCommentsResponses = {
     /**
      * OK
      */
-    200: CountCommentsRsp;
+    200: CountRsp;
 };
 
 export type CountCommentsResponse = CountCommentsResponses[keyof CountCommentsResponses];
@@ -1282,6 +1282,40 @@ export type AckNotificationResponses = {
 
 export type AckNotificationResponse = AckNotificationResponses[keyof AckNotificationResponses];
 
+export type CountNotificationsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Filter by status (unread/read), empty for all
+         */
+        status?: 'unread' | 'read';
+        /**
+         * Filter by category (like_and_save/comment_and_at), empty for all
+         */
+        category?: 'like_and_save' | 'comment_and_at';
+    };
+    url: '/api/v1/notification/count';
+};
+
+export type CountNotificationsErrors = {
+    /**
+     * Error
+     */
+    default: ErrorModel;
+};
+
+export type CountNotificationsError = CountNotificationsErrors[keyof CountNotificationsErrors];
+
+export type CountNotificationsResponses = {
+    /**
+     * OK
+     */
+    200: CountRsp;
+};
+
+export type CountNotificationsResponse = CountNotificationsResponses[keyof CountNotificationsResponses];
+
 export type ListNotificationsData = {
     body?: never;
     path?: never;
@@ -1298,6 +1332,10 @@ export type ListNotificationsData = {
          * Filter by status (unread/read), empty for all
          */
         status?: 'unread' | 'read';
+        /**
+         * Filter by category (like_and_save/comment_and_at), empty for all
+         */
+        category?: 'like_and_save' | 'comment_and_at';
     };
     url: '/api/v1/notification/list';
 };

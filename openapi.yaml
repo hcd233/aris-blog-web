@@ -119,11 +119,11 @@ components:
         - bucketName
         - region
       type: object
-    CountCommentsRsp:
+    CountRsp:
       additionalProperties: false
       properties:
         count:
-          description: Total count of comments for the article
+          description: Total count
           format: int64
           type: integer
         error:
@@ -1465,7 +1465,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CountCommentsRsp"
+                $ref: "#/components/schemas/CountRsp"
           description: OK
         default:
           content:
@@ -1653,9 +1653,52 @@ paths:
       summary: AckNotification
       tags:
         - Notification
+  /api/v1/notification/count:
+    get:
+      description: Count user notifications with optional status and type filters
+      operationId: countNotifications
+      parameters:
+        - description: Filter by status (unread/read), empty for all
+          explode: false
+          in: query
+          name: status
+          schema:
+            description: Filter by status (unread/read), empty for all
+            enum:
+              - unread
+              - read
+            type: string
+        - description: Filter by category (like_and_save/comment_and_at), empty for all
+          explode: false
+          in: query
+          name: category
+          schema:
+            description: Filter by category (like_and_save/comment_and_at), empty for all
+            enum:
+              - like_and_save
+              - comment_and_at
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountRsp"
+          description: OK
+        default:
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Error
+      security:
+        - jwtAuth: []
+      summary: CountNotifications
+      tags:
+        - Notification
   /api/v1/notification/list:
     get:
-      description: List user notifications with pagination and status filter
+      description: List user notifications with pagination, status filter, and type filter (comment/like/save)
       operationId: listNotifications
       parameters:
         - explode: false
@@ -1708,6 +1751,16 @@ paths:
             enum:
               - unread
               - read
+            type: string
+        - description: Filter by category (like_and_save/comment_and_at), empty for all
+          explode: false
+          in: query
+          name: category
+          schema:
+            description: Filter by category (like_and_save/comment_and_at), empty for all
+            enum:
+              - like_and_save
+              - comment_and_at
             type: string
       responses:
         "200":

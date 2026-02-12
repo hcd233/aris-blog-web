@@ -453,7 +453,8 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                         <div
                           className={cn(
                             "relative transition-all duration-300 ease-out",
-                            isInputExpanded && "flex-1"
+                            isInputExpanded && "flex-1",
+                            "mt-3"
                           )}
                         >
                           <textarea
@@ -467,9 +468,7 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                               "w-full resize-none outline-none transition-all duration-300",
                               "bg-gray-100 dark:bg-[#2a2a2a] text-gray-900 dark:text-white",
                               "placeholder:text-gray-400 dark:placeholder:text-gray-500",
-                              isInputExpanded
-                                ? "px-4 py-3 rounded-2xl min-h-[80px] max-h-[120px] text-sm"
-                                : "px-4 py-2.5 rounded-full h-10 text-sm overflow-hidden"
+                              "px-4 py-2.5 rounded-2xl h-10 text-sm overflow-hidden"
                             )}
                           />
                         </div>

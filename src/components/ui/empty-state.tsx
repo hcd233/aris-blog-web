@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
-import { FileText, SearchX } from "lucide-react";
+import { FileText, SearchX, Bell } from "lucide-react";
 
 interface EmptyStateProps {
   className?: string;
-  icon?: "article" | "search";
+  icon?: "article" | "search" | "bell";
   title?: string;
   description?: string;
   action?: React.ReactNode;
@@ -12,16 +12,19 @@ interface EmptyStateProps {
 const iconMap = {
   article: FileText,
   search: SearchX,
+  bell: Bell,
 };
 
 const defaultTitles = {
   article: "还没有内容",
   search: "没有找到相关内容",
+  bell: "暂无通知",
 };
 
 const defaultDescriptions = {
   article: "快去创作属于你的第一篇内容吧！",
   search: "尝试使用其他关键词搜索",
+  bell: "当有人与你互动时，你会在这里收到通知",
 };
 
 export function EmptyState({
