@@ -55,7 +55,7 @@ export function CommentItem({
   const userHref = currentUser?.id === comment.author.id ? "/profile" : `/user/${comment.author.id}`;
 
   return (
-    <div className={cn("group", isReply ? "ml-12 mt-3" : "")}>
+    <div className={cn("group", isReply ? "ml-0 mt-3" : "")}>
       <div className="flex gap-3">
         {/* 头像 */}
         <Link href={userHref} className="flex-shrink-0">
@@ -99,40 +99,48 @@ export function CommentItem({
             {comment.content}
           </div>
 
-          {/* 时间 + 操作 */}
-          <div className="mt-1.5 flex items-center gap-4 text-xs text-gray-400 dark:text-gray-500">
-            <span>{formatDate(comment.createdAt)}</span>
-
-            {/* 点赞 */}
-            <button
-              className={cn(
-                "flex items-center gap-1 transition-colors",
-                comment.liked ? "text-[#ff2442]" : "hover:text-[#ff2442]"
-              )}
-              onClick={() => onToggleLike?.(comment.id, comment.liked, comment.parentID)}
-            >
-              <Heart className={cn("w-3.5 h-3.5", comment.liked && "fill-current")} />
-              {comment.likes > 0 && <span>{comment.likes}</span>}
-            </button>
-
-            {/* 回复按钮 */}
-            <button
-              className="flex items-center gap-1 hover:text-blue-500 transition-colors"
-              onClick={() => onReply?.(comment)}
-            >
-              <MessageCircle className="w-3.5 h-3.5" />
-              <span>回复</span>
-            </button>
-
-            {/* 删除（仅作者可见） */}
-            {isOwner && (
+          {/* 时间与操作区：统一在小红书风格，时间单独一行，操作另起一行 */}
+          <div className="mt-1.5">
+            {/* 时间行 */}
+            <div className={cn(
+              "text-gray-400 dark:text-gray-500",
+              isReply ? "text-xs" : "text-xs"
+            )}>
+              {formatDate(comment.createdAt)}
+            </div>
+            {/* 操作行：点赞 + 回复（与评论内容左对齐） */}
+            <div className="mt-1.5 flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+              {/* 点赞 */}
               <button
-                className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all"
-                onClick={() => onDelete?.(comment.id, comment.parentID)}
+                className={cn(
+                  "flex items-center gap-1 transition-colors",
+                  comment.liked ? "text-[#ff2442]" : "hover:text-[#ff2442]"
+                )}
+                onClick={() => onToggleLike?.(comment.id, comment.liked, comment.parentID)}
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <Heart className={cn("w-3.5 h-3.5", comment.liked && "fill-current")} />
+                {comment.likes > 0 && <span>{comment.likes}</span>}
               </button>
-            )}
+
+              {/* 回复按钮 */}
+              <button
+                className="flex items-center gap-1 hover:text-blue-500 transition-colors"
+                onClick={() => onReply?.(comment)}
+              >
+                <MessageCircle className="w-3.5 h-3.5" />
+                <span>回复</span>
+              </button>
+
+              {/* 删除（仅作者可见） */}
+              {isOwner && (
+                <button
+                  className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all"
+                  onClick={() => onDelete?.(comment.id, comment.parentID)}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* 子评论列表（仅一级评论，默认展示） */}
@@ -154,7 +162,7 @@ export function CommentItem({
               {/* 展开更多回复 */}
               {hasMoreReplies && remainingCount > 0 && (
                 <button
-                  className="ml-12 mt-2 flex items-center gap-1 text-xs text-[#576b95] dark:text-[#7b9bd1] hover:opacity-80 transition-opacity"
+                  className="ml-8 mt-2 flex items-center gap-1 text-xs text-[#576b95] dark:text-[#7b9bd1] hover:opacity-80 transition-opacity"
                   onClick={() => onExpandAllReplies?.(comment.id)}
                   disabled={repliesLoading}
                 >
@@ -170,7 +178,7 @@ export function CommentItem({
               {/* 已全部展开且还有分页 */}
               {hasMoreReplies && remainingCount <= 0 && (
                 <button
-                  className="ml-12 mt-2 flex items-center gap-1 text-xs text-[#576b95] dark:text-[#7b9bd1] hover:opacity-80 transition-opacity"
+                  className="ml-0 mt-2 flex items-center gap-1 text-xs text-[#576b95] dark:text-[#7b9bd1] hover:opacity-80 transition-opacity"
                   onClick={() => onLoadMoreReplies?.(comment.id)}
                   disabled={repliesLoading}
                 >
@@ -187,7 +195,7 @@ export function CommentItem({
 
           {/* 子评论加载中（首次加载无数据时） */}
           {!isReply && repliesLoading && replies.length === 0 && replyTotal > 0 && (
-            <div className="ml-12 mt-2 flex items-center py-2">
+            <div className="ml-0 mt-2 flex items-center py-2">
               <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
             </div>
           )}
