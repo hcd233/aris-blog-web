@@ -88,6 +88,8 @@ export function MobileNav() {
           const Icon = item.icon!;
           const active = isActive(item.href);
 
+          const isNotification = item.label === "通知";
+
           return (
             <button
               key={item.label}
@@ -100,7 +102,15 @@ export function MobileNav() {
                   : "text-gray-500 dark:text-gray-400"
               )}
             >
-              <Icon className="w-6 h-6" />
+              <div className="relative">
+                <Icon className="w-6 h-6" />
+                {/* 移动端未读通知 badge */}
+                {isNotification && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] mt-0.5">{item.label}</span>
             </button>
           );
