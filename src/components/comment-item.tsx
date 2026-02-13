@@ -61,10 +61,9 @@ export function CommentItem({
         <Link href={userHref} className="flex-shrink-0">
           <Avatar className={cn("flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity", isReply ? "h-7 w-7" : "h-9 w-9")}>
             <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
-            <AvatarFallback className={cn(
-              "bg-gradient-to-br from-purple-500 to-blue-500 text-white",
-              isReply ? "text-[10px]" : "text-xs"
-            )}>
+            <AvatarFallback className={
+              "bg-gradient-to-br from-purple-500 to-blue-500 text-white text-xs"
+            }>
               {comment.author.name.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>
@@ -75,10 +74,9 @@ export function CommentItem({
           {/* 昵称行 */}
           <div className="flex items-center gap-2">
             <Link href={userHref} className="hover:opacity-80 transition-opacity">
-              <span className={cn(
-                "font-medium text-gray-900 dark:text-white truncate",
-                isReply ? "text-xs" : "text-sm"
-              )}>
+              <span className={
+                "font-medium text-gray-900 dark:text-white truncate text-sm"
+              }>
                 {comment.author.name}
               </span>
             </Link>
@@ -90,7 +88,7 @@ export function CommentItem({
           </div>
 
           {/* 评论内容 */}
-          <div className={cn("mt-1 text-gray-700 dark:text-gray-300", isReply ? "text-xs" : "text-sm")}>
+          <div className={"mt-1 text-gray-700 dark:text-gray-300 text-sm"}>
             {replyToName && (
               <span className="text-[#576b95] dark:text-[#7b9bd1]">
                 回复 {replyToName}：
