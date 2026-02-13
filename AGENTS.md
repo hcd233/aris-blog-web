@@ -261,7 +261,36 @@ src/
 4. 新依赖项
 5. 新代码模式或约定
 
-**最后更新**: 2026-02-12
+**最后更新**: 2026-02-13
+
+### 通知列表API结构更新 - 支持回复文章/评论及内容删除检测
+- **API更新**: 从 api-dev.blog.lvlvko.top 拉取最新OpenAPI规范
+  - `NotifiedComment` 新增 `repliedArticle` 和 `repliedComment` 字段
+  - `repliedArticle`: 被回复的文章信息（回复文章评论时存在）
+  - `repliedComment`: 被回复的评论信息（回复评论时存在）
+  - **隐式逻辑**: 如果 `article` 或 `comment` 字段为空，表示对应内容已被删除
+- **功能需求**:
+  1. 支持显示"回复了你的评论"（有repliedComment）
+  2. 支持显示"评论了你的笔记"（有repliedArticle但没有repliedComment）
+  3. 被回复的内容以灰色引用样式显示
+  4. 处理内容已删除的情况，显示"该评论已删除"或"该笔记已删除"
+  5. 点击已删除内容时弹出提示而不是跳转
+- **实现方案**:
+  1. **重新生成API客户端**:
+     - 使用 `npx openapi-ts` 从新的OpenAPI规范重新生成
+     - 更新 `types.gen.ts` 中 `NotifiedComment` 类型定义
+  2. **更新 `src/app/notifications/page.tsx`**:
+     - 修改 `getNotificationTypeText` 函数，根据 `repliedComment`/`repliedArticle` 判断是"回复评论"还是"评论文章"
+     - 修改通知项组件，显示被回复内容的灰色引用样式
+     - 添加内容已删除的检测逻辑（`!notification.article` 或 `!notification.comment`）
+     - 更新 `handleNotificationClick`，文章被删除时显示Toast提示
+- **技术要点**:
+  - 通知类型简化为4种：'like', 'save', 'comment', 'at'（移除了'reply'和'follow'）
+  - 回复通知通过 `comment.repliedComment` 或 `comment.repliedArticle` 字段区分
+  - 被回复内容显示为左侧带灰色边框的引用样式
+- **文件位置**:
+  - src/lib/api/types.gen.ts（重新生成）
+  - src/app/notifications/page.tsx（更新通知列表渲染逻辑）
 
 ### 通知功能增强 - Tab分类筛选与未读数显示（API更新版）
 - **API更新**: 从 api-dev.blog.lvlvko.top 拉取最新OpenAPI规范

@@ -22,7 +22,6 @@ import Image from "next/image";
 const tabs = [
   { id: "comment", label: "评论和@", icon: MessageCircle, category: "comment_and_at" as const },
   { id: "like", label: "赞和收藏", icon: Heart, category: "like_and_save" as const },
-  { id: "follow", label: "新增关注", icon: UserPlus, category: undefined },
 ];
 
 // 格式化时间
@@ -66,12 +65,17 @@ function getNotificationTypeText(notification: ListedNotification, activeTab: st
   if (activeTab === "comment") {
     // 评论和@Tab
     if (type === "comment") {
-      return "评论了你的笔记";
+      // 检查是否是回复评论（有repliedComment）
+      if (comment?.repliedComment) {
+        return "回复了你的评论";
+      }
+      // 检查是否是回复文章（有repliedArticle但没有repliedComment）
+      if (comment?.repliedArticle) {
+        return "评论了你的笔记";
+      }
+      return "评论了你";
     }
-    if (type === "reply") {
-      return "回复了你的评论";
-    }
-    if (type === "mention") {
+    if (type === "at") {
       return "提到了你";
     }
     return "评论了你";
@@ -85,19 +89,28 @@ function getNotificationTypeText(notification: ListedNotification, activeTab: st
     return targetType === "comment" ? "收藏了你的评论" : "收藏了你的笔记";
   }
   if (type === "comment") {
-    return "评论了你的笔记";
+    // 检查是否是回复评论
+    if (comment?.repliedComment) {
+      return "回复了你的评论";
+    }
+    // 检查是否是回复文章
+    if (comment?.repliedArticle) {
+      return "评论了你的笔记";
+    }
+    return "评论了你";
   }
-  if (type === "reply") {
-    return "回复了你的评论";
-  }
-  if (type === "follow") {
-    return "关注了你";
-  }
-  if (type === "mention") {
+  if (type === "at") {
     return "提到了你";
   }
   
   return "与你互动";
+}
+
+// 判断通知是否涉及回复（评论回复评论）
+function isReplyNotification(notification: ListedNotification): boolean {
+  return notification.type === "comment" && 
+         notification.comment?.repliedComment !== undefined && 
+         notification.comment.repliedComment !== null;
 }
 
 // 回复输入框组件
@@ -167,8 +180,8 @@ function NotificationItem({
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   
-  // 判断是否是评论/回复通知
-  const isCommentNotification = notification.type === "comment" || notification.type === "reply";
+  // 判断是否是评论/回复通知（包含回复文章的评论）
+  const isCommentNotification = notification.type === "comment";
   
   return (
     <div
@@ -206,26 +219,42 @@ function NotificationItem({
           )}
         </div>
 
-        {/* 评论内容 */}
-        {notification.comment?.content && (
+        {/* 评论内容 - 处理已删除的情况 */}
+        {notification.type === "comment" && notification.comment ? (
           <p className="mt-2 text-gray-700 dark:text-gray-300 text-sm">
             {notification.comment.content}
           </p>
-        )}
+        ) : notification.type === "comment" && !notification.comment ? (
+          <p className="mt-2 text-gray-400 dark:text-gray-500 text-sm">
+            该评论已删除
+          </p>
+        ) : null}
         
-        {/* 被回复的内容（灰色引用样式）- 从notification.content中解析 */}
-        {notification.content && notification.type === "reply" && (
+        {/* 被回复的内容（灰色引用样式）- 从repliedComment或repliedArticle中获取 */}
+        {notification.type === "comment" && notification.comment?.repliedComment ? (
           <div className="mt-2 pl-3 border-l-2 border-gray-200 dark:border-gray-600">
             <p className="text-gray-400 dark:text-gray-500 text-sm line-clamp-1">
-              {notification.content}
+              {notification.comment.repliedComment.content}
             </p>
           </div>
-        )}
+        ) : notification.type === "comment" && notification.comment?.repliedArticle ? (
+          <div className="mt-2 pl-3 border-l-2 border-gray-200 dark:border-gray-600">
+            <p className="text-gray-400 dark:text-gray-500 text-sm line-clamp-1">
+              {notification.comment.repliedArticle.title}
+            </p>
+          </div>
+        ) : null}
         
-        {/* 文章标题（如果没有评论内容） */}
-        {notification.article?.title && !notification.comment && (
-          <p className="mt-2 text-gray-700 dark:text-gray-300 text-sm line-clamp-1">
-            {notification.article.title}
+        {/* 文章标题 - 处理已删除的情况 */}
+        {notification.article ? (
+          !notification.comment && (
+            <p className="mt-2 text-gray-700 dark:text-gray-300 text-sm line-clamp-1">
+              {notification.article.title}
+            </p>
+          )
+        ) : notification.type !== "comment" && (
+          <p className="mt-2 text-gray-400 dark:text-gray-500 text-sm">
+            该笔记已删除
           </p>
         )}
 
@@ -277,22 +306,22 @@ function NotificationItem({
         )}
       </div>
 
-      {/* 文章封面图 */}
-      {notification.article?.coverImage && (
+      {/* 文章/评论封面图 - 优先显示评论封面，其次是文章封面 */}
+      {(notification.comment?.coverImage || notification.article?.coverImage) ? (
         <div 
           className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800"
           onClick={() => onClick(notification)}
         >
           <Image
-            src={notification.article.coverImage}
-            alt={notification.article.title || "文章封面"}
+            src={notification.comment?.coverImage || notification.article?.coverImage || ""}
+            alt={(notification.comment ? "评论" : notification.article?.title) || "封面"}
             width={64}
             height={64}
             className="w-full h-full object-cover"
             unoptimized
           />
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -358,9 +387,6 @@ export default function NotificationsPage() {
       const currentTab = tabs.find((t) => t.id === activeTab);
       const category = currentTab?.category;
 
-      // 如果是"新增关注"tab，使用前端过滤（API暂无此category）
-      const shouldFilterFollow = activeTab === "follow";
-
       const { data, error } = await listNotifications({
         query: {
           page: pageNum,
@@ -378,26 +404,17 @@ export default function NotificationsPage() {
       }
 
       if (data?.notifications) {
-        let filteredNotifications = data.notifications;
-
-        // 对"新增关注"进行前端过滤
-        if (shouldFilterFollow) {
-          filteredNotifications = data.notifications.filter(
-            (n) => n.type === "follow"
-          );
-        }
-
         if (isLoadMore) {
-          setNotifications((prev) => [...prev, ...filteredNotifications]);
+          setNotifications((prev) => [...prev, ...data.notifications!]);
         } else {
-          setNotifications(filteredNotifications);
+          setNotifications(data.notifications);
         }
 
         setHasMore(data.notifications.length === pageSize);
 
         // 自动批量标记未读通知为已读
-        if (!isLoadMore) {
-          const unreadIds = filteredNotifications
+        if (!isLoadMore && data.notifications) {
+          const unreadIds = data.notifications
             .filter((n) => n.status === "unread")
             .map((n) => n.id);
           if (unreadIds.length > 0) {
@@ -433,6 +450,30 @@ export default function NotificationsPage() {
 
   // 处理通知点击
   const handleNotificationClick = async (notification: ListedNotification) => {
+    // 检查文章是否已被删除
+    if (!notification.article) {
+      toast.info("内容已删除", {
+        description: "该内容已被删除，无法查看",
+      });
+      // 仍然标记为已读
+      if (notification.status === "unread") {
+        try {
+          await ackNotification({
+            query: { id: notification.id },
+          });
+          setNotifications((prev) =>
+            prev.map((n) =>
+              n.id === notification.id ? { ...n, status: "read" } : n
+            )
+          );
+          await refreshUnreadCount();
+        } catch (error) {
+          console.error("标记已读失败:", error);
+        }
+      }
+      return;
+    }
+
     // 标记为已读
     if (notification.status === "unread") {
       try {

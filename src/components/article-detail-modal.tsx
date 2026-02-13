@@ -462,6 +462,14 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                             value={commentText}
                             onChange={(e) => setCommentText(e.target.value)}
                             onFocus={() => setIsInputExpanded(true)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                if (commentText.trim() && !submitting) {
+                                  handleSubmitComment();
+                                }
+                              }
+                            }}
                             placeholder={replyTarget ? `回复 ${replyTarget.author.name}...` : "说点什么..."}
                             rows={1}
                             className={cn(
