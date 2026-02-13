@@ -263,6 +263,13 @@ src/
 
 **最后更新**: 2026-02-13
 
+### 通知列表Bug修复 - 点赞评论时文章来源处理
+- **问题**: 点赞评论时，API不返回 `article` 字段，而是返回 `comment.repliedArticle`，导致显示"该笔记已删除"
+- **修复**: 
+  1. 评论内容显示不再限制为 `type === "comment"`，只要有 `comment` 字段就显示
+  2. 文章跳转slug获取优先级：`notification.article?.slug` → `notification.comment?.repliedArticle?.slug`
+  3. 删除"该笔记已删除"的误判逻辑（只有文章和评论都为空时才提示已删除）
+
 ### 通知列表API结构更新 - 支持回复文章/评论及内容删除检测
 - **API更新**: 从 api-dev.blog.lvlvko.top 拉取最新OpenAPI规范
   - `NotifiedComment` 新增 `repliedArticle` 和 `repliedComment` 字段

@@ -220,7 +220,7 @@ function NotificationItem({
         </div>
 
         {/* 评论内容 - 处理已删除的情况 */}
-        {notification.type === "comment" && notification.comment ? (
+        {notification.comment ? (
           <p className="mt-2 text-gray-700 dark:text-gray-300 text-sm">
             {notification.comment.content}
           </p>
@@ -230,7 +230,7 @@ function NotificationItem({
           </p>
         ) : null}
         
-        {/* 被回复的内容（灰色引用样式）- 从repliedComment或repliedArticle中获取 */}
+        {/* 被回复的内容（灰色引用样式）- 仅评论通知显示 */}
         {notification.type === "comment" && notification.comment?.repliedComment ? (
           <div className="mt-2 pl-3 border-l-2 border-gray-200 dark:border-gray-600">
             <p className="text-gray-400 dark:text-gray-500 text-sm line-clamp-1">
@@ -245,16 +245,10 @@ function NotificationItem({
           </div>
         ) : null}
         
-        {/* 文章标题 - 处理已删除的情况 */}
-        {notification.article ? (
-          !notification.comment && (
-            <p className="mt-2 text-gray-700 dark:text-gray-300 text-sm line-clamp-1">
-              {notification.article.title}
-            </p>
-          )
-        ) : notification.type !== "comment" && (
-          <p className="mt-2 text-gray-400 dark:text-gray-500 text-sm">
-            该笔记已删除
+        {/* 文章标题 - 仅当直接有article字段且没有comment时显示 */}
+        {notification.article && !notification.comment && (
+          <p className="mt-2 text-gray-700 dark:text-gray-300 text-sm line-clamp-1">
+            {notification.article.title}
           </p>
         )}
 
@@ -450,8 +444,12 @@ export default function NotificationsPage() {
 
   // 处理通知点击
   const handleNotificationClick = async (notification: ListedNotification) => {
-    // 检查文章是否已被删除
-    if (!notification.article) {
+    // 获取文章slug（优先级：直接article > comment.repliedArticle）
+    const articleSlug = notification.article?.slug || 
+                        notification.comment?.repliedArticle?.slug;
+    
+    // 检查文章是否已被删除（没有直接article且没有repliedArticle）
+    if (!articleSlug) {
       toast.info("内容已删除", {
         description: "该内容已被删除，无法查看",
       });
@@ -496,9 +494,7 @@ export default function NotificationsPage() {
     }
 
     // 跳转到文章
-    if (notification.article?.slug) {
-      router.push(`/?article=${notification.article.slug}`);
-    }
+    router.push(`/?article=${articleSlug}`);
   };
 
   // 处理回复
