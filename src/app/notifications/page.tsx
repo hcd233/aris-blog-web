@@ -319,6 +319,34 @@ export default function NotificationsPage() {
     }
   }, [isAuthenticated, router]);
 
+  // 批量标记通知为已读
+  const batchAckNotifications = useCallback(async (notificationIds: number[]) => {
+    if (notificationIds.length === 0) return;
+
+    try {
+      // 并行发送所有ack请求
+      await Promise.all(
+        notificationIds.map((id) =>
+          ackNotification({
+            query: { id },
+          })
+        )
+      );
+
+      // 更新本地状态，将所有通知标记为已读
+      setNotifications((prev) =>
+        prev.map((n) =>
+          notificationIds.includes(n.id) ? { ...n, status: "read" as const } : n
+        )
+      );
+
+      // 刷新全局未读数
+      await refreshUnreadCount();
+    } catch (error) {
+      console.error("批量标记已读失败:", error);
+    }
+  }, [refreshUnreadCount]);
+
   // 获取通知列表
   const fetchNotifications = useCallback(async (pageNum: number, isLoadMore = false) => {
     if (!isAuthenticated) return;
@@ -366,6 +394,16 @@ export default function NotificationsPage() {
         }
 
         setHasMore(data.notifications.length === pageSize);
+
+        // 自动批量标记未读通知为已读
+        if (!isLoadMore) {
+          const unreadIds = filteredNotifications
+            .filter((n) => n.status === "unread")
+            .map((n) => n.id);
+          if (unreadIds.length > 0) {
+            batchAckNotifications(unreadIds);
+          }
+        }
       }
     } catch (error) {
       console.error("获取通知失败:", error);
@@ -375,7 +413,7 @@ export default function NotificationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, isAuthenticated]);
+  }, [activeTab, isAuthenticated, batchAckNotifications]);
 
   // 切换Tab时重新获取
   useEffect(() => {
