@@ -1668,15 +1668,15 @@ paths:
               - unread
               - read
             type: string
-        - description: Filter by category (like_and_save/comment_and_at), empty for all
+        - description: Filter by category (likeAndSave/commentAndAt), empty for all
           explode: false
           in: query
           name: category
           schema:
-            description: Filter by category (like_and_save/comment_and_at), empty for all
+            description: Filter by category (likeAndSave/commentAndAt), empty for all
             enum:
-              - like_and_save
-              - comment_and_at
+              - likeAndSave
+              - commentAndAt
             type: string
       responses:
         "200":
@@ -1752,15 +1752,15 @@ paths:
               - unread
               - read
             type: string
-        - description: Filter by category (like_and_save/comment_and_at), empty for all
+        - description: Filter by category (likeAndSave/commentAndAt), empty for all
           explode: false
           in: query
           name: category
           schema:
-            description: Filter by category (like_and_save/comment_and_at), empty for all
+            description: Filter by category (likeAndSave/commentAndAt), empty for all
             enum:
-              - like_and_save
-              - comment_and_at
+              - likeAndSave
+              - commentAndAt
             type: string
       responses:
         "200":

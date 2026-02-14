@@ -20,8 +20,8 @@ import Image from "next/image";
 
 // 通知类型 - id映射到API的category参数
 const tabs = [
-  { id: "comment", label: "评论和@", icon: MessageCircle, category: "comment_and_at" as const },
-  { id: "like", label: "赞和收藏", icon: Heart, category: "like_and_save" as const },
+  { id: "comment", label: "评论和@", icon: MessageCircle, category: "commentAndAt" as const },
+  { id: "like", label: "赞和收藏", icon: Heart, category: "likeAndSave" as const },
 ];
 
 // 格式化时间

@@ -1325,9 +1325,9 @@ export type CountNotificationsData = {
          */
         status?: 'unread' | 'read';
         /**
-         * Filter by category (like_and_save/comment_and_at), empty for all
+         * Filter by category (likeAndSave/commentAndAt), empty for all
          */
-        category?: 'like_and_save' | 'comment_and_at';
+        category?: 'likeAndSave' | 'commentAndAt';
     };
     url: '/api/v1/notification/count';
 };
@@ -1367,9 +1367,9 @@ export type ListNotificationsData = {
          */
         status?: 'unread' | 'read';
         /**
-         * Filter by category (like_and_save/comment_and_at), empty for all
+         * Filter by category (likeAndSave/commentAndAt), empty for all
          */
-        category?: 'like_and_save' | 'comment_and_at';
+        category?: 'likeAndSave' | 'commentAndAt';
     };
     url: '/api/v1/notification/list';
 };

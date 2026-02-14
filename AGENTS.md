@@ -303,7 +303,7 @@ src/
 - **API更新**: 从 api-dev.blog.lvlvko.top 拉取最新OpenAPI规范
   - 新增 `countNotifications` 端点 - 统计通知总数
   - `listNotifications` 新增 `category` 参数 - 支持服务端分类筛选
-  - category可选值：`like_and_save`（赞和收藏）、`comment_and_at`（评论和@）
+  - category可选值：`likeAndSave`（赞和收藏）、`commentAndAt`（评论和@）
 - **功能需求**:
   1. 支持在Tab导航选取分类：全部、评论和@、赞和关注
   2. 在主页通知图标显示未读消息数
@@ -318,7 +318,7 @@ src/
      - 优先使用countNotifications，失败时回退到listNotifications
   3. **更新 `src/app/notifications/page.tsx`**:
      - 使用 `category` 参数进行服务端分类筛选
-     - Tab映射：comment_and_at（评论和@）、like_and_save（赞和收藏）
+     - Tab映射：commentAndAt（评论和@）、likeAndSave（赞和收藏）
      - "新增关注"仍使用前端过滤（API暂无此category）
   4. 其他文件保持不变（sidebar、mobile-nav、layout）
 - **技术要点**:
