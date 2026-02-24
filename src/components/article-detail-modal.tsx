@@ -19,9 +19,10 @@ interface ArticleDetailModalProps {
   articleSlug: string;
   isOpen: boolean;
   onClose: () => void;
+  onLikeChange?: (articleId: number, liked: boolean, likes: number) => void;
 }
 
-export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDetailModalProps) {
+export function ArticleDetailModal({ articleSlug, isOpen, onClose, onLikeChange }: ArticleDetailModalProps) {
   const [article, setArticle] = useState<DetailedArticle | null>(null);
   const [loading, setLoading] = useState(false);
   const [isImagePreviewOpen, setIsImagePreviewOpen] = useState(false);
@@ -56,7 +57,13 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
     handleLike,
     handleSave,
     setInitialState,
-  } = useArticleActions();
+  } = useArticleActions({
+    onLikeChange: (liked, likes) => {
+      if (article) {
+        onLikeChange?.(article.id, liked, likes);
+      }
+    },
+  });
 
   useEffect(() => {
     if (isOpen && articleSlug) {

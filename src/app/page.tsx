@@ -109,10 +109,16 @@ function MainContent({ refreshKey }: { refreshKey: number }) {
     loading,
     imagesLoading,
     imagesLoaded,
+    updateArticle,
   } = useArticles({
     tagSlug,
     query: searchQuery || undefined,
   });
+
+  // 处理点赞状态变化
+  const handleLikeChange = useCallback((articleId: number, liked: boolean, likes: number) => {
+    updateArticle(articleId, { liked, likes });
+  }, [updateArticle]);
 
   useEffect(() => {
     const fetchTags = async () => {
@@ -225,6 +231,7 @@ function MainContent({ refreshKey }: { refreshKey: number }) {
                   <ArticleCard 
                     article={article} 
                     onClick={() => handleArticleClick(article.slug)}
+                    onLikeChange={handleLikeChange}
                   />
                 </div>
               ))}
@@ -237,6 +244,7 @@ function MainContent({ refreshKey }: { refreshKey: number }) {
         articleSlug={selectedArticleSlug || ""}
         isOpen={!!selectedArticleSlug}
         onClose={handleCloseModal}
+        onLikeChange={handleLikeChange}
       />
 
       <MobileNav />

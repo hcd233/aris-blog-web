@@ -188,6 +188,7 @@ export default function ProfilePage() {
           articleSlug={selectedArticleSlug || ""}
           isOpen={!!selectedArticleSlug}
           onClose={handleCloseModal}
+          onLikeChange={handleLikeChange}
         />
 
         {/* 移动端底部导航 */}

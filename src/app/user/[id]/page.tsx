@@ -151,6 +151,7 @@ export default function UserProfilePage() {
           articleSlug={selectedArticleSlug || ""}
           isOpen={!!selectedArticleSlug}
           onClose={handleCloseModal}
+          onLikeChange={handleLikeChange}
         />
 
         <MobileNav />
