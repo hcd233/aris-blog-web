@@ -1,7 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { Heart, MessageCircle, Trash2, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import type { ListedComment } from "@/lib/api/types.gen";
 import type { RepliesState } from "@/hooks/use-comments";
 import { cn, formatDate } from "@/lib/utils";
@@ -39,9 +45,25 @@ export function CommentItem({
   replyToName,
 }: CommentItemProps) {
   const { user: currentUser } = useAuth();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isArticleAuthor = articleAuthorId !== undefined && comment.author.id === articleAuthorId;
   const isOwner = currentUser?.id === comment.author.id;
+
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete?.(comment.id, comment.parentID);
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
 
   // 子评论数据
   const replies = repliesState?.comments ?? [];
@@ -133,7 +155,7 @@ export function CommentItem({
               {isOwner && (
                 <button
                   className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all"
-                  onClick={() => onDelete?.(comment.id, comment.parentID)}
+                  onClick={handleDeleteClick}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -199,6 +221,49 @@ export function CommentItem({
           )}
         </div>
       </div>
+
+      {/* 删除确认对话框 - 小红书风格 */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent 
+          showCloseButton={false}
+          className="sm:max-w-[320px] p-0 gap-0 bg-white dark:bg-[#1a1a1a] border-0 rounded-xl overflow-hidden"
+        >
+          {/* 无障碍标题（隐藏） */}
+          <DialogTitle className="sr-only">确认删除评论</DialogTitle>
+          <div className="flex flex-col">
+            {/* 标题区域 */}
+            <div className="py-5 px-6 text-center">
+              <p className="text-[15px] text-gray-900 dark:text-white font-normal">
+                确认删除此评论？
+              </p>
+            </div>
+            
+            {/* 分割线 */}
+            <div className="h-[1px] bg-gray-100 dark:bg-[#2a2a2a]" />
+            
+            {/* 确定按钮 */}
+            <button
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+              className="py-3.5 px-6 text-[#ff2442] text-[15px] font-normal hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors disabled:opacity-50"
+            >
+              {isDeleting ? "删除中..." : "确定"}
+            </button>
+            
+            {/* 分割线 */}
+            <div className="h-[1px] bg-gray-100 dark:bg-[#2a2a2a]" />
+            
+            {/* 取消按钮 */}
+            <button
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={isDeleting}
+              className="py-3.5 px-6 text-gray-900 dark:text-white text-[15px] font-normal hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors"
+            >
+              取消
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

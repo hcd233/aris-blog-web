@@ -9,6 +9,7 @@ import {
   ReactNode,
 } from "react";
 import { countNotifications, listNotifications } from "@/lib/api-config";
+import { useAuth } from "@/lib/auth";
 
 interface NotificationContextType {
   unreadCount: number;
@@ -21,8 +22,15 @@ const NotificationContext = createContext<NotificationContextType | undefined>(
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [unreadCount, setUnreadCount] = useState(0);
+  const { isAuthenticated } = useAuth();
 
   const refreshUnreadCount = useCallback(async () => {
+    // 如果用户未登录，直接返回未读数为0
+    if (!isAuthenticated) {
+      setUnreadCount(0);
+      return;
+    }
+
     try {
       // 使用 countNotifications 获取未读通知数
       const { data: countData, error: countError } = await countNotifications({
@@ -55,21 +63,23 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("获取未读通知数失败:", error);
     }
-  }, []);
+  }, [isAuthenticated]);
 
-  // 初始加载
+  // 初始加载和认证状态变化时刷新
   useEffect(() => {
     refreshUnreadCount();
-  }, [refreshUnreadCount]);
+  }, [refreshUnreadCount, isAuthenticated]);
 
   // 定期刷新（每30秒）
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     const interval = setInterval(() => {
       refreshUnreadCount();
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [refreshUnreadCount]);
+  }, [refreshUnreadCount, isAuthenticated]);
 
   return (
     <NotificationContext.Provider value={{ unreadCount, refreshUnreadCount }}>

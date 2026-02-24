@@ -74,8 +74,10 @@ export function useComments(articleId: number) {
             });
             
             if (error) {
-              console.error(`获取评论 ${currentId} 的回复失败`);
-              break;
+              console.error(`获取评论 ${currentId} 的回复失败:`, error);
+              // 不中断循环，继续获取其他评论的回复
+              hasMore = false;
+              continue;
             }
             
             if (data && data.comments) {
