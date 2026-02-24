@@ -493,6 +493,7 @@ src/
 - 每次修改后都要验证：1. 构建通过 2. 请求URL正确 3. Authorization header存在
 - **localStorage token键名统一使用驼峰命名 `accessToken`**，不要写成下划线 `access_token`（项目已统一使用驼峰命名）
 - **添加新功能前务必先检查是否已有现成组件**：在profile页面添加侧边栏时，没有先检查是否已有Sidebar组件，导致重复造轮子。应先用`glob`或`grep`搜索项目中是否已有类似组件，再决定是否新建
+- **禁止手动修改自动生成的API代码**：`src/lib/api/` 目录下的文件（`types.gen.ts`, `sdk.gen.ts`, `client.gen.ts` 等）是由 `@hey-api/openapi-ts` 自动生成的，**绝对不允许手动修改**。如需更新API模型，必须使用命令 `npx @hey-api/openapi-ts --input https://api-dev.blog.lvlvko.top/openapi.yaml --output src/lib/api` 重新生成，以确保代码与后端API规范完全一致
 
 ### 文章详情多图片轮播
 - **现象**: 文章详情页只支持展示单张封面图片，不支持多图片展示
