@@ -185,10 +185,8 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
 
     setSubmitting(true);
     try {
-      // 计算 parentID：如果是回复评论，parentID为一级评论ID
-      const parentID = replyTarget
-        ? (replyTarget.parentID === 0 ? replyTarget.id : replyTarget.parentID)
-        : 0;
+      // 计算 parentID：如果是回复评论，parentID为被回复评论的ID
+      const parentID = replyTarget ? replyTarget.id : 0;
 
       const { error } = await createComment({
         body: {

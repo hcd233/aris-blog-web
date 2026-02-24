@@ -12,7 +12,7 @@ import { MobileNav } from "@/components/mobile-nav";
 import { useAuth } from "@/lib/auth";
 import { useNotification } from "@/lib/notification-context";
 import { cn } from "@/lib/utils";
-import { listNotifications, ackNotification } from "@/lib/api-config";
+import { listNotifications, ackNotification, doAction, undoAction, createComment } from "@/lib/api-config";
 import type { ListedNotification } from "@/lib/api/types.gen";
 import { toast } from "sonner";
 import { MessageCircle, Heart, UserPlus, Search } from "lucide-react";
@@ -118,15 +118,17 @@ function ReplyInput({
   username,
   onSubmit,
   onCancel,
+  loading = false,
 }: {
   username: string;
   onSubmit: (content: string) => void;
   onCancel: () => void;
+  loading?: boolean;
 }) {
   const [content, setContent] = useState("");
 
   const handleSubmit = () => {
-    if (!content.trim()) return;
+    if (!content.trim() || loading) return;
     onSubmit(content);
   };
 
@@ -137,6 +139,7 @@ function ReplyInput({
           placeholder={`回复 ${username}`}
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          disabled={loading}
           className={cn(
             "w-full h-9 pl-3 pr-10 rounded-lg",
             "bg-gray-100 dark:bg-[#1a1a1a]",
@@ -156,6 +159,7 @@ function ReplyInput({
         variant="ghost"
         size="sm"
         onClick={onCancel}
+        disabled={loading}
         className="h-8 px-3 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
       >
         取消
@@ -174,14 +178,74 @@ function NotificationItem({
   notification: ListedNotification;
   activeTab: string;
   onClick: (notification: ListedNotification) => void;
-  onReply: (notification: ListedNotification, content: string) => void;
+  onReply: (notification: ListedNotification, content: string) => Promise<boolean>;
 }) {
   const isUnread = notification.status === "unread";
   const [showReplyInput, setShowReplyInput] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  // 使用API返回的liked字段初始化点赞状态
+  const [isLiked, setIsLiked] = useState(notification.comment?.liked ?? false);
+  const [isLiking, setIsLiking] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // 判断是否是评论/回复通知（包含回复文章的评论）
   const isCommentNotification = notification.type === "comment";
+
+  // 处理点赞/取消点赞
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!notification.comment || isLiking) return;
+
+    setIsLiking(true);
+    try {
+      if (isLiked) {
+        const { error } = await undoAction({
+          body: {
+            actionType: "like",
+            entityType: "comment",
+            entityID: notification.comment.id,
+          },
+        });
+        if (error) {
+          toast.error("取消点赞失败");
+          return;
+        }
+        setIsLiked(false);
+        toast.success("已取消点赞");
+      } else {
+        const { error } = await doAction({
+          body: {
+            actionType: "like",
+            entityType: "comment",
+            entityID: notification.comment.id,
+          },
+        });
+        if (error) {
+          toast.error("点赞失败");
+          return;
+        }
+        setIsLiked(true);
+        toast.success("点赞成功");
+      }
+    } catch (error) {
+      toast.error("操作失败，请稍后重试");
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  // 处理提交回复
+  const handleReplySubmit = async (content: string) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const success = await onReply(notification, content);
+      if (success) {
+        setShowReplyInput(false);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   return (
     <div
@@ -270,15 +334,12 @@ function NotificationItem({
             <Button
               variant="ghost"
               size="sm"
+              disabled={isLiking}
               className={cn(
                 "h-8 w-8 rounded-full p-0",
                 isLiked && "text-red-500 hover:text-red-600"
               )}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsLiked(!isLiked);
-                toast.success(isLiked ? "取消点赞" : "点赞成功");
-              }}
+              onClick={handleLike}
             >
               <Heart className={cn("h-4 w-4", isLiked && "fill-current")} />
             </Button>
@@ -290,11 +351,9 @@ function NotificationItem({
           <div onClick={(e) => e.stopPropagation()}>
             <ReplyInput
               username={notification.sender.name}
-              onSubmit={(content) => {
-                onReply(notification, content);
-                setShowReplyInput(false);
-              }}
+              onSubmit={handleReplySubmit}
               onCancel={() => setShowReplyInput(false)}
+              loading={isSubmitting}
             />
           </div>
         )}
@@ -498,11 +557,45 @@ export default function NotificationsPage() {
   };
 
   // 处理回复
-  const handleReply = async (notification: ListedNotification, content: string) => {
-    // 这里应该调用回复API
-    toast.success("回复成功", {
-      description: `已回复给 ${notification.sender.name}`,
-    });
+  const handleReply = async (notification: ListedNotification, content: string): Promise<boolean> => {
+    // 获取评论ID和文章ID
+    const commentId = notification.comment?.id;
+    const articleId = notification.comment?.repliedArticle?.id || notification.article?.id;
+
+    if (!commentId || !articleId) {
+      toast.error("无法回复", {
+        description: "评论信息不完整",
+      });
+      return false;
+    }
+
+    try {
+      const { error } = await createComment({
+        body: {
+          articleID: articleId,
+          content: content.trim(),
+          parentID: commentId,
+          images: null,
+        },
+      });
+
+      if (error) {
+        toast.error("回复失败", {
+          description: "请稍后重试",
+        });
+        return false;
+      }
+
+      toast.success("回复成功", {
+        description: `已回复给 ${notification.sender.name}`,
+      });
+      return true;
+    } catch (error) {
+      toast.error("回复失败", {
+        description: "网络错误，请稍后重试",
+      });
+      return false;
+    }
   };
 
   if (!isAuthenticated) {

@@ -35,7 +35,7 @@ export function useComments(articleId: number) {
   // 提交中状态
   const [submitting, setSubmitting] = useState(false);
 
-  // 获取某条评论的二级回复（预览模式只拿前几条）
+  // 递归获取某条评论的所有回复（包括嵌套回复）
   const fetchReplies = useCallback(async (parentId: number, pageNum: number = 1, append: boolean = false, pageSize: number = PAGE_SIZE) => {
     setRepliesMap(prev => ({
       ...prev,
@@ -50,33 +50,84 @@ export function useComments(articleId: number) {
     }));
 
     try {
-      const { data, error } = await listComments({
-        query: {
-          articleID: articleId,
-          parentID: parentId,
-          page: pageNum,
-          pageSize,
-          sort: "asc",
-          sortField: "createdAt",
-        },
-      });
-      if (error) {
-        toast.error("获取回复失败");
-        return;
-      }
-      if (data) {
-        const newReplies = data.comments ?? [];
-        setRepliesMap(prev => ({
-          ...prev,
-          [parentId]: {
-            comments: append ? [...(prev[parentId]?.comments ?? []), ...newReplies] : newReplies,
-            total: data.pageInfo.total,
+      // 递归获取所有回复（包括嵌套的）
+      const fetchAllReplies = async (rootId: number): Promise<ListedComment[]> => {
+        const allReplies: ListedComment[] = [];
+        const queue: number[] = [rootId];
+        
+        while (queue.length > 0) {
+          const currentId = queue.shift()!;
+          let page = 1;
+          let hasMore = true;
+          
+          // 分页获取当前评论的所有回复
+          while (hasMore) {
+            const { data, error } = await listComments({
+              query: {
+                articleID: articleId,
+                parentID: currentId,
+                page,
+                pageSize: PAGE_SIZE,
+                sort: "asc",
+                sortField: "createdAt",
+              },
+            });
+            
+            if (error) {
+              console.error(`获取评论 ${currentId} 的回复失败`);
+              break;
+            }
+            
+            if (data && data.comments) {
+              allReplies.push(...data.comments);
+              // 将新获取的评论ID加入队列，继续递归获取它们的回复
+              data.comments.forEach(c => queue.push(c.id));
+              
+              hasMore = data.comments.length === PAGE_SIZE && page * PAGE_SIZE < data.pageInfo.total;
+              page++;
+            } else {
+              hasMore = false;
+            }
+          }
+        }
+        
+        return allReplies;
+      };
+
+      let newReplies: ListedComment[] = [];
+      
+      if (pageNum === 1) {
+        // 首次加载，递归获取所有回复
+        newReplies = await fetchAllReplies(parentId);
+      } else {
+        // 分页加载更多（这种情况较少，因为通常一次性获取全部）
+        const { data, error } = await listComments({
+          query: {
+            articleID: articleId,
+            parentID: parentId,
             page: pageNum,
-            hasMore: pageNum * pageSize < data.pageInfo.total,
-            loading: false,
+            pageSize,
+            sort: "asc",
+            sortField: "createdAt",
           },
-        }));
+        });
+        if (error) {
+          toast.error("获取回复失败");
+          return;
+        }
+        newReplies = data?.comments ?? [];
       }
+      
+      setRepliesMap(prev => ({
+        ...prev,
+        [parentId]: {
+          comments: append ? [...(prev[parentId]?.comments ?? []), ...newReplies] : newReplies,
+          total: newReplies.length,
+          page: pageNum,
+          hasMore: false, // 递归获取已获取全部
+          loading: false,
+        },
+      }));
     } catch {
       toast.error("获取回复失败");
       setRepliesMap(prev => ({

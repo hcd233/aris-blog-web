@@ -150,7 +150,7 @@ export function CommentItem({
                   comment={reply}
                   articleAuthorId={articleAuthorId}
                   isReply
-                  replyToName={reply.parentID === comment.id ? comment.author.name : undefined}
+                  replyToName={reply.parentID === comment.id ? comment.author.name : replies.find(r => r.id === reply.parentID)?.author.name}
                   onReply={onReply}
                   onDelete={onDelete}
                   onToggleLike={onToggleLike}

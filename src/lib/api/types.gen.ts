@@ -685,6 +685,10 @@ export type NotifiedComment = {
      */
     id: number;
     /**
+     * Whether the current user has liked the comment
+     */
+    liked: boolean;
+    /**
      * Replied article
      */
     repliedArticle: Article;
