@@ -696,3 +696,28 @@ src/
 - **文件位置**: 
   - src/components/article-detail-modal.tsx
   - src/components/comment-section.tsx
+
+### 2026-02-24 通知列表点赞/回复功能实现 - API客户端代码规范
+- **现象**: 通知界面中的点赞和回复按钮是 mock 功能，没有调用真实 API
+- **原因**: 前端只实现了 UI 交互，没有对接后端 API
+- **解决方案**: 
+  1. **实现真实点赞功能**:
+     - 点击心形按钮调用 `doAction`/`undoAction` API
+     - entityType: "comment", actionType: "like"
+     - 显示 loading 状态防止重复点击
+  2. **实现真实回复功能**:
+     - 点击回复按钮显示输入框
+     - 提交时调用 `createComment` API
+     - parentID 使用通知中的评论ID
+     - articleID 从 `notification.comment.repliedArticle.id` 获取
+  3. **使用API返回的点赞状态**:
+     - 后端 API 在 `NotifiedComment` 中新增了 `liked: boolean` 字段
+     - 使用 `npx @hey-api/openapi-ts --input https://api-dev.blog.lvlvko.top/openapi.yaml --output src/lib/api` 重新生成API客户端
+     - 初始化状态时使用 `notification.comment?.liked ?? false`
+- **教训**: 
+  - **绝对禁止手动修改自动生成的API代码**（types.gen.ts, sdk.gen.ts等）
+  - API 字段变更后必须使用 openapi-ts 重新生成，而不是手动添加字段
+- **文件位置**: 
+  - src/app/notifications/page.tsx
+  - src/lib/api/types.gen.ts（重新生成）
+  - src/lib/api/sdk.gen.ts（重新生成）
