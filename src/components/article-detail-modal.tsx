@@ -154,6 +154,33 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
     }
   };
 
+  // 处理分享功能
+  const handleShareClick = async () => {
+    if (!article) return;
+
+    const baseUrl = window.location.origin;
+    const articleUrl = `${baseUrl}/article/${article.slug}`;
+
+    // 提取正文内容（去除HTML标签），最多10个字
+    const plainContent = article.content.replace(/<[^>]+>/g, "").trim();
+    const contentPreview = plainContent.slice(0, 10) + (plainContent.length > 10 ? "..." : "");
+
+    // 生成小红书风格的分享文案
+    const shareText = `${article.title}：${contentPreview} ${articleUrl}，浏览器打开进行阅读`;
+
+    try {
+      await navigator.clipboard.writeText(shareText);
+      toast.success("已复制链接", {
+        description: "快分享给好友吧",
+      });
+    } catch (err) {
+      console.error("复制失败:", err);
+      toast.error("复制失败", {
+        description: "请手动复制链接",
+      });
+    }
+  };
+
   // 处理键盘事件
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -562,11 +589,7 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose }: ArticleDeta
                           </button>
                           <button
                             className="flex items-center gap-1 text-gray-600 dark:text-gray-400 hover:text-green-500 transition-colors"
-                            onClick={() =>
-                              toast.info("敬请期待", {
-                                description: "分享功能正在开发中",
-                              })
-                            }
+                            onClick={handleShareClick}
                           >
                             <Share2 className="w-5 h-5" />
                           </button>

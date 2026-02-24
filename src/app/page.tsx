@@ -140,13 +140,15 @@ function MainContent({ refreshKey }: { refreshKey: number }) {
 
   const handleArticleClick = useCallback((slug: string) => {
     setSelectedArticleSlug(slug);
+    // 更新 URL 为动态路由格式
+    window.history.pushState({}, document.title, `/article/${slug}`);
   }, []);
 
   const handleCloseModal = useCallback(() => {
     setSelectedArticleSlug(null);
-    // 清除 URL 参数
-    if (window.location.search.includes("article=")) {
-      window.history.replaceState({}, document.title, "/");
+    // 恢复 URL 为首页
+    if (window.location.pathname.startsWith("/article/")) {
+      window.history.pushState({}, document.title, "/");
     }
   }, []);
 

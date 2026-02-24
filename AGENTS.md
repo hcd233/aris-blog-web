@@ -721,3 +721,18 @@ src/
   - src/app/notifications/page.tsx
   - src/lib/api/types.gen.ts（重新生成）
   - src/lib/api/sdk.gen.ts（重新生成）
+
+### 文章详情 URL 跳转功能
+- **功能需求**: 通过带 slug 的 URL 能直接跳转到相应文章详情
+- **实现方案**:
+  1. 创建动态路由 `/article/[slug]/page.tsx`:
+     - 从 URL 参数中获取 slug
+     - 重定向到首页并带上 `?article=slug` 参数
+     - 复用主页已有的文章详情弹窗逻辑
+  2. 支持两种 URL 格式：
+     - 友好格式：`/article/my-article-slug`
+     - 查询参数：`/?article=my-article-slug`（已有实现）
+- **文件位置**: 
+  - src/app/article/[slug]/page.tsx（新增）
+
+**最后更新**: 2026-02-24
