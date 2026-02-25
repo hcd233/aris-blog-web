@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { CommentItem } from "@/components/comment-item";
 import { useComments } from "@/hooks/use-comments";
@@ -40,6 +40,10 @@ export function CommentSection({
     toggleCommentLike,
   } = useComments(articleId);
 
+  // 滚动加载引用
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
   // 初始加载
   useEffect(() => {
     if (articleId > 0) {
@@ -53,6 +57,30 @@ export function CommentSection({
       fetchComments(1, false);
     }
   }, [refreshKey, articleId]);
+
+  // 瀑布流滚动加载
+  useEffect(() => {
+    if (!hasMore || loading) return;
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1, rootMargin: "100px" }
+    );
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [hasMore, loading, loadMore]);
 
   // 同步总数到外部
   useEffect(() => {
@@ -98,18 +126,22 @@ export function CommentSection({
             />
           ))}
 
+          {/* 加载更多触发器 */}
           {hasMore && (
-            <button
-              className="w-full py-2 text-xs text-[#576b95] dark:text-[#7b9bd1] hover:opacity-80 transition-opacity"
-              onClick={loadMore}
-              disabled={loading}
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin mx-auto" />
-              ) : (
-                "查看更多评论"
+            <div ref={loadMoreRef} className="py-4 flex items-center justify-center">
+              {loading && (
+                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
               )}
-            </button>
+            </div>
+          )}
+
+          {/* 结束文案 */}
+          {!hasMore && comments.length > 0 && (
+            <div className="py-6 flex items-center justify-center">
+              <span className="text-xs text-gray-400 dark:text-gray-500 px-4 py-1.5">
+                - THE END -
+              </span>
+            </div>
           )}
         </div>
       )}

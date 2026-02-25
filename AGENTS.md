@@ -735,4 +735,24 @@ src/
 - **文件位置**: 
   - src/app/article/[slug]/page.tsx（新增）
 
-**最后更新**: 2026-02-24
+### 2026-02-25 评论功能样式优化
+- **功能需求**:
+  1. 一级评论瀑布流滚动加载效果
+  2. 评论列表末尾添加 "- THE END -" 文案
+  3. 底部输入框样式优化，头像包裹在输入框内（参考小红书）
+- **实现方案**:
+  1. 更新 `src/components/comment-section.tsx`:
+     - 使用 Intersection Observer 实现滚动加载
+     - 添加 `loadMoreRef` 作为触发器
+     - 监听滚动到底部时自动调用 `loadMore()`
+     - 无更多评论时显示 "- THE END -" 文案
+  2. 更新 `src/components/article-detail-modal.tsx`:
+     - 修改底部输入框布局
+     - 用户头像包裹在输入框内（左侧）
+     - 使用 rounded-full 圆角样式（小红书风格）
+     - 将 textarea 改为 input 元素
+- **文件位置**:
+  - src/components/comment-section.tsx
+  - src/components/article-detail-modal.tsx
+
+**最后更新**: 2026-02-25

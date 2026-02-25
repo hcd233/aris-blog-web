@@ -593,6 +593,10 @@ export type ListedComment = {
      */
     parentID: number;
     /**
+     * Root comment ID
+     */
+    rootID: number;
+    /**
      * Whether the current user has saved the comment
      */
     saved: boolean;
@@ -1213,9 +1217,9 @@ export type ListCommentsData = {
          */
         articleID: number;
         /**
-         * Parent comment ID to filter
+         * Root comment ID to filter
          */
-        parentID?: number;
+        rootID?: number;
     };
     url: '/api/v1/comment/list';
 };

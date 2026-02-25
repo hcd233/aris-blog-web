@@ -20,15 +20,15 @@ type CommentItemProps = {
   articleAuthorId?: number;
   // 回复相关
   repliesState?: RepliesState;
-  onExpandAllReplies?: (parentId: number) => void;
-  onLoadMoreReplies?: (parentId: number) => void;
+  onExpandAllReplies?: (rootId: number) => void;
+  onLoadMoreReplies?: (rootId: number) => void;
   // 操作
   onReply?: (comment: ListedComment) => void;
-  onDelete?: (commentId: number, parentID: number) => void;
-  onToggleLike?: (commentId: number, liked: boolean, parentID: number) => void;
-  // 是否是二级评论
+  onDelete?: (commentId: number, rootID: number) => void;
+  onToggleLike?: (commentId: number, liked: boolean, rootID: number) => void;
+  // 是否是二级评论（回复）
   isReply?: boolean;
-  // 被回复人的名称（二级评论专用）
+  // 被回复人的名称（回复专用，根据 parentID 查找）
   replyToName?: string;
 };
 
@@ -58,7 +58,7 @@ export function CommentItem({
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     try {
-      await onDelete?.(comment.id, comment.parentID);
+      await onDelete?.(comment.id, comment.rootID);
     } finally {
       setIsDeleting(false);
       setDeleteDialogOpen(false);
@@ -136,7 +136,7 @@ export function CommentItem({
                   "flex items-center gap-1 transition-colors",
                   comment.liked ? "text-[#ff2442]" : "hover:text-[#ff2442]"
                 )}
-                onClick={() => onToggleLike?.(comment.id, comment.liked, comment.parentID)}
+                onClick={() => onToggleLike?.(comment.id, comment.liked, comment.rootID)}
               >
                 <Heart className={cn("w-3.5 h-3.5", comment.liked && "fill-current")} />
                 {comment.likes > 0 && <span>{comment.likes}</span>}
@@ -166,18 +166,27 @@ export function CommentItem({
           {/* 子评论列表（仅一级评论，默认展示） */}
           {!isReply && replies.length > 0 && (
             <div className="mt-1">
-              {replies.map((reply) => (
-                <CommentItem
-                  key={reply.id}
-                  comment={reply}
-                  articleAuthorId={articleAuthorId}
-                  isReply
-                  replyToName={reply.parentID === comment.id ? comment.author.name : replies.find(r => r.id === reply.parentID)?.author.name}
-                  onReply={onReply}
-                  onDelete={onDelete}
-                  onToggleLike={onToggleLike}
-                />
-              ))}
+              {replies.map((reply) => {
+                // 根据 parentID 查找被回复人名称
+                // 如果 parentID 等于一级评论的ID，则回复的是一级评论
+                // 否则在已有的回复中查找
+                const replyTo = reply.parentID === comment.id
+                  ? comment.author
+                  : replies.find(r => r.id === reply.parentID)?.author;
+                
+                return (
+                  <CommentItem
+                    key={reply.id}
+                    comment={reply}
+                    articleAuthorId={articleAuthorId}
+                    isReply
+                    replyToName={replyTo?.name}
+                    onReply={onReply}
+                    onDelete={onDelete}
+                    onToggleLike={onToggleLike}
+                  />
+                );
+              })}
 
               {/* 展开更多回复 */}
               {hasMoreReplies && remainingCount > 0 && (
@@ -191,25 +200,10 @@ export function CommentItem({
                   ) : (
                     <ChevronDown className="w-3.5 h-3.5" />
                   )}
-                  展开更多回复
+                  展开 {remainingCount} 条回复
                 </button>
               )}
 
-              {/* 已全部展开且还有分页 */}
-              {hasMoreReplies && remainingCount <= 0 && (
-                <button
-                  className="ml-0 mt-2 flex items-center gap-1 text-xs text-[#576b95] dark:text-[#7b9bd1] hover:opacity-80 transition-opacity"
-                  onClick={() => onLoadMoreReplies?.(comment.id)}
-                  disabled={repliesLoading}
-                >
-                  {repliesLoading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  ) : (
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  )}
-                  查看更多回复
-                </button>
-              )}
             </div>
           )}
 

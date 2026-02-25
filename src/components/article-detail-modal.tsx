@@ -472,75 +472,32 @@ export function ArticleDetailModal({ articleSlug, isOpen, onClose, onLikeChange 
                     )}
                     
                     <div className="flex items-center gap-3">
-                      {/* 用户头像（始终显示） */}
-                      <Avatar className="h-8 w-8 shrink-0">
-                        <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
-                        <AvatarFallback className="text-xs bg-gradient-to-br from-purple-500 to-blue-500 text-white">
-                          {currentUser?.name?.charAt(0) || "U"}
-                        </AvatarFallback>
-                      </Avatar>
+                      {/* 输入框区域 - 头像包裹在输入框内 */}
+                      <div className="flex-1 flex items-center gap-2 bg-gray-100 dark:bg-[#2a2a2a] rounded-full px-3 py-2">
+                        {/* 用户头像（包裹在输入框内） */}
+                        <Avatar className="h-7 w-7 shrink-0">
+                          <AvatarImage src={currentUser?.avatar} alt={currentUser?.name} />
+                          <AvatarFallback className="text-xs bg-gradient-to-br from-purple-500 to-blue-500 text-white">
+                            {currentUser?.name?.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
 
-                      {/* 输入框区域 */}
-                      <div className="flex-1 flex flex-col">
-                        <div
-                          className={cn(
-                            "relative transition-all duration-300 ease-out",
-                            isInputExpanded && "flex-1",
-                            "mt-3"
-                          )}
-                        >
-                          <textarea
-                            ref={inputRef}
-                            value={commentText}
-                            onChange={(e) => setCommentText(e.target.value)}
-                            onFocus={() => setIsInputExpanded(true)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                if (commentText.trim() && !submitting) {
-                                  handleSubmitComment();
-                                }
+                        <input
+                          ref={inputRef as any}
+                          value={commentText}
+                          onChange={(e) => setCommentText(e.target.value)}
+                          onFocus={() => setIsInputExpanded(true)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              if (commentText.trim() && !submitting) {
+                                handleSubmitComment();
                               }
-                            }}
-                            placeholder={replyTarget ? `回复 ${replyTarget.author.name}...` : "说点什么..."}
-                            rows={1}
-                            className={cn(
-                              "w-full resize-none outline-none transition-all duration-300",
-                              "bg-gray-100 dark:bg-[#2a2a2a] text-gray-900 dark:text-white",
-                              "placeholder:text-gray-400 dark:placeholder:text-gray-500",
-                              "px-4 py-2.5 rounded-2xl h-10 text-sm overflow-hidden"
-                            )}
-                          />
-                        </div>
-                        
-                        {/* 展开时的工具栏 */}
-                        <div
-                          className={cn(
-                            "flex items-center justify-between mt-2 transition-all duration-300 overflow-hidden",
-                            isInputExpanded ? "h-6 opacity-100" : "h-0 opacity-0"
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <button
-                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                              onClick={() => toast.info("敬请期待", { description: "@功能正在开发中" })}
-                            >
-                              <AtSign className="w-5 h-5" />
-                            </button>
-                            <button
-                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                              onClick={() => toast.info("敬请期待", { description: "表情功能正在开发中" })}
-                            >
-                              <Smile className="w-5 h-5" />
-                            </button>
-                            <button
-                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                              onClick={() => toast.info("敬请期待", { description: "图片功能正在开发中" })}
-                            >
-                              <Image className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </div>
+                            }
+                          }}
+                          placeholder={replyTarget ? `回复 ${replyTarget.author.name}...` : "说点什么..."}
+                          className="flex-1 bg-transparent outline-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 text-sm"
+                        />
                       </div>
 
                       {/* 操作按钮区域 */}
